@@ -15,6 +15,7 @@ beforeAll(async () => {
     create table storage.objects(id uuid primary key,name text,bucket_id text); alter table storage.objects enable row level security;`);
   await db.exec(await readFile(new URL('../supabase/migrations/202610120001_core.sql', import.meta.url), 'utf8'));
   await db.exec(await readFile(new URL('../supabase/migrations/202610120002_operations.sql', import.meta.url), 'utf8'));
+  await db.exec(await readFile(new URL('../supabase/migrations/202610120003_asset_usage.sql', import.meta.url), 'utf8'));
   await asUser(userA); wsA=(await db.query<{ create_workspace:string }>("select public.create_workspace('Команда A')")).rows[0].create_workspace;
   await asUser(userB); wsB=(await db.query<{ create_workspace:string }>("select public.create_workspace('Команда B')")).rows[0].create_workspace;
 },30000);
