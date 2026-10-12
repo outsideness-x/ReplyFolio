@@ -6,11 +6,12 @@ const db = new PGlite(),
   manager = '22222222-2222-4222-8222-222222222222',
   outsider = '33333333-3333-4333-8333-333333333333';
 let workspace: string;
+const authSid = '77777777-7777-4777-8777-777777777777';
 async function user(uid: string, aal = 'aal2') {
   await db.exec('reset role;set role authenticated');
   await db.query(
     "select set_config('request.jwt.claim.sub',$1,false),set_config('request.jwt.claims',$2,false)",
-    [uid, JSON.stringify({ sub: uid, aal })],
+    [uid, JSON.stringify({ sub: uid, aal, session_id: authSid })],
   );
 }
 beforeAll(async () => {
@@ -34,9 +35,28 @@ beforeAll(async () => {
       owner,
     ])
   ).rows[0].service_team_workspace;
+  await db.query("select public.service_trusted_factor($1,'trusted')", [owner]);
+  const baseline = '88888888-8888-4888-8888-888888888888';
+  await db.query(
+    "select public.service_session_create($1,'baseline-cookie',$2,'mfa','sealed','agent',$3)",
+    [baseline, owner, authSid],
+  );
+  await db.query("select public.service_session_update($1,'sealed','active','trusted',null,true)", [
+    baseline,
+  ]);
 }, 30000);
 afterAll(() => db.close());
 describe('closed-team security in PostgreSQL', () => {
+  it('rejects an AAL2 token from a separate public Auth login session', async () => {
+    await user(owner);
+    await db.query("select set_config('request.jwt.claims',$1,false)", [
+      JSON.stringify({ sub: owner, aal: 'aal2', session_id: outsider }),
+    ]);
+    expect(
+      (await db.query<{ is_member: boolean }>('select private.is_member($1)', [workspace])).rows[0]
+        .is_member,
+    ).toBe(false);
+  });
   it('denies public table access even with a valid invited AAL2 identity', async () => {
     await user(owner);
     await expect(db.query('select * from public.instagram_accounts')).rejects.toThrow(
@@ -205,10 +225,10 @@ describe('closed-team security in PostgreSQL', () => {
   it('binds OAuth to the initiating session and browser, and consumes state once', async () => {
     await db.exec('reset role');
     const sid = '44444444-4444-4444-8444-444444444444';
-    await db.query("select public.service_session_create($1,'cookie',$2,'mfa','sealed','agent')", [
-      sid,
-      owner,
-    ]);
+    await db.query(
+      "select public.service_session_create($1,'cookie',$2,'mfa','sealed','agent',$3)",
+      [sid, owner, authSid],
+    );
     await db.query(
       "select public.service_session_update($1,'sealed','active','trusted',null,true)",
       [sid],

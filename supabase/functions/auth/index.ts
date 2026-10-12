@@ -8,7 +8,7 @@ import {
   secureCookie,
   SESSION_COOKIE,
 } from '../../../shared/security.ts';
-import { database, env, HttpError, json, readJson, rpc, serve } from '../_shared/http.ts';
+import { database, env, HttpError, json, readJson, rpc, serve, uuid } from '../_shared/http.ts';
 import { gateway, limit } from '../_shared/gateway.ts';
 import { sealed, userClient, webSession } from '../_shared/web-session.ts';
 async function captcha(token: unknown, ip: string) {
@@ -113,6 +113,9 @@ serve(async (req) => {
       throw new HttpError(400, 'Неверный или просроченный код.');
     await rpc(db, 'service_login_finish', { hash: await digest(token) });
     const role = await rpc<string | null>(db, 'service_claim_invite', { uid: data.user.id });
+    const proof = await client.auth.getClaims(data.session.access_token);
+    if (proof.error || proof.data?.claims.sub !== data.user.id)
+      throw new HttpError(403, 'Подтверждение входа не завершено.');
     const id = crypto.randomUUID(),
       sessionToken = opaqueToken(),
       state = role ? 'mfa' : 'waitlist';
@@ -123,6 +126,7 @@ serve(async (req) => {
       session_state: state,
       sealed: await sealed(data.session, id),
       agent: await hmac(context.agent, env('RATE_LIMIT_SECRET')),
+      auth_sid: uuid(proof.data.claims.session_id),
     });
     await rpc(db, 'service_security_event', {
       event_kind: role ? 'team_email_verified' : 'waitlist_email_verified',
@@ -217,7 +221,12 @@ serve(async (req) => {
     });
     if (trusted !== s.row.factor_id) throw new HttpError(403, 'Доверенный фактор не совпадает.');
     const claims = await s.client.auth.getClaims(checked.data.access_token);
-    if (claims.error || claims.data?.claims.aal !== 'aal2' || claims.data.claims.sub !== s.user.id)
+    if (
+      claims.error ||
+      claims.data?.claims.aal !== 'aal2' ||
+      claims.data.claims.sub !== s.user.id ||
+      claims.data.claims.session_id !== s.row.auth_session_id
+    )
       throw new HttpError(403, 'Подтверждение MFA не завершено.');
     await rpc(db, 'service_session_update', {
       sid: s.row.id,

@@ -4,6 +4,7 @@ import { decryptToken, encryptToken } from './crypto.ts';
 import { env, HttpError, rpc, type Database } from './http.ts';
 export type Tokens = { access_token: string; refresh_token: string };
 export type WebSession = {
+  auth_session_id: string;
   id: string;
   user_id: string;
   state: 'mfa' | 'active' | 'waitlist';
@@ -79,6 +80,7 @@ export async function webSession(req: Request, db: Database, agent: string) {
       error ||
       data?.claims.aal !== 'aal2' ||
       data.claims.sub !== user.id ||
+      data.claims.session_id !== row.auth_session_id ||
       !trusted ||
       trusted !== row.factor_id
     )
