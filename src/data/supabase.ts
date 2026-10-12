@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Contact, Conversation, Flow, Material, Snapshot } from '../../shared/types.ts';
 import type { Repository } from './repository.ts';
+import { loadPages } from './pagination.ts';
 const url = import.meta.env.VITE_SUPABASE_URL as string | undefined,
   key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
 function unsafeKey(value: string): boolean {
@@ -64,23 +65,24 @@ export class SupabaseRepository implements Repository {
       'automation_runs',
     ] as const;
     const results = await Promise.all(
-      tables.map((table) => {
-        const q = supabase!
-          .from(table)
-          .select('*')
-          .eq(table === 'workspaces' ? 'id' : 'workspace_id', this.workspaceId);
-        return table === 'messages'
-          ? q.order('created_at', { ascending: false }).limit(1000)
-          : table === 'automation_runs'
-            ? q.order('created_at', { ascending: false }).limit(100)
-            : q;
+      tables.map(async (table) => {
+        const query = () =>
+          supabase!
+            .from(table)
+            .select('*')
+            .eq(table === 'workspaces' ? 'id' : 'workspace_id', this.workspaceId);
+        if (table !== 'messages' && table !== 'automation_runs') {
+          return loadPages((from, to) => query().order('id').range(from, to));
+        }
+        const { data, error } = await query()
+          .order('created_at', { ascending: false })
+          .limit(table === 'messages' ? 1000 : 100);
+        if (error)
+          throw new Error('Не удалось загрузить данные. Проверьте миграции и права доступа.');
+        return data ?? [];
       }),
     );
-    const failed = results.find((r) => r.error);
-    if (failed) throw new Error('Не удалось загрузить данные. Проверьте миграции и права доступа.');
-    const [ws, contacts, conversations, messages, flows, materials, account, runs] = results.map(
-      (r) => r.data ?? [],
-    );
+    const [ws, contacts, conversations, messages, flows, materials, account, runs] = results;
     if (!ws[0]) throw new Error('Рабочее пространство недоступно.');
     return {
       workspace: ws[0],
