@@ -11,6 +11,7 @@ import { Materials } from './pages/Materials.tsx';
 import { Leads } from './pages/Leads.tsx';
 import { Flows } from './pages/Flows.tsx';
 import { Lab } from './pages/Lab.tsx';
+import { Settings as SettingsPage } from './pages/Settings.tsx';
 import { Badge, Loading, UIContext, type Page } from './ui.tsx';
 const pages=[{id:'dashboard',title:'Обзор',icon:LayoutDashboard},{id:'inbox',title:'Диалоги',icon:MessagesSquare},{id:'flows',title:'Сценарии',icon:Workflow},{id:'materials',title:'Материалы',icon:BookOpen},{id:'leads',title:'Заявки',icon:Users},{id:'lab',title:'Симулятор',icon:FlaskConical},{id:'settings',title:'Настройки',icon:Settings}]as const;
 const local=new LocalRepository(window.localStorage);
@@ -42,7 +43,7 @@ function WorkspaceApp({repo}:{repo:Repository}){
     <div className="main-shell"><header className="topbar"><div className="breadcrumb"><button className="mobile-only icon-button" aria-label="Открыть меню" onClick={()=>setMobile(true)}><Menu size={22}/></button><span>Рабочее пространство</span><ChevronRight size={14}/><strong>{pages.find((p)=>p.id===page)?.title}</strong></div><div className="topbar-actions"><form className="global-search" onSubmit={(e)=>{e.preventDefault();navigate('inbox');}}><Search size={16}/><input aria-label="Поиск контактов" placeholder="Поиск контактов…" value={query} onChange={(e)=>setQuery(e.target.value)}/><kbd>↵</kbd></form><span className="owner-avatar">RF</span></div></header>
       {repo.mode==='demo'&&<div className="demo-banner"><FlaskConical size={15}/><span><strong>Демо-среда.</strong> Данные хранятся в этом браузере; сообщения в Instagram не отправляются.</span><button onClick={()=>navigate('settings')}>Подключить сервисы<ArrowRight size={14}/></button></div>}
       {loadError&&<div className="inline-alert"><AlertCircle size={16}/>{loadError}</div>}
-      <main className={`workspace-main ${page==='inbox'?'inbox-main':''}`}>{page==='dashboard'?<Dashboard/>:page==='inbox'?<Inbox selectedId={selectedConversation} query={query}/>:page==='materials'?<Materials/>:page==='leads'?<Leads/>:page==='flows'?<Flows/>:page==='lab'?<Lab/>:<section className="panel"><h1>{pages.find((p)=>p.id===page)?.title}</h1><p>Раздел готовится.</p></section>}</main><footer className="app-footer"><span>ReplyFolio · Из Direct в заявку</span>{supabase&&<button className="text-button" onClick={()=>void supabase!.auth.signOut()}><LogOut size={14}/>Выйти</button>}<span>{repo.mode==='demo'?'LOCAL DEMO':'SUPABASE CONNECTED'}</span></footer></div>
+      <main className={`workspace-main ${page==='inbox'?'inbox-main':''}`}>{page==='dashboard'?<Dashboard/>:page==='inbox'?<Inbox selectedId={selectedConversation} query={query}/>:page==='materials'?<Materials/>:page==='leads'?<Leads/>:page==='flows'?<Flows/>:page==='lab'?<Lab/>:<SettingsPage/>}</main><footer className="app-footer"><span>ReplyFolio · Из Direct в заявку</span>{supabase&&<button className="text-button" onClick={()=>void supabase!.auth.signOut()}><LogOut size={14}/>Выйти</button>}<span>{repo.mode==='demo'?'LOCAL DEMO':'SUPABASE CONNECTED'}</span></footer></div>
     {toast&&<div className="toast" role="alert"><CheckCircle2 size={19}/><span>{toast}</span><button className="icon-button" aria-label="Закрыть уведомление" onClick={()=>setToast('')}><X size={16}/></button></div>}
   </div></UIContext.Provider>;
 }
