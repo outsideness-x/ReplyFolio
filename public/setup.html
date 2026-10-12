@@ -1,7 +1,142 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Подключение · ReplyFolio</title><link rel="icon" href="/favicon.svg"><style>body{font:16px/1.8 system-ui,sans-serif;background:#fafafa;color:#282a31;margin:0}main{max-width:760px;padding:60px 24px;margin:auto}h1{font-size:36px;letter-spacing:-1px;line-height:1.2}h2{margin-top:40px;font-size:22px}p,li{color:#626774}a{color:#252833}code{background:#eceef2;padding:3px 6px;border-radius:4px;font-size:14px}.brand{font-size:18px;font-weight:600}section{border-top:1px solid #e4e6ea;margin-top:30px;padding-top:12px}.note{padding:18px;background:#f0f1f4;border-radius:12px;font-size:14px}button{font:inherit}</style></head><body><main><a class="brand" href="/">ReplyFolio</a><h1>Подключим ваш Direct.</h1><p>Сейчас кабинет работает как локальная демонстрация. Для реальных сообщений нужны ваш Supabase, приложение Meta и профессиональный Instagram.</p><p class="note">Полная техническая инструкция лежит в проекте: <code>docs/SETUP.md</code>. Здесь — порядок действий для владельца.</p>
-<section><h2>01 · Supabase</h2><ol><li>Создайте проект и примените три миграции из <code>supabase/migrations</code>.</li><li>Включите вход через Google в Supabase Auth. Добавьте адрес фронтенда в Site URL и redirect URLs.</li><li>Опубликуйте пять Edge Functions и добавьте серверные секреты по инструкции. В браузер передаются только URL проекта и publishable key.</li><li>Настройте защищённый запуск очереди из <code>supabase/setup/schedule.sql</code>.</li></ol></section>
-<section><h2>02 · Фронтенд</h2><p>Используйте Cloudflare Pages: сборка <code>npm run build</code>, каталог <code>dist</code>. Укажите <code>VITE_SUPABASE_URL</code> и <code>VITE_SUPABASE_PUBLISHABLE_KEY</code>. Для бизнеса на бесплатном тарифе это выбранный вариант.</p><p>Notion подходит для страницы помощи и встраивания ссылки на приложение. Он не запускает React-приложение и его сервер. Vercel требует тарифа с разрешённым коммерческим использованием.</p></section>
-<section><h2>03 · Meta и Instagram</h2><ol><li>Переведите Instagram в Business или Creator.</li><li>Создайте приложение Meta с Instagram API и Instagram Login. Добавьте свой аккаунт для тестирования, примите приглашение и настройте разрешения.</li><li>Укажите callback URL из инструкции. В настройках webhook добавьте адрес <code>…/functions/v1/instagram-webhook</code> и ваш verify token.</li><li>Опубликуйте собственные страницы политики конфиденциальности и удаления данных. Шаблоны находятся в <code>docs</code>.</li><li>В ReplyFolio откройте «Настройки → Подключить Instagram» и пройдите официальный вход.</li></ol></section>
-<section><h2>04 · Проверка перед запуском</h2><p>Замените демонстрационные ссылки своими материалами, включите сценарий и проверьте с другим тестовым аккаунтом: ключевое слово в Direct, комментарий, ответ на него, сбор заявки и передачу менеджеру. Первое сообщение после комментария не даёт права продолжать переписку без ответа пользователя.</p><p>Проверка на реальном аккаунте обязательна: локальный симулятор не подтверждает доступ Meta и доставку Instagram.</p></section>
-<p><a href="/#/settings">← Вернуться в кабинет</a></p></main></body></html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Подключение · ReplyFolio</title>
+    <link rel="icon" href="/favicon.svg" />
+    <style>
+      body {
+        font:
+          16px/1.8 system-ui,
+          sans-serif;
+        background: #fafafa;
+        color: #282a31;
+        margin: 0;
+      }
+      main {
+        max-width: 760px;
+        padding: 60px 24px;
+        margin: auto;
+      }
+      h1 {
+        font-size: 36px;
+        letter-spacing: -1px;
+        line-height: 1.2;
+      }
+      h2 {
+        margin-top: 40px;
+        font-size: 22px;
+      }
+      p,
+      li {
+        color: #626774;
+      }
+      a {
+        color: #252833;
+      }
+      code {
+        background: #eceef2;
+        padding: 3px 6px;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+      .brand {
+        font-size: 18px;
+        font-weight: 600;
+      }
+      section {
+        border-top: 1px solid #e4e6ea;
+        margin-top: 30px;
+        padding-top: 12px;
+      }
+      .note {
+        padding: 18px;
+        background: #f0f1f4;
+        border-radius: 12px;
+        font-size: 14px;
+      }
+      button {
+        font: inherit;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <a class="brand" href="/">ReplyFolio</a>
+      <h1>Подключим ваш Direct.</h1>
+      <p>
+        Сейчас кабинет работает как локальная демонстрация. Для реальных сообщений нужны ваш
+        Supabase, приложение Meta и профессиональный Instagram.
+      </p>
+      <p class="note">
+        Полная техническая инструкция лежит в проекте: <code>docs/SETUP.md</code>. Здесь — порядок
+        действий для владельца.
+      </p>
+      <section>
+        <h2>01 · Supabase</h2>
+        <ol>
+          <li>Создайте проект и примените три миграции из <code>supabase/migrations</code>.</li>
+          <li>
+            Включите вход через Google в Supabase Auth. Добавьте адрес фронтенда в Site URL и
+            redirect URLs.
+          </li>
+          <li>
+            Опубликуйте пять Edge Functions и добавьте серверные секреты по инструкции. В браузер
+            передаются только URL проекта и publishable key.
+          </li>
+          <li>Настройте защищённый запуск очереди из <code>supabase/setup/schedule.sql</code>.</li>
+        </ol>
+      </section>
+      <section>
+        <h2>02 · Фронтенд</h2>
+        <p>
+          Используйте Cloudflare Pages: сборка <code>npm run build</code>, каталог
+          <code>dist</code>. Укажите <code>VITE_SUPABASE_URL</code> и
+          <code>VITE_SUPABASE_PUBLISHABLE_KEY</code>. Для бизнеса на бесплатном тарифе это выбранный
+          вариант.
+        </p>
+        <p>
+          Notion подходит для страницы помощи и встраивания ссылки на приложение. Он не запускает
+          React-приложение и его сервер. Vercel требует тарифа с разрешённым коммерческим
+          использованием.
+        </p>
+      </section>
+      <section>
+        <h2>03 · Meta и Instagram</h2>
+        <ol>
+          <li>Переведите Instagram в Business или Creator.</li>
+          <li>
+            Создайте приложение Meta с Instagram API и Instagram Login. Добавьте свой аккаунт для
+            тестирования, примите приглашение и настройте разрешения.
+          </li>
+          <li>
+            Укажите callback URL из инструкции. В настройках webhook добавьте адрес
+            <code>…/functions/v1/instagram-webhook</code> и ваш verify token.
+          </li>
+          <li>
+            Опубликуйте собственные страницы политики конфиденциальности и удаления данных. Шаблоны
+            находятся в <code>docs</code>.
+          </li>
+          <li>
+            В ReplyFolio откройте «Настройки → Подключить Instagram» и пройдите официальный вход.
+          </li>
+        </ol>
+      </section>
+      <section>
+        <h2>04 · Проверка перед запуском</h2>
+        <p>
+          Замените демонстрационные ссылки своими материалами, включите сценарий и проверьте с
+          другим тестовым аккаунтом: ключевое слово в Direct, комментарий, ответ на него, сбор
+          заявки и передачу менеджеру. Первое сообщение после комментария не даёт права продолжать
+          переписку без ответа пользователя.
+        </p>
+        <p>
+          Проверка на реальном аккаунте обязательна: локальный симулятор не подтверждает доступ Meta
+          и доставку Instagram.
+        </p>
+      </section>
+      <p><a href="/#/settings">← Вернуться в кабинет</a></p>
+    </main>
+  </body>
+</html>

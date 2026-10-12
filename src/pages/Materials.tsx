@@ -1,28 +1,248 @@
 import { useState } from 'react';
-import { BookOpen, Edit3, ExternalLink, FileText, Link2, Plus, Search, Trash2, Upload } from 'lucide-react';
+import {
+  BookOpen,
+  Edit3,
+  ExternalLink,
+  FileText,
+  Link2,
+  Plus,
+  Search,
+  Trash2,
+  Upload,
+} from 'lucide-react';
 import type { Material } from '../../shared/types.ts';
 import { isHttpsUrl } from '../../shared/engine.ts';
 import { supabase } from '../data/supabase.ts';
 import { Badge, Empty, Modal, useUI } from '../ui.tsx';
-export function Materials(){
-  const {data,repo,perform,busy,notify}=useUI(),[query,setQuery]=useState(''),[editing,setEditing]=useState<Material|null>(null),[deleting,setDeleting]=useState<Material|null>(null);
-  const list=data.materials.filter((m)=>(m.title+' '+m.description).toLowerCase().includes(query.toLowerCase()));
-  const create=()=>setEditing({id:crypto.randomUUID(),workspace_id:data.workspace.id,title:'',description:'',url:'',kind:'link',created_at:new Date().toISOString()});
-  return <><div className="page-heading"><div><div className="eyebrow">YOUR LIBRARY</div><h1>Материалы</h1><p>Полезное знакомство с вашим обучением.</p></div><button className="button primary" onClick={create}><Plus size={16}/>Добавить материал</button></div><div className="table-toolbar"><div className="table-search"><Search size={16}/><input aria-label="Поиск материалов" placeholder="Поиск по библиотеке" value={query} onChange={(e)=>setQuery(e.target.value)}/></div><Badge tone="gray">{data.materials.length} материалов</Badge></div>{list.length?<div className="cards-grid">{list.map((m)=><article className="material-card" key={m.id}><div className="material-cover">{m.kind==='pdf'?<FileText size={42}/>:<BookOpen size={42}/>}</div><div><Badge tone="gray">{m.kind==='pdf'?'PDF':'Ссылка'}</Badge></div><h3 style={{marginTop:13}}>{m.title}</h3><p>{m.description||'Готов к добавлению в сценарий.'}</p><div className="material-url">{m.url}</div><div className="card-footer"><a className="button small" href={m.url} target="_blank" rel="noopener noreferrer"><ExternalLink size={13}/>Открыть</a><button className="icon-button" aria-label={'Редактировать '+m.title} onClick={()=>setEditing(m)}><Edit3 size={16}/></button><button className="icon-button" aria-label={'Удалить '+m.title} onClick={()=>setDeleting(m)}><Trash2 size={15}/></button></div></article>)}</div>:<section className="panel"><Empty title="Ваша библиотека начинается здесь" description="Добавьте бесплатный урок, прайс или полезный PDF, чтобы отправлять его ученикам."><button className="button primary" onClick={create}><Plus size={16}/>Добавить материал</button></Empty></section>}{editing&&<MaterialEditor key={editing.id} material={editing} onClose={()=>setEditing(null)}/>} {deleting&&<Modal title="Удалить материал?" onClose={()=>setDeleting(null)}><p className="form-hint">«{deleting.title}» будет убран из библиотеки. Материал, используемый в сценарии или активном диалоге, удалить нельзя.</p><div className="modal-footer"><button className="button" onClick={()=>setDeleting(null)}>Отмена</button><button className="button danger" disabled={busy} onClick={async()=>{if(await perform(()=>repo.deleteMaterial(deleting.id),'Материал удалён.'))setDeleting(null);}}>Удалить материал</button></div></Modal>}</>;
+export function Materials() {
+  const { data, repo, perform, busy, notify } = useUI(),
+    [query, setQuery] = useState(''),
+    [editing, setEditing] = useState<Material | null>(null),
+    [deleting, setDeleting] = useState<Material | null>(null);
+  const list = data.materials.filter((m) =>
+    (m.title + ' ' + m.description).toLowerCase().includes(query.toLowerCase()),
+  );
+  const create = () =>
+    setEditing({
+      id: crypto.randomUUID(),
+      workspace_id: data.workspace.id,
+      title: '',
+      description: '',
+      url: '',
+      kind: 'link',
+      created_at: new Date().toISOString(),
+    });
+  return (
+    <>
+      <div className="page-heading">
+        <div>
+          <div className="eyebrow">YOUR LIBRARY</div>
+          <h1>Материалы</h1>
+          <p>Полезное знакомство с вашим обучением.</p>
+        </div>
+        <button className="button primary" onClick={create}>
+          <Plus size={16} />
+          Добавить материал
+        </button>
+      </div>
+      <div className="table-toolbar">
+        <div className="table-search">
+          <Search size={16} />
+          <input
+            aria-label="Поиск материалов"
+            placeholder="Поиск по библиотеке"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </div>
+        <Badge tone="gray">{data.materials.length} материалов</Badge>
+      </div>
+      {list.length ? (
+        <div className="cards-grid">
+          {list.map((m) => (
+            <article className="material-card" key={m.id}>
+              <div className="material-cover">
+                {m.kind === 'pdf' ? <FileText size={42} /> : <BookOpen size={42} />}
+              </div>
+              <div>
+                <Badge tone="gray">{m.kind === 'pdf' ? 'PDF' : 'Ссылка'}</Badge>
+              </div>
+              <h3 style={{ marginTop: 13 }}>{m.title}</h3>
+              <p>{m.description || 'Готов к добавлению в сценарий.'}</p>
+              <div className="material-url">{m.url}</div>
+              <div className="card-footer">
+                <a className="button small" href={m.url} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink size={13} />
+                  Открыть
+                </a>
+                <button
+                  className="icon-button"
+                  aria-label={'Редактировать ' + m.title}
+                  onClick={() => setEditing(m)}
+                >
+                  <Edit3 size={16} />
+                </button>
+                <button
+                  className="icon-button"
+                  aria-label={'Удалить ' + m.title}
+                  onClick={() => setDeleting(m)}
+                >
+                  <Trash2 size={15} />
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <section className="panel">
+          <Empty
+            title="Ваша библиотека начинается здесь"
+            description="Добавьте бесплатный урок, прайс или полезный PDF, чтобы отправлять его ученикам."
+          >
+            <button className="button primary" onClick={create}>
+              <Plus size={16} />
+              Добавить материал
+            </button>
+          </Empty>
+        </section>
+      )}
+      {editing && (
+        <MaterialEditor key={editing.id} material={editing} onClose={() => setEditing(null)} />
+      )}{' '}
+      {deleting && (
+        <Modal title="Удалить материал?" onClose={() => setDeleting(null)}>
+          <p className="form-hint">
+            «{deleting.title}» будет убран из библиотеки. Материал, используемый в сценарии или
+            активном диалоге, удалить нельзя.
+          </p>
+          <div className="modal-footer">
+            <button className="button" onClick={() => setDeleting(null)}>
+              Отмена
+            </button>
+            <button
+              className="button danger"
+              disabled={busy}
+              onClick={async () => {
+                if (await perform(() => repo.deleteMaterial(deleting.id), 'Материал удалён.'))
+                  setDeleting(null);
+              }}
+            >
+              Удалить материал
+            </button>
+          </div>
+        </Modal>
+      )}
+    </>
+  );
 }
-function MaterialEditor({material,onClose}:{material:Material;onClose:()=>void}){
-  const {repo,perform,busy,notify}=useUI(),[draft,setDraft]=useState({...material}),[file,setFile]=useState<File|null>(null);
-  return <Modal title={material.title?'Редактировать материал':'Новый материал'} onClose={onClose}><form onSubmit={async(e)=>{e.preventDefault();const ok=await perform(async()=>{
-    let saved={...draft},uploaded:string|null=null;
-    if(file){
-      if(!supabase||repo.mode!=='live')throw new Error('Загрузка PDF доступна после подключения Supabase.');
-      if(file.size>25*1024*1024)throw new Error('PDF должен быть меньше 25 МБ.');
-      if(new TextDecoder().decode(await file.slice(0,5).arrayBuffer())!=='%PDF-')throw new Error('Выберите PDF-файл.');
-      const path=draft.workspace_id+'/'+crypto.randomUUID()+'.pdf';
-      const {error}=await supabase.storage.from('materials').upload(path,file,{contentType:'application/pdf',upsert:false});if(error)throw new Error('Не удалось загрузить PDF. Проверьте Storage и права доступа.');
-      uploaded=path;saved={...saved,url:supabase.storage.from('materials').getPublicUrl(path).data.publicUrl,kind:'pdf',storage_path:path};
-    }
-    if(!isHttpsUrl(saved.url)){if(uploaded)await supabase!.storage.from('materials').remove([uploaded]);throw new Error('Укажите HTTPS-ссылку.');}
-    try{await repo.saveMaterial(saved);}catch(e){if(uploaded)await supabase!.storage.from('materials').remove([uploaded]);throw e;}
-  },'Материал сохранён.');if(ok)onClose();}}><label>Название<input value={draft.title} onChange={(e)=>setDraft({...draft,title:e.target.value})} required maxLength={120} placeholder="Например, бесплатный вводный урок"/></label><label>Описание<textarea value={draft.description} onChange={(e)=>setDraft({...draft,description:e.target.value})} maxLength={2000} placeholder="Коротко о содержимом" rows={3}/></label><label>HTTPS-ссылка<input type="url" value={draft.url} onChange={(e)=>{setDraft({...draft,url:e.target.value,storage_path:null});setFile(null);}} placeholder="https://…" required={!file}/><small>Материал должен быть доступен ученику по этой ссылке.</small></label><div className="upload-zone"><Upload size={22}/><span>{repo.mode==='demo'?'PDF можно будет загрузить после подключения сервисов':'Или загрузите PDF до 25 МБ'}</span>{repo.mode==='live'&&<input aria-label="Загрузить PDF" type="file" accept="application/pdf" onChange={(e)=>setFile(e.target.files?.[0]??null)}/>}<small>{file?.name||'Файлы библиотеки предназначены для выдачи по публичной ссылке.'}</small></div><div className="modal-footer"><button type="button" className="button" onClick={onClose}>Отмена</button><button className="button primary" disabled={busy||!draft.title.trim()}>Сохранить материал</button></div></form></Modal>;
+function MaterialEditor({ material, onClose }: { material: Material; onClose: () => void }) {
+  const { repo, perform, busy, notify } = useUI(),
+    [draft, setDraft] = useState({ ...material }),
+    [file, setFile] = useState<File | null>(null);
+  return (
+    <Modal title={material.title ? 'Редактировать материал' : 'Новый материал'} onClose={onClose}>
+      <form
+        onSubmit={async (e) => {
+          e.preventDefault();
+          const ok = await perform(async () => {
+            let saved = { ...draft },
+              uploaded: string | null = null;
+            if (file) {
+              if (!supabase || repo.mode !== 'live')
+                throw new Error('Загрузка PDF доступна после подключения Supabase.');
+              if (file.size > 25 * 1024 * 1024) throw new Error('PDF должен быть меньше 25 МБ.');
+              if (new TextDecoder().decode(await file.slice(0, 5).arrayBuffer()) !== '%PDF-')
+                throw new Error('Выберите PDF-файл.');
+              const path = draft.workspace_id + '/' + crypto.randomUUID() + '.pdf';
+              const { error } = await supabase.storage
+                .from('materials')
+                .upload(path, file, { contentType: 'application/pdf', upsert: false });
+              if (error)
+                throw new Error('Не удалось загрузить PDF. Проверьте Storage и права доступа.');
+              uploaded = path;
+              saved = {
+                ...saved,
+                url: supabase.storage.from('materials').getPublicUrl(path).data.publicUrl,
+                kind: 'pdf',
+                storage_path: path,
+              };
+            }
+            if (!isHttpsUrl(saved.url)) {
+              if (uploaded) await supabase!.storage.from('materials').remove([uploaded]);
+              throw new Error('Укажите HTTPS-ссылку.');
+            }
+            try {
+              await repo.saveMaterial(saved);
+            } catch (e) {
+              if (uploaded) await supabase!.storage.from('materials').remove([uploaded]);
+              throw e;
+            }
+          }, 'Материал сохранён.');
+          if (ok) onClose();
+        }}
+      >
+        <label>
+          Название
+          <input
+            value={draft.title}
+            onChange={(e) => setDraft({ ...draft, title: e.target.value })}
+            required
+            maxLength={120}
+            placeholder="Например, бесплатный вводный урок"
+          />
+        </label>
+        <label>
+          Описание
+          <textarea
+            value={draft.description}
+            onChange={(e) => setDraft({ ...draft, description: e.target.value })}
+            maxLength={2000}
+            placeholder="Коротко о содержимом"
+            rows={3}
+          />
+        </label>
+        <label>
+          HTTPS-ссылка
+          <input
+            type="url"
+            value={draft.url}
+            onChange={(e) => {
+              setDraft({ ...draft, url: e.target.value, storage_path: null });
+              setFile(null);
+            }}
+            placeholder="https://…"
+            required={!file}
+          />
+          <small>Материал должен быть доступен ученику по этой ссылке.</small>
+        </label>
+        <div className="upload-zone">
+          <Upload size={22} />
+          <span>
+            {repo.mode === 'demo'
+              ? 'PDF можно будет загрузить после подключения сервисов'
+              : 'Или загрузите PDF до 25 МБ'}
+          </span>
+          {repo.mode === 'live' && (
+            <input
+              aria-label="Загрузить PDF"
+              type="file"
+              accept="application/pdf"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            />
+          )}
+          <small>
+            {file?.name || 'Файлы библиотеки предназначены для выдачи по публичной ссылке.'}
+          </small>
+        </div>
+        <div className="modal-footer">
+          <button type="button" className="button" onClick={onClose}>
+            Отмена
+          </button>
+          <button className="button primary" disabled={busy || !draft.title.trim()}>
+            Сохранить материал
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
 }

@@ -9,7 +9,9 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit",
-    "check:edge": "deno check supabase/functions/*/index.ts"
+    "check:edge": "deno check supabase/functions/*/index.ts",
+    "format": "prettier --write src shared tests e2e supabase/functions *.ts *.json public/*.html",
+    "format:check": "prettier --check src shared tests e2e supabase/functions *.ts *.json public/*.html"
   },
   "license": "UNLICENSED",
   "type": "module",
@@ -27,6 +29,7 @@
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
     "deno": "^2.9.6",
+    "prettier": "^3.9.10",
     "typescript": "^7.0.2",
     "vite": "^8.3.4",
     "vitest": "^5.0.3"

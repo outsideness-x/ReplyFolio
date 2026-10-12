@@ -1,30 +1,65 @@
-import { describe,expect,it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { LocalRepository } from '../src/data/local.ts';
-function fixture(){const map=new Map<string,string>();let now=Date.parse('2026-10-12T09:00:00Z');const storage={getItem:(key:string)=>map.get(key)??null,setItem:(key:string,value:string)=>{map.set(key,value);}};return {repo:new LocalRepository(storage,()=>now),storage,now:()=>now,advance:(ms:number)=>{now+=ms;}};}
-describe('local demonstration uses the production scenario engine',()=>{
-  it('persists choices and leads across browser reloads',async()=>{
-    const f=fixture(),id=await f.repo.simulate({kind:'dm',text:'материалы'}),s=await f.repo.load();
-    const contactId=s.conversations.find((c)=>c.id===id)!.contact_id;
-    const reloaded=new LocalRepository(f.storage,f.now);
-    await reloaded.simulate({kind:'dm',text:'Учебные материалы',contactId});
-    await reloaded.simulate({kind:'dm',text:'student@example.com',contactId});
-    expect((await reloaded.load()).contacts.find((c)=>c.id===contactId)).toMatchObject({email:'student@example.com',is_lead:true});
+function fixture() {
+  const map = new Map<string, string>();
+  let now = Date.parse('2026-10-12T09:00:00Z');
+  const storage = {
+    getItem: (key: string) => map.get(key) ?? null,
+    setItem: (key: string, value: string) => {
+      map.set(key, value);
+    },
+  };
+  return {
+    repo: new LocalRepository(storage, () => now),
+    storage,
+    now: () => now,
+    advance: (ms: number) => {
+      now += ms;
+    },
+  };
+}
+describe('local demonstration uses the production scenario engine', () => {
+  it('persists choices and leads across browser reloads', async () => {
+    const f = fixture(),
+      id = await f.repo.simulate({ kind: 'dm', text: 'материалы' }),
+      s = await f.repo.load();
+    const contactId = s.conversations.find((c) => c.id === id)!.contact_id;
+    const reloaded = new LocalRepository(f.storage, f.now);
+    await reloaded.simulate({ kind: 'dm', text: 'Учебные материалы', contactId });
+    await reloaded.simulate({ kind: 'dm', text: 'student@example.com', contactId });
+    expect((await reloaded.load()).contacts.find((c) => c.id === contactId)).toMatchObject({
+      email: 'student@example.com',
+      is_lead: true,
+    });
   });
-  it('does not open a normal window from a comment',async()=>{
-    const {repo}=fixture(),id=await repo.simulate({kind:'comment',text:'урок'}),s=await repo.load();
-    expect(s.conversations.find((c)=>c.id===id)?.window_expires_at).toBeNull();
-    expect(s.messages.filter((m)=>m.conversation_id===id&&m.direction==='out')).toHaveLength(1);
-    await expect(repo.send(id,'Здравствуйте')).rejects.toThrow('Окно');
+  it('does not open a normal window from a comment', async () => {
+    const { repo } = fixture(),
+      id = await repo.simulate({ kind: 'comment', text: 'урок' }),
+      s = await repo.load();
+    expect(s.conversations.find((c) => c.id === id)?.window_expires_at).toBeNull();
+    expect(
+      s.messages.filter((m) => m.conversation_id === id && m.direction === 'out'),
+    ).toHaveLength(1);
+    await expect(repo.send(id, 'Здравствуйте')).rejects.toThrow('Окно');
   });
-  it('pauses the bot when an operator replies',async()=>{
-    const {repo}=fixture(),id=await repo.simulate({kind:'dm',text:'прайс'}),s=await repo.load();
-    await repo.send(id,'Вам ответит команда');const count=(await repo.load()).messages.length;
-    await repo.simulate({kind:'dm',text:'Стоимость обучения',contactId:s.conversations.find((c)=>c.id===id)!.contact_id});
-    expect((await repo.load()).messages).toHaveLength(count+1);
+  it('pauses the bot when an operator replies', async () => {
+    const { repo } = fixture(),
+      id = await repo.simulate({ kind: 'dm', text: 'прайс' }),
+      s = await repo.load();
+    await repo.send(id, 'Вам ответит команда');
+    const count = (await repo.load()).messages.length;
+    await repo.simulate({
+      kind: 'dm',
+      text: 'Стоимость обучения',
+      contactId: s.conversations.find((c) => c.id === id)!.contact_id,
+    });
+    expect((await repo.load()).messages).toHaveLength(count + 1);
   });
-  it('rejects expired manual replies and deletion of a referenced material',async()=>{
-    const f=fixture(),s=await f.repo.load();f.advance(25*3600000);
-    await expect(f.repo.send(s.conversations[0].id,'test')).rejects.toThrow();
+  it('rejects expired manual replies and deletion of a referenced material', async () => {
+    const f = fixture(),
+      s = await f.repo.load();
+    f.advance(25 * 3600000);
+    await expect(f.repo.send(s.conversations[0].id, 'test')).rejects.toThrow();
     await expect(f.repo.deleteMaterial(s.materials[0].id)).rejects.toThrow('используется');
   });
 });

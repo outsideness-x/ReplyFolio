@@ -1,6 +1,23 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { BookOpen, ChevronRight, FlaskConical, LayoutDashboard, LogOut, Menu, MessagesSquare, Search, Settings, Users, Workflow, X, ArrowUpRight, CheckCircle2, AlertCircle, ArrowRight } from 'lucide-react';
+import {
+  BookOpen,
+  ChevronRight,
+  FlaskConical,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  MessagesSquare,
+  Search,
+  Settings,
+  Users,
+  Workflow,
+  X,
+  ArrowUpRight,
+  CheckCircle2,
+  AlertCircle,
+  ArrowRight,
+} from 'lucide-react';
 import { LocalRepository } from './data/local.ts';
 import { configurationError, supabase, SupabaseRepository } from './data/supabase.ts';
 import type { Repository } from './data/repository.ts';
@@ -13,37 +30,451 @@ import { Flows } from './pages/Flows.tsx';
 import { Lab } from './pages/Lab.tsx';
 import { Settings as SettingsPage } from './pages/Settings.tsx';
 import { Badge, Loading, UIContext, type Page } from './ui.tsx';
-const pages=[{id:'dashboard',title:'Обзор',icon:LayoutDashboard},{id:'inbox',title:'Диалоги',icon:MessagesSquare},{id:'flows',title:'Сценарии',icon:Workflow},{id:'materials',title:'Материалы',icon:BookOpen},{id:'leads',title:'Заявки',icon:Users},{id:'lab',title:'Симулятор',icon:FlaskConical},{id:'settings',title:'Настройки',icon:Settings}]as const;
-const local=new LocalRepository(window.localStorage);
-function initialPage():Page{const value=location.hash.replace('#/','').split('?')[0];return pages.some((p)=>p.id===value)?value as Page:'dashboard';}
-function Brand(){return <div className="brand"><img src="/favicon.svg" alt=""/><span>Reply<span>Folio</span></span></div>;}
-export default function App(){
-  const [session,setSession]=useState<Session|null|undefined>(supabase?undefined:null),[workspace,setWorkspace]=useState<string|null>(null),[error,setError]=useState(''),[finding,setFinding]=useState(false);
-  useEffect(()=>{if(!supabase)return;void supabase.auth.getSession().then(({data,error})=>{if(error)setError('Не удалось восстановить сессию.');setSession(data.session);});const {data}=supabase.auth.onAuthStateChange((_event,s)=>setSession(s));return()=>data.subscription.unsubscribe();},[]);
-  useEffect(()=>{if(!supabase||!session){setWorkspace(null);return;}let cancelled=false;setFinding(true);void supabase.from('workspaces').select('id').limit(1).maybeSingle().then(({data,error})=>{if(cancelled)return;if(error)setError('Рабочее пространство не загрузилось. Примените миграции Supabase из инструкции.');else{setWorkspace(data?.id??null);setError('');}setFinding(false);});return()=>{cancelled=true;};},[session?.user.id]);
-  const repo=useMemo(()=>workspace?new SupabaseRepository(workspace):local,[workspace]);
-  if(configurationError)return <div className="auth-screen"><section className="auth-card"><Brand/><h1>Проверьте подключение</h1><p>{configurationError}</p></section></div>;
-  if(supabase&&(session===undefined||finding))return <Loading/>;
-  if(supabase&&!session)return <div className="auth-screen"><section className="auth-card"><Brand/><Badge>ВАШ INSTAGRAM, В ПОРЯДКЕ</Badge><h1>Каждый диалог<br/>ведёт к возможности.</h1><p>Сценарии, учебные материалы и заявки — в одном рабочем пространстве.</p><button className="button primary full" onClick={async()=>{const {error}=await supabase!.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin}});if(error)setError('Не удалось открыть вход через Google. Проверьте настройки Auth.');}}><span className="google-letter">G</span>Войти через Google<ArrowRight size={17}/></button>{error&&<p className="error-text">{error}</p>}<small>Доступ к данным проверяется для каждого рабочего пространства.</small></section><div className="auth-decoration"><MessagesSquare size={90}/><h2>Ответьте вовремя.<br/>Помогите учиться.</h2><span>REPLYFOLIO / DIRECT AUTOMATION</span></div></div>;
-  if(supabase&&!workspace)return <Onboarding error={error} onCreated={setWorkspace}/>;
-  return <WorkspaceApp repo={repo}/>;
+const pages = [
+  { id: 'dashboard', title: 'Обзор', icon: LayoutDashboard },
+  { id: 'inbox', title: 'Диалоги', icon: MessagesSquare },
+  { id: 'flows', title: 'Сценарии', icon: Workflow },
+  { id: 'materials', title: 'Материалы', icon: BookOpen },
+  { id: 'leads', title: 'Заявки', icon: Users },
+  { id: 'lab', title: 'Симулятор', icon: FlaskConical },
+  { id: 'settings', title: 'Настройки', icon: Settings },
+] as const;
+const local = new LocalRepository(window.localStorage);
+function initialPage(): Page {
+  const value = location.hash.replace('#/', '').split('?')[0];
+  return pages.some((p) => p.id === value) ? (value as Page) : 'dashboard';
 }
-function Onboarding({error,onCreated}:{error:string;onCreated:(id:string)=>void}){const [name,setName]=useState('Моя EdTech команда'),[message,setMessage]=useState(error),[busy,setBusy]=useState(false);return <div className="auth-screen"><section className="auth-card"><Brand/><h1>Ваше рабочее пространство</h1><p>Начните с названия команды. Instagram можно подключить следующим шагом.</p><form onSubmit={async(e)=>{e.preventDefault();setBusy(true);const {data,error}=await supabase!.rpc('create_workspace',{workspace_name:name.trim()});if(error)setMessage('Не удалось создать пространство. Проверьте миграции базы.');else onCreated(data);setBusy(false);}}><label>Название<input value={name} onChange={(e)=>setName(e.target.value)} required maxLength={120}/></label><button className="button primary full" disabled={busy||!name.trim()}>Создать пространство<ArrowRight size={16}/></button></form>{message&&<p className="error-text">{message}</p>}<button className="text-button" onClick={()=>void supabase!.auth.signOut()}>Выйти</button></section></div>;}
-function WorkspaceApp({repo}:{repo:Repository}){
-  const [data,setData]=useState<Snapshot|null>(null),[page,setPage]=useState<Page>(initialPage),[loadError,setLoadError]=useState(''),[toast,setToast]=useState(''),[busy,setBusy]=useState(false),[mobile,setMobile]=useState(false),[query,setQuery]=useState(''),[selectedConversation,setSelectedConversation]=useState<string|null>(null);
-  const navigate=(value:Page)=>{location.hash='/'+value;setPage(value);setMobile(false);};
-  useEffect(()=>{const fn=()=>setPage(initialPage());window.addEventListener('hashchange',fn);return()=>window.removeEventListener('hashchange',fn);},[]);
-  useEffect(()=>{let active=true;let timer:ReturnType<typeof setTimeout>;const reload=()=>{clearTimeout(timer);timer=setTimeout(()=>{void repo.load().then((s)=>{if(active){setData(s);setLoadError('');}}).catch((e)=>{if(active)setLoadError(e.message);});},50);};reload();const unsubscribe=repo.subscribe(reload);const interval=repo.processDue?setInterval(()=>{void repo.processDue?.().catch(()=>undefined);},30000):undefined;return()=>{active=false;clearTimeout(timer);unsubscribe();clearInterval(interval);};},[repo]);
-  useEffect(()=>{if(!toast)return;const timer=setTimeout(()=>setToast(''),6000);return()=>clearTimeout(timer);},[toast]);
-  useEffect(()=>{const status=new URL(location.href).searchParams.get('instagram');if(status){setToast(status==='connected'?'Instagram подключён.':'Подключение не завершено. Проверьте настройки Meta и повторите вход.');history.replaceState(null,'',location.pathname+location.hash);}},[]);
-  async function perform(action:()=>Promise<unknown>,message?:string){setBusy(true);try{await action();setData(await repo.load());if(message)setToast(message);return true;}catch(e){setToast(e instanceof Error?e.message:'Не удалось выполнить операцию.');return false;}finally{setBusy(false);}}
-  if(!data)return loadError?<div className="auth-screen"><section className="auth-card"><Brand/><h1>Не удалось загрузить кабинет</h1><p>{loadError}</p><button className="button primary" onClick={()=>location.reload()}>Повторить</button></section></div>:<Loading/>;
-  const unread=data.conversations.reduce((sum,c)=>sum+c.unread_count,0);
-  return <UIContext.Provider value={{data,repo,perform,navigate,openInbox:(id)=>{setSelectedConversation(id);navigate('inbox');},notify:setToast,busy}}><div className="app-shell"><aside className={`sidebar ${mobile?'mobile-open':''}`}><div className="sidebar-brand"><Brand/><button className="mobile-only icon-button" aria-label="Закрыть меню" onClick={()=>setMobile(false)}><X size={20}/></button></div><button className="workspace-switch" onClick={()=>navigate('settings')}><span className="workspace-monogram">{data.workspace.name[0]}</span><div><strong>{data.workspace.name}</strong><small>{repo.mode==='demo'?'Демонстрационный режим':'Рабочее пространство'}</small></div><ChevronRight size={15}/></button><div className="nav-label">УПРАВЛЕНИЕ</div><nav>{pages.map((p)=><button key={p.id} className={`nav-item ${page===p.id?'active':''}`} onClick={()=>navigate(p.id)}><p.icon size={19}/><span>{p.title}</span>{p.id==='inbox'&&unread>0&&<span className="nav-count">{unread}</span>}{p.id==='lab'&&<span className="nav-mini">TEST</span>}</button>)}</nav><div className="sidebar-bottom"><div className="connection-small"><span className={`status-dot ${data.account?.status==='connected'?'green':'gray'}`}/><span>{repo.mode==='demo'?'Локальный симулятор':data.account?.status==='connected'?'Instagram подключён':'Instagram не подключён'}</span></div><button className="help-card" onClick={()=>navigate('settings')}><span className="help-icon"><BookOpen size={18}/></span><div><strong>Готовы подключить Instagram?</strong><small>Настройка шаг за шагом</small></div><ArrowUpRight size={16}/></button><div className="sidebar-version">REPLYFOLIO <span>v0.1</span></div></div></aside>{mobile&&<button className="sidebar-scrim" aria-label="Закрыть меню" onClick={()=>setMobile(false)}/>}
-    <div className="main-shell"><header className="topbar"><div className="breadcrumb"><button className="mobile-only icon-button" aria-label="Открыть меню" onClick={()=>setMobile(true)}><Menu size={22}/></button><span>Рабочее пространство</span><ChevronRight size={14}/><strong>{pages.find((p)=>p.id===page)?.title}</strong></div><div className="topbar-actions"><form className="global-search" onSubmit={(e)=>{e.preventDefault();navigate('inbox');}}><Search size={16}/><input aria-label="Поиск контактов" placeholder="Поиск контактов…" value={query} onChange={(e)=>setQuery(e.target.value)}/><kbd>↵</kbd></form><span className="owner-avatar">RF</span></div></header>
-      {repo.mode==='demo'&&<div className="demo-banner"><FlaskConical size={15}/><span><strong>Демо-среда.</strong> Данные хранятся в этом браузере; сообщения в Instagram не отправляются.</span><button onClick={()=>navigate('settings')}>Подключить сервисы<ArrowRight size={14}/></button></div>}
-      {loadError&&<div className="inline-alert"><AlertCircle size={16}/>{loadError}</div>}
-      <main className={`workspace-main ${page==='inbox'?'inbox-main':''}`}>{page==='dashboard'?<Dashboard/>:page==='inbox'?<Inbox selectedId={selectedConversation} query={query}/>:page==='materials'?<Materials/>:page==='leads'?<Leads/>:page==='flows'?<Flows/>:page==='lab'?<Lab/>:<SettingsPage/>}</main><footer className="app-footer"><span>ReplyFolio · Из Direct в заявку</span>{supabase&&<button className="text-button" onClick={()=>void supabase!.auth.signOut()}><LogOut size={14}/>Выйти</button>}<span>{repo.mode==='demo'?'LOCAL DEMO':'SUPABASE CONNECTED'}</span></footer></div>
-    {toast&&<div className="toast" role="alert"><CheckCircle2 size={19}/><span>{toast}</span><button className="icon-button" aria-label="Закрыть уведомление" onClick={()=>setToast('')}><X size={16}/></button></div>}
-  </div></UIContext.Provider>;
+function Brand() {
+  return (
+    <div className="brand">
+      <img src="/favicon.svg" alt="" />
+      <span>
+        Reply<span>Folio</span>
+      </span>
+    </div>
+  );
+}
+export default function App() {
+  const [session, setSession] = useState<Session | null | undefined>(supabase ? undefined : null),
+    [workspace, setWorkspace] = useState<string | null>(null),
+    [error, setError] = useState(''),
+    [finding, setFinding] = useState(false);
+  useEffect(() => {
+    if (!supabase) return;
+    void supabase.auth.getSession().then(({ data, error }) => {
+      if (error) setError('Не удалось восстановить сессию.');
+      setSession(data.session);
+    });
+    const { data } = supabase.auth.onAuthStateChange((_event, s) => setSession(s));
+    return () => data.subscription.unsubscribe();
+  }, []);
+  useEffect(() => {
+    if (!supabase || !session) {
+      setWorkspace(null);
+      return;
+    }
+    let cancelled = false;
+    setFinding(true);
+    void supabase
+      .from('workspaces')
+      .select('id')
+      .limit(1)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error)
+          setError(
+            'Рабочее пространство не загрузилось. Примените миграции Supabase из инструкции.',
+          );
+        else {
+          setWorkspace(data?.id ?? null);
+          setError('');
+        }
+        setFinding(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.user.id]);
+  const repo = useMemo(() => (workspace ? new SupabaseRepository(workspace) : local), [workspace]);
+  if (configurationError)
+    return (
+      <div className="auth-screen">
+        <section className="auth-card">
+          <Brand />
+          <h1>Проверьте подключение</h1>
+          <p>{configurationError}</p>
+        </section>
+      </div>
+    );
+  if (supabase && (session === undefined || finding)) return <Loading />;
+  if (supabase && !session)
+    return (
+      <div className="auth-screen">
+        <section className="auth-card">
+          <Brand />
+          <Badge>ВАШ INSTAGRAM, В ПОРЯДКЕ</Badge>
+          <h1>
+            Каждый диалог
+            <br />
+            ведёт к возможности.
+          </h1>
+          <p>Сценарии, учебные материалы и заявки — в одном рабочем пространстве.</p>
+          <button
+            className="button primary full"
+            onClick={async () => {
+              const { error } = await supabase!.auth.signInWithOAuth({
+                provider: 'google',
+                options: { redirectTo: location.origin },
+              });
+              if (error)
+                setError('Не удалось открыть вход через Google. Проверьте настройки Auth.');
+            }}
+          >
+            <span className="google-letter">G</span>Войти через Google
+            <ArrowRight size={17} />
+          </button>
+          {error && <p className="error-text">{error}</p>}
+          <small>Доступ к данным проверяется для каждого рабочего пространства.</small>
+        </section>
+        <div className="auth-decoration">
+          <MessagesSquare size={90} />
+          <h2>
+            Ответьте вовремя.
+            <br />
+            Помогите учиться.
+          </h2>
+          <span>REPLYFOLIO / DIRECT AUTOMATION</span>
+        </div>
+      </div>
+    );
+  if (supabase && !workspace) return <Onboarding error={error} onCreated={setWorkspace} />;
+  return <WorkspaceApp repo={repo} />;
+}
+function Onboarding({ error, onCreated }: { error: string; onCreated: (id: string) => void }) {
+  const [name, setName] = useState('Моя EdTech команда'),
+    [message, setMessage] = useState(error),
+    [busy, setBusy] = useState(false);
+  return (
+    <div className="auth-screen">
+      <section className="auth-card">
+        <Brand />
+        <h1>Ваше рабочее пространство</h1>
+        <p>Начните с названия команды. Instagram можно подключить следующим шагом.</p>
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            setBusy(true);
+            const { data, error } = await supabase!.rpc('create_workspace', {
+              workspace_name: name.trim(),
+            });
+            if (error) setMessage('Не удалось создать пространство. Проверьте миграции базы.');
+            else onCreated(data);
+            setBusy(false);
+          }}
+        >
+          <label>
+            Название
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              maxLength={120}
+            />
+          </label>
+          <button className="button primary full" disabled={busy || !name.trim()}>
+            Создать пространство
+            <ArrowRight size={16} />
+          </button>
+        </form>
+        {message && <p className="error-text">{message}</p>}
+        <button className="text-button" onClick={() => void supabase!.auth.signOut()}>
+          Выйти
+        </button>
+      </section>
+    </div>
+  );
+}
+function WorkspaceApp({ repo }: { repo: Repository }) {
+  const [data, setData] = useState<Snapshot | null>(null),
+    [page, setPage] = useState<Page>(initialPage),
+    [loadError, setLoadError] = useState(''),
+    [toast, setToast] = useState(''),
+    [busy, setBusy] = useState(false),
+    [mobile, setMobile] = useState(false),
+    [query, setQuery] = useState(''),
+    [selectedConversation, setSelectedConversation] = useState<string | null>(null);
+  const navigate = (value: Page) => {
+    location.hash = '/' + value;
+    setPage(value);
+    setMobile(false);
+  };
+  useEffect(() => {
+    const fn = () => setPage(initialPage());
+    window.addEventListener('hashchange', fn);
+    return () => window.removeEventListener('hashchange', fn);
+  }, []);
+  useEffect(() => {
+    let active = true;
+    let timer: ReturnType<typeof setTimeout>;
+    const reload = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        void repo
+          .load()
+          .then((s) => {
+            if (active) {
+              setData(s);
+              setLoadError('');
+            }
+          })
+          .catch((e) => {
+            if (active) setLoadError(e.message);
+          });
+      }, 50);
+    };
+    reload();
+    const unsubscribe = repo.subscribe(reload);
+    const interval = repo.processDue
+      ? setInterval(() => {
+          void repo.processDue?.().catch(() => undefined);
+        }, 30000)
+      : undefined;
+    return () => {
+      active = false;
+      clearTimeout(timer);
+      unsubscribe();
+      clearInterval(interval);
+    };
+  }, [repo]);
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(''), 6000);
+    return () => clearTimeout(timer);
+  }, [toast]);
+  useEffect(() => {
+    const status = new URL(location.href).searchParams.get('instagram');
+    if (status) {
+      setToast(
+        status === 'connected'
+          ? 'Instagram подключён.'
+          : 'Подключение не завершено. Проверьте настройки Meta и повторите вход.',
+      );
+      history.replaceState(null, '', location.pathname + location.hash);
+    }
+  }, []);
+  async function perform(action: () => Promise<unknown>, message?: string) {
+    setBusy(true);
+    try {
+      await action();
+      setData(await repo.load());
+      if (message) setToast(message);
+      return true;
+    } catch (e) {
+      setToast(e instanceof Error ? e.message : 'Не удалось выполнить операцию.');
+      return false;
+    } finally {
+      setBusy(false);
+    }
+  }
+  if (!data)
+    return loadError ? (
+      <div className="auth-screen">
+        <section className="auth-card">
+          <Brand />
+          <h1>Не удалось загрузить кабинет</h1>
+          <p>{loadError}</p>
+          <button className="button primary" onClick={() => location.reload()}>
+            Повторить
+          </button>
+        </section>
+      </div>
+    ) : (
+      <Loading />
+    );
+  const unread = data.conversations.reduce((sum, c) => sum + c.unread_count, 0);
+  return (
+    <UIContext.Provider
+      value={{
+        data,
+        repo,
+        perform,
+        navigate,
+        openInbox: (id) => {
+          setSelectedConversation(id);
+          navigate('inbox');
+        },
+        notify: setToast,
+        busy,
+      }}
+    >
+      <div className="app-shell">
+        <aside className={`sidebar ${mobile ? 'mobile-open' : ''}`}>
+          <div className="sidebar-brand">
+            <Brand />
+            <button
+              className="mobile-only icon-button"
+              aria-label="Закрыть меню"
+              onClick={() => setMobile(false)}
+            >
+              <X size={20} />
+            </button>
+          </div>
+          <button className="workspace-switch" onClick={() => navigate('settings')}>
+            <span className="workspace-monogram">{data.workspace.name[0]}</span>
+            <div>
+              <strong>{data.workspace.name}</strong>
+              <small>
+                {repo.mode === 'demo' ? 'Демонстрационный режим' : 'Рабочее пространство'}
+              </small>
+            </div>
+            <ChevronRight size={15} />
+          </button>
+          <div className="nav-label">УПРАВЛЕНИЕ</div>
+          <nav>
+            {pages.map((p) => (
+              <button
+                key={p.id}
+                className={`nav-item ${page === p.id ? 'active' : ''}`}
+                onClick={() => navigate(p.id)}
+              >
+                <p.icon size={19} />
+                <span>{p.title}</span>
+                {p.id === 'inbox' && unread > 0 && <span className="nav-count">{unread}</span>}
+                {p.id === 'lab' && <span className="nav-mini">TEST</span>}
+              </button>
+            ))}
+          </nav>
+          <div className="sidebar-bottom">
+            <div className="connection-small">
+              <span
+                className={`status-dot ${data.account?.status === 'connected' ? 'green' : 'gray'}`}
+              />
+              <span>
+                {repo.mode === 'demo'
+                  ? 'Локальный симулятор'
+                  : data.account?.status === 'connected'
+                    ? 'Instagram подключён'
+                    : 'Instagram не подключён'}
+              </span>
+            </div>
+            <button className="help-card" onClick={() => navigate('settings')}>
+              <span className="help-icon">
+                <BookOpen size={18} />
+              </span>
+              <div>
+                <strong>Готовы подключить Instagram?</strong>
+                <small>Настройка шаг за шагом</small>
+              </div>
+              <ArrowUpRight size={16} />
+            </button>
+            <div className="sidebar-version">
+              REPLYFOLIO <span>v0.1</span>
+            </div>
+          </div>
+        </aside>
+        {mobile && (
+          <button
+            className="sidebar-scrim"
+            aria-label="Закрыть меню"
+            onClick={() => setMobile(false)}
+          />
+        )}
+        <div className="main-shell">
+          <header className="topbar">
+            <div className="breadcrumb">
+              <button
+                className="mobile-only icon-button"
+                aria-label="Открыть меню"
+                onClick={() => setMobile(true)}
+              >
+                <Menu size={22} />
+              </button>
+              <span>Рабочее пространство</span>
+              <ChevronRight size={14} />
+              <strong>{pages.find((p) => p.id === page)?.title}</strong>
+            </div>
+            <div className="topbar-actions">
+              <form
+                className="global-search"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  navigate('inbox');
+                }}
+              >
+                <Search size={16} />
+                <input
+                  aria-label="Поиск контактов"
+                  placeholder="Поиск контактов…"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                />
+                <kbd>↵</kbd>
+              </form>
+              <span className="owner-avatar">RF</span>
+            </div>
+          </header>
+          {repo.mode === 'demo' && (
+            <div className="demo-banner">
+              <FlaskConical size={15} />
+              <span>
+                <strong>Демо-среда.</strong> Данные хранятся в этом браузере; сообщения в Instagram
+                не отправляются.
+              </span>
+              <button onClick={() => navigate('settings')}>
+                Подключить сервисы
+                <ArrowRight size={14} />
+              </button>
+            </div>
+          )}
+          {loadError && (
+            <div className="inline-alert">
+              <AlertCircle size={16} />
+              {loadError}
+            </div>
+          )}
+          <main className={`workspace-main ${page === 'inbox' ? 'inbox-main' : ''}`}>
+            {page === 'dashboard' ? (
+              <Dashboard />
+            ) : page === 'inbox' ? (
+              <Inbox selectedId={selectedConversation} query={query} />
+            ) : page === 'materials' ? (
+              <Materials />
+            ) : page === 'leads' ? (
+              <Leads />
+            ) : page === 'flows' ? (
+              <Flows />
+            ) : page === 'lab' ? (
+              <Lab />
+            ) : (
+              <SettingsPage />
+            )}
+          </main>
+          <footer className="app-footer">
+            <span>ReplyFolio · Из Direct в заявку</span>
+            {supabase && (
+              <button className="text-button" onClick={() => void supabase!.auth.signOut()}>
+                <LogOut size={14} />
+                Выйти
+              </button>
+            )}
+            <span>{repo.mode === 'demo' ? 'LOCAL DEMO' : 'SUPABASE CONNECTED'}</span>
+          </footer>
+        </div>
+        {toast && (
+          <div className="toast" role="alert">
+            <CheckCircle2 size={19} />
+            <span>{toast}</span>
+            <button
+              className="icon-button"
+              aria-label="Закрыть уведомление"
+              onClick={() => setToast('')}
+            >
+              <X size={16} />
+            </button>
+          </div>
+        )}
+      </div>
+    </UIContext.Provider>
+  );
 }

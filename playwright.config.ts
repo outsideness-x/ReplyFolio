@@ -1,6 +1,13 @@
 import { defineConfig } from '@playwright/test';
 export default defineConfig({
-  testDir: './e2e', fullyParallel: false, reporter: 'list',
+  testDir: './e2e',
+  fullyParallel: false,
+  reporter: 'list',
   use: { baseURL: 'http://127.0.0.1:5173', headless: true, browserName: 'chromium' },
-  webServer: { command: 'npm run dev', url: 'http://127.0.0.1:5173', reuseExistingServer: true, timeout: 30000 },
+  webServer: {
+    command: 'npm run dev',
+    url: 'http://127.0.0.1:5173',
+    reuseExistingServer: true,
+    timeout: 30000,
+  },
 });
