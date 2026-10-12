@@ -2,6 +2,7 @@
 @import './pages.css';
 @import './flows.css';
 @import './landing.css';
+@import './premium.css';
 :root {
   font-family:
     Inter,

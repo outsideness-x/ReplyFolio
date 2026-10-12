@@ -16,6 +16,8 @@ import {
   CheckCircle2,
   AlertCircle,
   ArrowRight,
+  Moon,
+  Sun,
 } from 'lucide-react';
 import { LocalRepository } from './data/local.ts';
 import { SupabaseRepository } from './data/supabase.ts';
@@ -24,6 +26,7 @@ import type { Repository } from './data/repository.ts';
 import type { Snapshot } from '../shared/types.ts';
 import { Brand } from './components/Brand.tsx';
 import { MfaChallenge } from './components/MfaChallenge.tsx';
+import { CommandPalette } from './components/CommandPalette.tsx';
 import { Landing } from './pages/Landing.tsx';
 import { Dashboard } from './pages/Dashboard.tsx';
 import { Inbox } from './pages/Inbox.tsx';
@@ -85,6 +88,20 @@ export default function App() {
   return <Landing access={access} onAccess={setAccess} ready={ready} />;
 }
 function WorkspaceApp({ repo }: { repo: Repository }) {
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    try {
+      return localStorage.getItem('replyfolio.theme') === 'dark' ? 'dark' : 'light';
+    } catch {
+      return 'light';
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem('replyfolio.theme', theme);
+    } catch {
+      /* A theme preference is optional. */
+    }
+  }, [theme]);
   const [stepUp, setStepUp] = useState(false);
   useEffect(() => {
     const open = () => setStepUp(true);
@@ -204,7 +221,7 @@ function WorkspaceApp({ repo }: { repo: Repository }) {
         busy,
       }}
     >
-      <div className="app-shell">
+      <div className="app-shell" data-theme={theme}>
         {stepUp && (
           <Modal title="Подтвердите вход" onClose={() => setStepUp(false)}>
             <MfaChallenge
@@ -301,22 +318,14 @@ function WorkspaceApp({ repo }: { repo: Repository }) {
               <strong>{pages.find((p) => p.id === page)?.title}</strong>
             </div>
             <div className="topbar-actions">
-              <form
-                className="global-search"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  navigate('inbox');
-                }}
+              <CommandPalette />
+              <button
+                className="icon-button theme-toggle"
+                aria-label={theme === 'light' ? 'Тёмная тема' : 'Светлая тема'}
+                onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
               >
-                <Search size={16} />
-                <input
-                  aria-label="Поиск контактов"
-                  placeholder="Поиск контактов…"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                />
-                <kbd>↵</kbd>
-              </form>
+                {theme === 'light' ? <Moon size={17} /> : <Sun size={17} />}
+              </button>
               <span className="owner-avatar">RF</span>
             </div>
           </header>
@@ -358,6 +367,12 @@ function WorkspaceApp({ repo }: { repo: Repository }) {
           </main>
           <footer className="app-footer">
             <span>ReplyFolio · Из Direct в заявку</span>
+            {repo.mode === 'demo' && (
+              <a href="/">
+                На главную
+                <ArrowUpRight size={12} />
+              </a>
+            )}
             {repo.mode === 'live' && (
               <button
                 className="text-button"

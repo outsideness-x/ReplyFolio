@@ -93,8 +93,9 @@ export function Dashboard() {
                 : 'Подключение Instagram'}
           </Badge>
           <h2>
-            Всё начинается
-            <br />с диалога.
+            Ваш Direct.
+            <br />
+            <span>Без суеты.</span>
           </h2>
           <p>Материалы, ответы и заявки — в одном потоке.</p>
           <button
@@ -106,7 +107,25 @@ export function Dashboard() {
           </button>
         </div>
         <div className="welcome-minimal" aria-hidden="true">
-          <MessagesSquare size={72} strokeWidth={0.7} />
+          <div className="welcome-stack">
+            <span>
+              <MessagesSquare size={17} />
+              Новый интерес
+              <i />
+            </span>
+            <div />
+            <span>
+              <BookOpen size={17} />
+              Полезный ответ
+              <i />
+            </span>
+            <div />
+            <span>
+              <Users size={17} />
+              Следующий шаг
+              <i />
+            </span>
+          </div>
         </div>
       </section>
       <div className="stats-grid">
