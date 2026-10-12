@@ -14,6 +14,7 @@ beforeAll(async () => {
     create schema storage; create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
     create table storage.objects(id uuid primary key,name text,bucket_id text); alter table storage.objects enable row level security;`);
   await db.exec(await readFile(new URL('../supabase/migrations/202610120001_core.sql', import.meta.url), 'utf8'));
+  await db.exec(await readFile(new URL('../supabase/migrations/202610120002_operations.sql', import.meta.url), 'utf8'));
   await asUser(userA); wsA=(await db.query<{ create_workspace:string }>("select public.create_workspace('Команда A')")).rows[0].create_workspace;
   await asUser(userB); wsB=(await db.query<{ create_workspace:string }>("select public.create_workspace('Команда B')")).rows[0].create_workspace;
 },30000);
@@ -55,5 +56,30 @@ describe('real PostgreSQL permissions and queue transactions', () => {
     expect((await db.query<{ service_lock:boolean }>("select public.service_lock('conversation', $1)",[userB])).rows[0].service_lock).toBe(false);
     await db.query("select public.service_unlock('conversation',$1)",[userA]);
     expect((await db.query<{ service_lock:boolean }>("select public.service_lock('conversation', $1)",[userB])).rows[0].service_lock).toBe(true);
+  });
+  it('ingests a retried incoming event once and opens an ordinary reply window', async () => {
+    await db.exec('reset role');
+    const account='33333333-3333-4333-8333-333333333333';
+    await db.query("insert into public.instagram_accounts(id,workspace_id,ig_user_id,status) values($1,$2,'100','connected')",[account,wsA]);
+    const params=[account,'200','прайс','stable-mid','mid.1',new Date().toISOString(),'dm'];
+    const first=(await db.query<{service_ingest:{conversation:{id:string;unread_count:number;window_expires_at:string}}}>('select public.service_ingest($1,$2,$3,$4,$5,$6,$7)',params)).rows[0].service_ingest;
+    const retry=(await db.query<{service_ingest:{conversation:{id:string;unread_count:number}}}>('select public.service_ingest($1,$2,$3,$4,$5,$6,$7)',params)).rows[0].service_ingest;
+    expect(first.conversation.window_expires_at).toBeTruthy();
+    expect(first.conversation.id).toBe(retry.conversation.id);
+    expect(retry.conversation.unread_count).toBe(1);
+  });
+  it('atomically applies a handoff and queues its final notice only once', async () => {
+    await db.exec('reset role');
+    const f='44444444-4444-4444-8444-444444444444';
+    await db.query("insert into public.flows(id,workspace_id,name,trigger_kind,definition) values($1,$2,'Прайс','dm_keyword','{}')",[f,wsA]);
+    const c=(await db.query<{id:string}>('select id from public.conversations where workspace_id=$1',[wsA])).rows[0].id;
+    const result={actions:[{text:'Передаю менеджеру',quickReplies:[]}],variables:{email:'student@example.com'},tags:['Обучение'],lead:true,handoff:true,session:null};
+    const params=[c,f,'apply-once',JSON.stringify(result)];
+    expect((await db.query<{service_apply_result:boolean}>('select public.service_apply_result($1,$2,$3,$4::jsonb)',params)).rows[0].service_apply_result).toBe(true);
+    expect((await db.query<{service_apply_result:boolean}>('select public.service_apply_result($1,$2,$3,$4::jsonb)',params)).rows[0].service_apply_result).toBe(false);
+    expect((await db.query<{mode:string}>('select mode from public.conversations where id=$1',[c])).rows[0].mode).toBe('human');
+    const jobs=(await db.query<{payload:{allowHandoff:boolean}}> ("select payload from private.jobs where kind='send'")).rows;
+    expect(jobs).toHaveLength(1);expect(jobs[0].payload.allowHandoff).toBe(true);
+    expect((await db.query<{email:string;is_lead:boolean}>('select email,is_lead from public.contacts where workspace_id=$1',[wsA])).rows[0]).toMatchObject({email:'student@example.com',is_lead:true});
   });
 });
