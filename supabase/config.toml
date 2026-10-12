@@ -1,0 +1,32 @@
+project_id = "replyfolio"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+major_version = 17
+
+[auth]
+enabled = true
+site_url = "http://localhost:5173"
+additional_redirect_urls = ["http://127.0.0.1:5173"]
+enable_signup = true
+
+[functions.instagram-connect]
+verify_jwt = false
+[functions.instagram-callback]
+verify_jwt = false
+[functions.instagram-webhook]
+verify_jwt = false
+[functions.automation-worker]
+verify_jwt = false
+[functions.workspace-api]
+verify_jwt = false
+
+# Authenticated endpoints verify the user using auth.getUser themselves.
+# Public callbacks/webhooks and the worker use their own signature/secret validation.
