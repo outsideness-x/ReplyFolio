@@ -19,8 +19,7 @@ export function Settings() {
     [confirm, setConfirm] = useState<'reset' | 'disconnect' | null>(null);
   const connected = data.account?.status === 'connected';
   useEffect(() => setName(data.workspace.name), [data.workspace.name]);
-  const publicUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-  const webhook = publicUrl ? publicUrl + '/functions/v1/instagram-webhook' : '';
+  const webhook = '';
   async function connect() {
     if (repo.mode === 'demo') {
       window.open('/setup.html', '_blank', 'noopener');

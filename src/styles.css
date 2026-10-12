@@ -1,6 +1,7 @@
 @import './workspace.css';
 @import './pages.css';
 @import './flows.css';
+@import './landing.css';
 :root {
   font-family:
     Inter,

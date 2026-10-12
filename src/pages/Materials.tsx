@@ -12,7 +12,6 @@ import {
 } from 'lucide-react';
 import type { Material } from '../../shared/types.ts';
 import { isHttpsUrl } from '../../shared/engine.ts';
-import { supabase } from '../data/supabase.ts';
 import { Badge, Empty, Modal, useUI } from '../ui.tsx';
 export function Materials() {
   const { data, repo, perform, busy, notify } = useUI(),
@@ -148,33 +147,28 @@ function MaterialEditor({ material, onClose }: { material: Material; onClose: ()
             let saved = { ...draft },
               uploaded: string | null = null;
             if (file) {
-              if (!supabase || repo.mode !== 'live')
+              if (!repo.uploadMaterial || repo.mode !== 'live')
                 throw new Error('Загрузка PDF доступна после подключения Supabase.');
               if (file.size > 25 * 1024 * 1024) throw new Error('PDF должен быть меньше 25 МБ.');
               if (new TextDecoder().decode(await file.slice(0, 5).arrayBuffer()) !== '%PDF-')
                 throw new Error('Выберите PDF-файл.');
-              const path = draft.workspace_id + '/' + crypto.randomUUID() + '.pdf';
-              const { error } = await supabase.storage
-                .from('materials')
-                .upload(path, file, { contentType: 'application/pdf', upsert: false });
-              if (error)
-                throw new Error('Не удалось загрузить PDF. Проверьте Storage и права доступа.');
-              uploaded = path;
+              const result = await repo.uploadMaterial(file);
+              uploaded = result.path;
               saved = {
                 ...saved,
-                url: supabase.storage.from('materials').getPublicUrl(path).data.publicUrl,
+                url: result.url,
                 kind: 'pdf',
-                storage_path: path,
+                storage_path: result.path,
               };
             }
             if (!isHttpsUrl(saved.url)) {
-              if (uploaded) await supabase!.storage.from('materials').remove([uploaded]);
+              if (uploaded) await repo.removeUpload?.(uploaded);
               throw new Error('Укажите HTTPS-ссылку.');
             }
             try {
               await repo.saveMaterial(saved);
             } catch (e) {
-              if (uploaded) await supabase!.storage.from('materials').remove([uploaded]);
+              if (uploaded) await repo.removeUpload?.(uploaded);
               throw e;
             }
           }, 'Материал сохранён.');

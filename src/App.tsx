@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { Session } from '@supabase/supabase-js';
 import {
   BookOpen,
   ChevronRight,
@@ -19,9 +18,13 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { LocalRepository } from './data/local.ts';
-import { configurationError, supabase, SupabaseRepository } from './data/supabase.ts';
+import { SupabaseRepository } from './data/supabase.ts';
+import { api, forceDemo, logout, type AccessState } from './data/session.ts';
 import type { Repository } from './data/repository.ts';
 import type { Snapshot } from '../shared/types.ts';
+import { Brand } from './components/Brand.tsx';
+import { MfaChallenge } from './components/MfaChallenge.tsx';
+import { Landing } from './pages/Landing.tsx';
 import { Dashboard } from './pages/Dashboard.tsx';
 import { Inbox } from './pages/Inbox.tsx';
 import { Materials } from './pages/Materials.tsx';
@@ -29,7 +32,7 @@ import { Leads } from './pages/Leads.tsx';
 import { Flows } from './pages/Flows.tsx';
 import { Lab } from './pages/Lab.tsx';
 import { Settings as SettingsPage } from './pages/Settings.tsx';
-import { Badge, Loading, UIContext, type Page } from './ui.tsx';
+import { Badge, Loading, Modal, UIContext, type Page } from './ui.tsx';
 const pages = [
   { id: 'dashboard', title: 'Обзор', icon: LayoutDashboard },
   { id: 'inbox', title: 'Диалоги', icon: MessagesSquare },
@@ -39,163 +42,55 @@ const pages = [
   { id: 'lab', title: 'Симулятор', icon: FlaskConical },
   { id: 'settings', title: 'Настройки', icon: Settings },
 ] as const;
-const local = new LocalRepository(window.localStorage);
 function initialPage(): Page {
   const value = location.hash.replace('#/', '').split('?')[0];
   return pages.some((p) => p.id === value) ? (value as Page) : 'dashboard';
 }
-function Brand() {
-  return (
-    <div className="brand">
-      <img src="/favicon.svg" alt="" />
-      <span>
-        Reply<span>Folio</span>
-      </span>
-    </div>
-  );
-}
 export default function App() {
-  const [session, setSession] = useState<Session | null | undefined>(supabase ? undefined : null),
-    [workspace, setWorkspace] = useState<string | null>(null),
-    [error, setError] = useState(''),
-    [finding, setFinding] = useState(false);
-  useEffect(() => {
-    if (!supabase) return;
-    void supabase.auth.getSession().then(({ data, error }) => {
-      if (error) setError('Не удалось восстановить сессию.');
-      setSession(data.session);
-    });
-    const { data } = supabase.auth.onAuthStateChange((_event, s) => setSession(s));
-    return () => data.subscription.unsubscribe();
-  }, []);
-  useEffect(() => {
-    if (!supabase || !session) {
-      setWorkspace(null);
-      return;
-    }
-    let cancelled = false;
-    setFinding(true);
-    void supabase
-      .from('workspaces')
-      .select('id')
-      .limit(1)
-      .maybeSingle()
-      .then(({ data, error }) => {
-        if (cancelled) return;
-        if (error)
-          setError(
-            'Рабочее пространство не загрузилось. Примените миграции Supabase из инструкции.',
-          );
-        else {
-          setWorkspace(data?.id ?? null);
-          setError('');
-        }
-        setFinding(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [session?.user.id]);
-  const repo = useMemo(() => (workspace ? new SupabaseRepository(workspace) : local), [workspace]);
-  if (configurationError)
-    return (
-      <div className="auth-screen">
-        <section className="auth-card">
-          <Brand />
-          <h1>Проверьте подключение</h1>
-          <p>{configurationError}</p>
-        </section>
-      </div>
-    );
-  if (supabase && (session === undefined || finding)) return <Loading />;
-  if (supabase && !session)
-    return (
-      <div className="auth-screen">
-        <section className="auth-card">
-          <Brand />
-          <Badge>ВАШ INSTAGRAM, В ПОРЯДКЕ</Badge>
-          <h1>
-            Каждый диалог
-            <br />
-            ведёт к возможности.
-          </h1>
-          <p>Сценарии, учебные материалы и заявки — в одном рабочем пространстве.</p>
-          <button
-            className="button primary full"
-            onClick={async () => {
-              const { error } = await supabase!.auth.signInWithOAuth({
-                provider: 'google',
-                options: { redirectTo: location.origin },
-              });
-              if (error)
-                setError('Не удалось открыть вход через Google. Проверьте настройки Auth.');
-            }}
-          >
-            <span className="google-letter">G</span>Войти через Google
-            <ArrowRight size={17} />
-          </button>
-          {error && <p className="error-text">{error}</p>}
-          <small>Доступ к данным проверяется для каждого рабочего пространства.</small>
-        </section>
-        <div className="auth-decoration">
-          <MessagesSquare size={90} />
-          <h2>
-            Ответьте вовремя.
-            <br />
-            Помогите учиться.
-          </h2>
-          <span>REPLYFOLIO / DIRECT AUTOMATION</span>
-        </div>
-      </div>
-    );
-  if (supabase && !workspace) return <Onboarding error={error} onCreated={setWorkspace} />;
-  return <WorkspaceApp repo={repo} />;
-}
-function Onboarding({ error, onCreated }: { error: string; onCreated: (id: string) => void }) {
-  const [name, setName] = useState('Моя EdTech команда'),
-    [message, setMessage] = useState(error),
-    [busy, setBusy] = useState(false);
-  return (
-    <div className="auth-screen">
-      <section className="auth-card">
-        <Brand />
-        <h1>Ваше рабочее пространство</h1>
-        <p>Начните с названия команды. Instagram можно подключить следующим шагом.</p>
-        <form
-          onSubmit={async (e) => {
-            e.preventDefault();
-            setBusy(true);
-            const { data, error } = await supabase!.rpc('create_workspace', {
-              workspace_name: name.trim(),
-            });
-            if (error) setMessage('Не удалось создать пространство. Проверьте миграции базы.');
-            else onCreated(data);
-            setBusy(false);
-          }}
-        >
-          <label>
-            Название
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              maxLength={120}
-            />
-          </label>
-          <button className="button primary full" disabled={busy || !name.trim()}>
-            Создать пространство
-            <ArrowRight size={16} />
-          </button>
-        </form>
-        {message && <p className="error-text">{message}</p>}
-        <button className="text-button" onClick={() => void supabase!.auth.signOut()}>
-          Выйти
-        </button>
-      </section>
-    </div>
+  const [access, setAccess] = useState<AccessState>({ state: 'anonymous' }),
+    [ready, setReady] = useState(false);
+  const local = useMemo(() => (forceDemo ? new LocalRepository(window.localStorage) : null), []);
+  const repo = useMemo(
+    () =>
+      access.state === 'active' && access.workspaceId
+        ? new SupabaseRepository(access.workspaceId)
+        : null,
+    [access.state, access.workspaceId],
   );
+  useEffect(() => {
+    if (forceDemo) return;
+    let active = true;
+    void api<AccessState>('auth')
+      .then((state) => {
+        if (active) {
+          setAccess(state);
+          setReady(true);
+        }
+      })
+      .catch(() => {
+        if (active) setReady(false);
+      });
+    const ended = () => {
+      setAccess({ state: 'anonymous' });
+      setReady(true);
+    };
+    window.addEventListener('replyfolio:session-ended', ended);
+    return () => {
+      active = false;
+      window.removeEventListener('replyfolio:session-ended', ended);
+    };
+  }, []);
+  if (local) return <WorkspaceApp repo={local} />;
+  if (repo) return <WorkspaceApp key={access.workspaceId} repo={repo} />;
+  return <Landing access={access} onAccess={setAccess} ready={ready} />;
 }
 function WorkspaceApp({ repo }: { repo: Repository }) {
+  const [stepUp, setStepUp] = useState(false);
+  useEffect(() => {
+    const open = () => setStepUp(true);
+    window.addEventListener('replyfolio:step-up', open);
+    return () => window.removeEventListener('replyfolio:step-up', open);
+  }, []);
   const [data, setData] = useState<Snapshot | null>(null),
     [page, setPage] = useState<Page>(initialPage),
     [loadError, setLoadError] = useState(''),
@@ -310,6 +205,16 @@ function WorkspaceApp({ repo }: { repo: Repository }) {
       }}
     >
       <div className="app-shell">
+        {stepUp && (
+          <Modal title="Подтвердите вход" onClose={() => setStepUp(false)}>
+            <MfaChallenge
+              onDone={() => {
+                setStepUp(false);
+                setToast('Вход подтверждён. Повторите действие.');
+              }}
+            />
+          </Modal>
+        )}
         <aside className={`sidebar ${mobile ? 'mobile-open' : ''}`}>
           <div className="sidebar-brand">
             <Brand />
@@ -453,8 +358,13 @@ function WorkspaceApp({ repo }: { repo: Repository }) {
           </main>
           <footer className="app-footer">
             <span>ReplyFolio · Из Direct в заявку</span>
-            {supabase && (
-              <button className="text-button" onClick={() => void supabase!.auth.signOut()}>
+            {repo.mode === 'live' && (
+              <button
+                className="text-button"
+                onClick={() =>
+                  void logout().catch(() => setToast('Не удалось выйти. Повторите действие.'))
+                }
+              >
                 <LogOut size={14} />
                 Выйти
               </button>

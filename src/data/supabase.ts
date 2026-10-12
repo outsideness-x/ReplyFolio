@@ -1,119 +1,23 @@
-import { createClient } from '@supabase/supabase-js';
 import type { Contact, Conversation, Flow, Material, Snapshot } from '../../shared/types.ts';
 import type { Repository } from './repository.ts';
-import { loadPages } from './pagination.ts';
-const url = import.meta.env.VITE_SUPABASE_URL as string | undefined,
-  key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
-function unsafeKey(value: string): boolean {
-  if (value.startsWith('sb_secret_')) return true;
-  try {
-    return (
-      JSON.parse(atob(value.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).role ===
-      'service_role'
-    );
-  } catch {
-    return false;
-  }
-}
-export const configurationError =
-  !!url !== !!key
-    ? 'Укажите оба параметра Supabase в .env.'
-    : key && unsafeKey(key)
-      ? 'В браузере разрешён только публичный ключ Supabase. Удалите серверный ключ.'
-      : url &&
-          !/^https:\/\/[a-z0-9.-]+(?::\d+)?\/?$/i.test(url) &&
-          !/^http:\/\/(localhost|127\.0\.0\.1):54321\/?$/.test(url)
-        ? 'Проверьте URL проекта Supabase.'
-        : null;
-const forceDemo =
-  typeof location !== 'undefined' && new URL(location.href).searchParams.get('demo') === '1';
-export const supabase =
-  url && key && !configurationError && !forceDemo
-    ? createClient(url, key, {
-        auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
-      })
-    : null;
+import { api } from './session.ts';
 export class SupabaseRepository implements Repository {
   mode = 'live' as const;
   constructor(private workspaceId: string) {}
-  private async call(action: string, payload: Record<string, unknown> = {}) {
-    const { data, error } = await supabase!.functions.invoke('workspace-api', {
-      body: { action, workspaceId: this.workspaceId, ...payload },
-    });
-    if (error) {
-      let message = 'Не удалось выполнить операцию. Проверьте подключение.';
-      try {
-        const body = await error.context?.json();
-        if (body?.error) message = body.error;
-      } catch {
-        /* Network failure has no JSON response. */
-      }
-      throw new Error(message);
-    }
-    if (data?.error) throw new Error(data.error);
-    return data;
+  private call<T = unknown>(action: string, payload: Record<string, unknown> = {}) {
+    return api<T>('workspace-api', { action, workspaceId: this.workspaceId, ...payload });
   }
-  async load(): Promise<Snapshot> {
-    const tables = [
-      'workspaces',
-      'contacts',
-      'conversations',
-      'messages',
-      'flows',
-      'materials',
-      'instagram_accounts',
-      'automation_runs',
-    ] as const;
-    const results = await Promise.all(
-      tables.map(async (table) => {
-        const query = () =>
-          supabase!
-            .from(table)
-            .select('*')
-            .eq(table === 'workspaces' ? 'id' : 'workspace_id', this.workspaceId);
-        if (table !== 'messages' && table !== 'automation_runs') {
-          return loadPages((from, to) => query().order('id').range(from, to));
-        }
-        const { data, error } = await query()
-          .order('created_at', { ascending: false })
-          .limit(table === 'messages' ? 1000 : 100);
-        if (error)
-          throw new Error('Не удалось загрузить данные. Проверьте миграции и права доступа.');
-        return data ?? [];
-      }),
-    );
-    const [ws, contacts, conversations, messages, flows, materials, account, runs] = results;
-    if (!ws[0]) throw new Error('Рабочее пространство недоступно.');
-    return {
-      workspace: ws[0],
-      contacts,
-      conversations,
-      messages: messages.reverse(),
-      flows,
-      materials,
-      account: account[0] ?? null,
-      runs,
-    } as Snapshot;
+  load() {
+    return this.call<Snapshot>('read');
   }
   subscribe(listener: () => void) {
-    const channel = supabase!.channel('workspace-' + this.workspaceId);
-    for (const table of [
-      'contacts',
-      'conversations',
-      'messages',
-      'flows',
-      'materials',
-      'instagram_accounts',
-      'automation_runs',
-    ])
-      channel.on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table, filter: `workspace_id=eq.${this.workspaceId}` },
-        listener,
-      );
-    channel.subscribe();
+    const timer = setInterval(() => {
+      if (document.visibilityState === 'visible') listener();
+    }, 15000);
+    window.addEventListener('focus', listener);
     return () => {
-      void supabase!.removeChannel(channel);
+      clearInterval(timer);
+      window.removeEventListener('focus', listener);
     };
   }
   async saveFlow(flow: Flow) {
@@ -141,14 +45,34 @@ export class SupabaseRepository implements Repository {
     await this.call('rename-workspace', { name });
   }
   async connect() {
-    const { data, error } = await supabase!.functions.invoke('instagram-connect', {
-      body: { workspaceId: this.workspaceId },
+    const result = await api<{ url: string }>('instagram-connect', {
+      workspaceId: this.workspaceId,
     });
-    if (error || !data?.url)
-      throw new Error('Не удалось начать подключение. Проверьте настройки Meta.');
-    return data.url as string;
+    return result.url;
   }
   async disconnect() {
     await this.call('disconnect');
+  }
+  async uploadMaterial(file: File) {
+    if (
+      file.size > 25 * 1024 * 1024 ||
+      new TextDecoder().decode(await file.slice(0, 5).arrayBuffer()) !== '%PDF-'
+    )
+      throw new Error('Выберите PDF до 25 МБ.');
+    const result = await this.call<{ path: string; uploadUrl: string; url: string }>('upload-url');
+    const url = new URL(result.uploadUrl);
+    if (url.protocol !== 'https:' || !url.hostname.endsWith('.supabase.co'))
+      throw new Error('Загрузка недоступна.');
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: { 'content-type': 'application/pdf', 'x-upsert': 'false' },
+      body: file,
+      credentials: 'omit',
+    });
+    if (!response.ok) throw new Error('Не удалось загрузить PDF.');
+    return { path: result.path, url: result.url };
+  }
+  async removeUpload(path: string) {
+    await this.call('remove-upload', { path });
   }
 }

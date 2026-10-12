@@ -20,6 +20,8 @@ export interface Repository {
   renameWorkspace(name: string): Promise<void>;
   connect(): Promise<string>;
   disconnect(): Promise<void>;
+  uploadMaterial?(file: File): Promise<{ path: string; url: string }>;
+  removeUpload?(path: string): Promise<void>;
   simulate?(event: Simulation): Promise<string>;
   processDue?(): Promise<void>;
   reset?(): Promise<void>;
