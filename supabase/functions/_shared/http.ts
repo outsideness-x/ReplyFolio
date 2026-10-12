@@ -1,5 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.117.3';
 import { withHeaders } from './responses.ts';
+import { gateway, limit } from './gateway.ts';
+import { webSession } from './web-session.ts';
 export class HttpError extends Error {
   constructor(
     public status: number,
@@ -77,27 +79,28 @@ export function uuid(value: unknown): string {
     throw new HttpError(400, 'Некорректный идентификатор.');
   return value;
 }
-export async function member(
-  req: Request,
-  db: Database,
-  workspaceId: string,
-): Promise<{ userId: string; role: string }> {
-  const token = req.headers.get('Authorization')?.match(/^Bearer (.+)$/i)?.[1];
-  if (!token) throw new HttpError(401, 'Войдите в кабинет.');
-  const {
-    data: { user },
-    error,
-  } = await db.auth.getUser(token);
-  if (error || !user) throw new HttpError(401, 'Сессия истекла. Войдите снова.');
-  const { data, error: membershipError } = await db
+export async function member(req: Request, db: Database, workspaceId: string) {
+  const context = await gateway(req, db);
+  await limit(db, 'workspace:' + context.ip, 120, 60);
+  const s = await webSession(req, db, context.agent);
+  if (s.row.state !== 'active') throw new HttpError(403, 'Нужен подтверждённый вход команды.');
+  const teamWorkspace = await rpc<string | null>(db, 'service_team_workspace', { uid: s.user.id });
+  if (teamWorkspace !== workspaceId)
+    throw new HttpError(403, 'Нет доступа к рабочему пространству.');
+  const { data, error } = await db
     .from('workspace_members')
     .select('role')
     .eq('workspace_id', workspaceId)
-    .eq('user_id', user.id)
+    .eq('user_id', s.user.id)
     .maybeSingle();
-  if (membershipError) throw new Error('Membership lookup failed');
+  if (error) throw new Error('Membership lookup failed');
   if (!data) throw new HttpError(403, 'Нет доступа к рабочему пространству.');
-  return { userId: user.id, role: data.role };
+  await rpc(db, 'service_security_event', { event_kind: 'workspace_access', uid: s.user.id });
+  return {
+    userId: s.user.id,
+    role: data.role === 'owner' && s.teamRole === 'owner' ? 'owner' : 'manager',
+    session: s.row,
+  };
 }
 export function serve(handler: (req: Request) => Promise<Response>): void {
   Deno.serve(async (req) => {

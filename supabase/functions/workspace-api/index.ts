@@ -14,6 +14,7 @@ import {
   type Database,
 } from '../_shared/http.ts';
 import { accountToken, metaRequest } from '../_shared/meta.ts';
+import { recentMfa } from '../_shared/web-session.ts';
 async function owned(db: Database, table: string, id: string, ws: string) {
   const { data, error } = await db
     .from(table)
@@ -61,6 +62,78 @@ serve(async (req) => {
     db = database(),
     membership = await member(req, db, ws);
   const action = body.action;
+  if (action === 'read') {
+    const columns = {
+      workspaces: 'id,name,created_at',
+      contacts:
+        'id,workspace_id,instagram_scoped_id,username,name,email,phone,tags,status,source,is_lead,created_at,updated_at',
+      conversations:
+        'id,workspace_id,account_id,contact_id,status,mode,window_expires_at,last_message,last_message_at,unread_count',
+      messages:
+        'id,workspace_id,conversation_id,instagram_message_id,direction,body,quick_replies,source,status,error,created_at',
+      flows:
+        'id,workspace_id,name,description,enabled,trigger_kind,keywords,post_ids,definition,created_at,updated_at',
+      materials: 'id,workspace_id,title,description,url,kind,storage_path,created_at',
+      instagram_accounts: 'id,workspace_id,ig_user_id,username,status,token_expires_at,last_error',
+      automation_runs: 'id,workspace_id,flow_name,contact_name,status,detail,created_at',
+    };
+    const values = await Promise.all(
+      Object.entries(columns).map(async ([table, fields]) => {
+        const query = () =>
+          db
+            .from(table)
+            .select(fields)
+            .eq(table === 'workspaces' ? 'id' : 'workspace_id', ws);
+        if (table === 'messages' || table === 'automation_runs') {
+          const { data, error } = await query()
+            .order('created_at', { ascending: false })
+            .limit(table === 'messages' ? 1000 : 100);
+          if (error) throw new Error('Read failed');
+          return data ?? [];
+        }
+        const items: unknown[] = [];
+        for (let from = 0; ; from += 500) {
+          const { data, error } = await query()
+            .order('id')
+            .range(from, from + 499);
+          if (error) throw new Error('Read failed');
+          items.push(...(data ?? []));
+          if (!data || data.length < 500) return items;
+        }
+      }),
+    );
+    const [workspace, contacts, conversations, messages, flows, materials, accounts, runs] = values;
+    return json({
+      workspace: workspace[0],
+      contacts,
+      conversations,
+      messages: messages.reverse(),
+      flows,
+      materials,
+      account: accounts[0] ?? null,
+      runs,
+    });
+  }
+  if (action === 'upload-url') {
+    const path = ws + '/' + crypto.randomUUID() + '.pdf';
+    const { data, error } = await db.storage.from('materials').createSignedUploadUrl(path);
+    if (error || !data) throw new Error('Upload unavailable');
+    return json({
+      path,
+      uploadUrl: data.signedUrl,
+      url: Deno.env.get('SUPABASE_URL') + '/storage/v1/object/public/materials/' + path,
+    });
+  }
+  if (action === 'remove-upload') {
+    const path = text(body.path, 300, true);
+    if (!new RegExp('^' + ws + '/[0-9a-f-]+\\.pdf$', 'i').test(path))
+      throw new HttpError(403, 'Файл недоступен.');
+    const { data, error } = await db.from('materials').select('id').eq('storage_path', path);
+    if (error || data?.length) throw new HttpError(409, 'Файл используется в библиотеке.');
+    const removed = await db.storage.from('materials').remove([path]);
+    if (removed.error) throw new Error('Removal failed');
+    return json({ ok: true });
+  }
   if (action === 'save-flow') {
     const raw = object(body.flow),
       id = uuid(raw.id);
@@ -253,6 +326,7 @@ serve(async (req) => {
       .eq('id', ws);
     if (error) throw new Error('Workspace update failed');
   } else if (action === 'disconnect') {
+    recentMfa(membership.session);
     if (membership.role !== 'owner') throw new HttpError(403, 'Действие доступно владельцу.');
     const { data: a, error } = await db
       .from('instagram_accounts')

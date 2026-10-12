@@ -15,7 +15,7 @@ major_version = 17
 enabled = true
 site_url = "http://localhost:5173"
 additional_redirect_urls = ["http://127.0.0.1:5173"]
-enable_signup = true
+enable_signup = false
 
 [functions.instagram-connect]
 verify_jwt = false
@@ -26,6 +26,8 @@ verify_jwt = false
 [functions.automation-worker]
 verify_jwt = false
 [functions.workspace-api]
+verify_jwt = false
+[functions.auth]
 verify_jwt = false
 
 # Authenticated endpoints verify the user using auth.getUser themselves.
