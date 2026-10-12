@@ -423,7 +423,7 @@ label small {
   align-items: center;
   justify-content: center;
   padding: 40px;
-  background: radial-gradient(ellipse at 15% 25%, #e6efff, transparent 50%), #f7f9fc;
+  background: none;
   gap: 70px;
 }
 .auth-card {

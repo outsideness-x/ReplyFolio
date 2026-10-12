@@ -30,7 +30,7 @@
   right: -380px;
   top: -470px;
   pointer-events: none;
-  background: radial-gradient(ellipse, #6d4cb637 0%, #4b3a7814 40%, transparent 70%);
+  background: none;
   filter: blur(40px);
 }
 .landing-nav,
@@ -135,7 +135,7 @@
   white-space: nowrap;
 }
 .landing h1 > span {
-  background: linear-gradient(105deg, #e6dffa, #a99aba 75%);
+  background: none;
   color: transparent;
   background-clip: text;
 }
@@ -184,7 +184,7 @@
 }
 .login-card {
   position: relative;
-  background: linear-gradient(150deg, #1f1c2a 0%, #17151e 50%, #16151b);
+  background: none;
   border: 1px solid #ffffff12;
   border-radius: 19px;
   padding: 32px;
@@ -201,7 +201,7 @@
   left: 18%;
   right: 18%;
   height: 1px;
-  background: linear-gradient(90deg, transparent, #c3a9f55c, transparent);
+  background: none;
 }
 .login-card-top {
   display: flex;
@@ -276,7 +276,7 @@
 }
 .login-button {
   border: 1px solid #e9deff88;
-  background: linear-gradient(180deg, #e5def0, #d5cee4);
+  background: none;
   box-shadow:
     0 1px 0 #fff8 inset,
     0 3px 12px #0002;
@@ -296,7 +296,7 @@
   margin-left: auto;
 }
 .login-button:hover {
-  background: linear-gradient(180deg, #f0e9f9, #e0d6ee);
+  background: none;
   transform: translateY(-1px);
   box-shadow: 0 4px 18px #b292ea15;
 }
@@ -450,7 +450,7 @@
   border: 1px solid #a899c321;
   border-radius: 15px;
   overflow: hidden;
-  background: linear-gradient(110deg, #15151c, #16141d);
+  background: none;
   box-shadow:
     0 40px 100px #0003,
     0 0 90px #b591d207;
@@ -461,7 +461,7 @@
   position: absolute;
   pointer-events: none;
   inset: 0;
-  background: linear-gradient(180deg, transparent 70%, #0d0d125c);
+  background: none;
 }
 .showcase-sidebar {
   border-right: 1px solid #ffffff07;
@@ -595,7 +595,7 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: linear-gradient(130deg, #6c5b8029, #916b9420);
+  background: none;
   border: 1px solid #b391c71a;
   color: #b599c7;
   font-size: 12px;
@@ -635,7 +635,7 @@
   align-self: flex-end;
   margin-top: 13px;
   color: #ccbce3;
-  background: linear-gradient(135deg, #66507427, #5d466630);
+  background: none;
   border: 1px solid #b58ddf1d;
   border-bottom-right-radius: 3px;
   width: 94%;
@@ -749,12 +749,12 @@
 .show-flow-line {
   height: 22px;
   width: 1px;
-  background: linear-gradient(#987bac2e, #ac80ce4a);
+  background: none;
   margin: 0 auto;
 }
 .show-flow-node.final {
   border-color: #849b9026;
-  background: linear-gradient(110deg, #749b870b, #b28dc608);
+  background: none;
 }
 .showcase-note {
   display: flex;
@@ -1150,5 +1150,112 @@
       border-color: #849b9050;
       box-shadow: 0 0 16px #8898840b;
     }
+  }
+}
+
+@font-face {
+  font-family: 'ReplyFolio Script';
+  src: url('/fonts/BadScript-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+.landing-glow,
+.login-card:before,
+.showcase-window:after {
+  display: none;
+}
+.landing {
+  background: #101013;
+}
+.landing:before {
+  opacity: 0.45;
+}
+.landing h1 > span {
+  background: none;
+  color: #aea4b9;
+}
+.login-card {
+  background: #19171d;
+  border-color: #ffffff10;
+  box-shadow: 0 12px 38px #0002;
+}
+.login-button {
+  background: #dfd9e7;
+}
+.login-button:hover {
+  background: #ede6f3;
+  box-shadow: 0 2px 8px #0001;
+}
+.showcase-window {
+  background: #18171c;
+  box-shadow: 0 12px 35px #0002;
+}
+.mock-avatar {
+  background: #26202c;
+}
+.mock-bubble.outgoing {
+  background: #29222f;
+}
+.show-flow-line {
+  background: #403448;
+}
+.show-flow-node.final {
+  background: #1c221e;
+}
+.hero-caption {
+  margin-top: 30px;
+  font-size: 23px;
+  font-family: 'ReplyFolio Script', cursive;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #a69bad;
+  gap: 13px;
+  line-height: 1.6;
+}
+.hero-line {
+  width: 22px;
+  background: #68606f;
+}
+.app-shell .workspace-monogram,
+.app-shell .avatar {
+  background: var(--accent-wash);
+}
+.app-shell .material-cover {
+  background: var(--accent-wash);
+}
+.app-shell .welcome {
+  background: #f4f1f5;
+  box-shadow: none;
+  border-color: #d9cfdf50;
+}
+.app-shell[data-theme='dark'] .welcome {
+  background: #201c24;
+  border-color: #ffffff0b;
+}
+.app-shell .welcome:after {
+  display: none;
+}
+.app-shell .welcome h2 > span {
+  font-family: 'ReplyFolio Script', cursive;
+  font-size: 36px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: -0.5px;
+}
+.app-shell .flow-canvas {
+  background-image: none;
+}
+.app-shell .auth-screen {
+  background: var(--canvas);
+}
+@media (max-width: 540px) {
+  .hero-caption {
+    font-size: 22px;
+    letter-spacing: 0;
+    margin-top: 21px;
+  }
+  .app-shell .welcome h2 > span {
+    font-size: 33px;
   }
 }

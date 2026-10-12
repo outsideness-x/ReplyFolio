@@ -210,7 +210,7 @@
   min-width: 0;
   padding: 28px 23px;
   background-color: #fafbfd;
-  background-image: radial-gradient(#dce4ef 0.75px, transparent 0.75px);
+  background-image: none;
   background-size: 16px 16px;
   max-height: 1050px;
   overflow: auto;

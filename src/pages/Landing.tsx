@@ -297,7 +297,7 @@ export function Landing({
             </p>
             <div className="hero-caption">
               <span className="hero-line" />
-              <span>ВАШ ГОЛОС. ВАШ РИТМ. ВАШ DIRECT.</span>
+              <span>С вашим голосом.</span>
             </div>
             {demoAllowed && (
               <a className="demo-link" href="/?demo=1#/dashboard">

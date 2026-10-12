@@ -82,7 +82,7 @@
 .app-shell .workspace-monogram {
   width: 31px;
   height: 31px;
-  background: linear-gradient(130deg, #c4b5d22c, #a892d92e);
+  background: none;
   border: 1px solid #a190be20;
   color: var(--accent-ink);
   font-weight: 500;
@@ -388,9 +388,7 @@
   color: var(--muted);
 }
 .app-shell .welcome {
-  background:
-    radial-gradient(ellipse at 96% 52%, #c8b1da24, transparent 55%),
-    linear-gradient(125deg, #eee7f433, var(--surface));
+  background: none;
   border-color: #b79bc721;
   border-radius: 12px;
   padding: 30px 32px;
@@ -759,7 +757,7 @@
   box-shadow: 0 1px 4px #3c235003;
 }
 .app-shell .material-cover {
-  background: linear-gradient(140deg, #b99dd510, #be98d508);
+  background: none;
   color: var(--muted);
   border-radius: 8px;
 }
@@ -849,7 +847,7 @@
 }
 .app-shell .flow-canvas {
   background-color: var(--canvas);
-  background-image: radial-gradient(var(--grid) 1px, transparent 1px);
+  background-image: none;
   background-size: 17px 17px;
 }
 .app-shell .workflow-node,
@@ -960,7 +958,7 @@
   color: var(--muted);
 }
 .app-shell .avatar {
-  background: linear-gradient(120deg, #ba9dd317, #ab8bba17);
+  background: none;
   border: 1px solid #b493c915;
   color: var(--muted);
   font-weight: 500;
