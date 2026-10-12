@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.117.3';
+import { withHeaders } from './responses.ts';
 export class HttpError extends Error { constructor(public status: number, message: string) { super(message); } }
 export function env(name: string): string { const value = Deno.env.get(name); if (!value) throw new Error(`Missing server configuration: ${name}`); return value; }
 export function database() { return createClient(env('SUPABASE_URL'), env('SUPABASE_SERVICE_ROLE_KEY'), { auth: { persistSession: false, autoRefreshToken: false } }); }
@@ -35,8 +36,7 @@ export function serve(handler: (req: Request) => Promise<Response>): void {
     let response: Response;
     try { response = await handler(req); }
     catch (e) { console.error('request_failed', e instanceof HttpError ? e.status : 'internal'); response = json({ error: e instanceof HttpError ? e.message : 'Не удалось выполнить операцию. Проверьте настройки подключения.' }, e instanceof HttpError ? e.status : 500); }
-    for (const [key,value] of Object.entries(headers)) response.headers.set(key,value);
-    return response;
+    return withHeaders(response, headers);
   });
 }
 export async function wakeWorker(): Promise<void> {

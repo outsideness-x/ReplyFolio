@@ -69,7 +69,14 @@ serve(async(req)=>{
   }else if(action==='disconnect'){
     if(membership.role!=='owner')throw new HttpError(403,'Действие доступно владельцу.');
     const {data:a,error}=await db.from('instagram_accounts').select('*').eq('workspace_id',ws).maybeSingle();if(error)throw new Error('Lookup failed');
-    if(a){const token=await accountToken(db,a.id);await db.from('instagram_accounts').update({status:'disconnected',last_error:null}).eq('id',a.id);await rpc(db,'service_delete_credentials',{account:a.id});try{await metaRequest(`${a.ig_user_id}/subscribed_apps`,token,'DELETE');}catch{/* Local sending is already disabled, even if unsubscribe is temporarily unavailable. */}}
+    if(a){
+      let token:string|undefined;
+      try{token=await accountToken(db,a.id);}catch{/* Repeating disconnect succeeds even after credentials have been removed. */}
+      const {error:saveError}=await db.from('instagram_accounts').update({status:'disconnected',last_error:null}).eq('id',a.id);
+      if(saveError)throw new Error('Disconnect failed');
+      await rpc(db,'service_delete_credentials',{account:a.id});
+      if(token)try{await metaRequest(`${a.ig_user_id}/subscribed_apps`,token,'DELETE');}catch{/* Sending is already disabled; a temporary unsubscribe failure cannot re-enable it. */}
+    }
   }else throw new HttpError(400,'Неизвестное действие.');
   return json({ok:true});
 });

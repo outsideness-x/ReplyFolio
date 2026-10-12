@@ -15,11 +15,15 @@ serve(async (req) => {
     const igUserId = String(profile.user_id ?? profile.id ?? ''); if (!/^\d{1,30}$/.test(igUserId)) throw new Error('Invalid Instagram identity');
     const { data:other,error:otherError } = await db.from('instagram_accounts').select('workspace_id').eq('ig_user_id',igUserId).maybeSingle();
     if (otherError || (other && other.workspace_id !== workspaceId)) throw new Error('Instagram account belongs to another workspace');
+    const { data:current,error:currentError } = await db.from('instagram_accounts').select('ig_user_id').eq('workspace_id',workspaceId).maybeSingle();
+    // Existing conversations contain recipient IDs specific to this Instagram account.
+    if (currentError || (current && current.ig_user_id !== igUserId)) throw new Error('Reconnect the same Instagram account');
     const { data:account,error } = await db.from('instagram_accounts').upsert({ workspace_id:workspaceId,ig_user_id:igUserId,username:String(profile.username ?? ''),status:'disconnected',token_expires_at:new Date(Date.now()+expiresIn*1000).toISOString(),last_error:null },{ onConflict:'workspace_id' }).select('id').single();
     if (error || !account) throw new Error('Account save failed');
     await rpc(db,'service_put_credentials',{ account:account.id,encrypted:await encryptToken(token,account.id) });
     try {
-      await metaRequest(`${igUserId}/subscribed_apps`,token,'POST',{ subscribed_fields:'messages,messaging_postbacks,messaging_referrals,messaging_seen,comments' });
+      const subscription = await metaRequest(`${igUserId}/subscribed_apps`,token,'POST',{ subscribed_fields:'messages,messaging_postbacks,messaging_referrals,messaging_seen,comments' });
+      if (subscription.success !== true) throw new Error('Subscription not confirmed');
       const { error:saveError } = await db.from('instagram_accounts').update({ status:'connected',last_error:null }).eq('id',account.id); if (saveError) throw new Error('Account activation failed');
     } catch (e) { await db.from('instagram_accounts').update({ status:'error',last_error:'Не удалось подписаться на события Instagram. Проверьте разрешения Meta и повторите подключение.' }).eq('id',account.id); throw e; }
     destination.searchParams.set('instagram','connected');
