@@ -43,6 +43,14 @@ describe('Instagram rules and validation', () => {
   });
 });
 describe('durable flow sessions', () => {
+  it('keeps an active conversation on the version that started it', () => {
+    const f = flow(), start = runFlow(f);
+    f.definition.nodes = f.definition.nodes.filter((n)=>n.id !== 'price');
+    const choice = f.definition.nodes.find((n)=>n.id === 'interest');
+    if (choice?.type === 'choice') choice.options[1].next = 'email';
+    const result = runFlow(f,{session:start.session,input:{text:'Стоимость обучения'}});
+    expect(result.actions[0].nodeId).toBe('price');
+  });
   it('persists a choice, rejects forged payloads, captures an email and creates a lead', () => {
     const f = flow();
     const start = runFlow(f, { now });

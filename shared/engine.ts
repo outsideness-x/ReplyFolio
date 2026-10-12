@@ -123,14 +123,16 @@ export function runFlow(flow: Flow, args: {
   validateFlow(flow);
   const now = args.now ?? Date.now();
   const old = args.session;
+  const definition = structuredClone(old?.definition ?? flow.definition);
+  validateDefinition(definition);
   const variables = { ...(args.variables ?? {}), ...(old?.variables ?? {}) };
   const tags = [...(old?.tags ?? [])];
   let lead = old?.lead ?? false, handoff = false;
-  let cursor: string | null = old?.nodeId ?? flow.definition.start;
+  let cursor: string | null = old?.nodeId ?? definition.start;
   const actions: SendAction[] = [];
   const result = (waiting: FlowSession['waiting'] = null, resumeAt: string | null = null): EngineResult => ({
     actions, variables, tags, lead, handoff,
-    session: cursor ? { flowId: flow.id, nodeId: cursor, waiting, resumeAt, variables, tags, lead } : null,
+    session: cursor ? { flowId: flow.id, nodeId: cursor, waiting, resumeAt, variables, tags, lead, definition } : null,
   });
   const send = (nodeId: string, text: string, quickReplies: SendAction['quickReplies'] = []): void => {
     const rendered = renderText(text, variables); assertMessage(rendered);
@@ -139,7 +141,7 @@ export function runFlow(flow: Flow, args: {
   if (old?.waiting === 'delay' && old.resumeAt && Date.parse(old.resumeAt) > now) return result('delay', old.resumeAt);
   if (old?.waiting === 'reply' && !args.input) return result('reply');
   if ((old?.waiting === 'choice' || old?.waiting === 'capture') && args.input) {
-    const node = flow.definition.nodes.find((n) => n.id === cursor);
+    const node = definition.nodes.find((n) => n.id === cursor);
     if (node?.type === 'choice') {
       const option = node.options.find((o) => args.input!.payload === `rf:${node.id}:${o.id}` || normalize(o.label) === normalize(args.input!.text));
       if (!option) { send(node.id, 'Пожалуйста, выберите один из вариантов.', node.options.map((o) => ({ title: o.label, payload: `rf:${node.id}:${o.id}` }))); return result('choice'); }
@@ -151,7 +153,7 @@ export function runFlow(flow: Flow, args: {
     }
   } else if (old?.waiting === 'choice' || old?.waiting === 'capture') return result(old.waiting);
   for (let steps = 0; cursor && steps < 50; steps++) {
-    const node = flow.definition.nodes.find((n) => n.id === cursor);
+    const node = definition.nodes.find((n) => n.id === cursor);
     if (!node) throw new Error('Текущий блок удалён. Перезапустите сценарий.');
     switch (node.type) {
       case 'send': {

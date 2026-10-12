@@ -47,6 +47,7 @@ export type Snapshot = { workspace: Workspace; contacts: Contact[]; conversation
 export type FlowSession = {
   flowId: string; nodeId: string; waiting: 'choice' | 'capture' | 'delay' | 'reply' | null;
   resumeAt: string | null; variables: Record<string, string>; tags: string[]; lead: boolean;
+  definition?: FlowDefinition;
 };
 export type SendAction = { type: 'send'; nodeId: string; text: string; quickReplies: { title: string; payload: string }[] };
 export type EngineResult = {
