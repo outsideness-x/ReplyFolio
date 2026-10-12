@@ -36,6 +36,12 @@ beforeAll(async () => {
       'utf8',
     ),
   );
+  await db.exec(
+    await readFile(
+      new URL('../supabase/migrations/202610120004_webhook_batch.sql', import.meta.url),
+      'utf8',
+    ),
+  );
   await asUser(userA);
   wsA = (
     await db.query<{ create_workspace: string }>("select public.create_workspace('Команда A')")
@@ -49,6 +55,28 @@ afterAll(async () => {
   await db.close();
 });
 describe('real PostgreSQL permissions and queue transactions', () => {
+  it('persists a complete webhook batch atomically and deduplicates its redelivery', async () => {
+    await db.exec('reset role');
+    const events = Array.from({ length: 130 }, (_, n) => ({
+      key: 'batch:' + n,
+      kind: 'dm',
+      text: 'прайс',
+    }));
+    const result = await db.query<{ service_enqueue_events: number }>(
+      'select public.service_enqueue_events($1::jsonb)',
+      [JSON.stringify(events)],
+    );
+    expect(result.rows[0].service_enqueue_events).toBe(130);
+    expect(
+      (
+        await db.query<{ service_enqueue_events: number }>(
+          'select public.service_enqueue_events($1::jsonb)',
+          [JSON.stringify(events)],
+        )
+      ).rows[0].service_enqueue_events,
+    ).toBe(0);
+    await db.exec("delete from private.jobs where event_key like 'batch:%'");
+  });
   it('isolates workspaces without recursive membership policies', async () => {
     await asUser(userA);
     expect(

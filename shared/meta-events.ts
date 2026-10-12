@@ -37,12 +37,13 @@ export function parseMetaEvents(body: unknown, now = Date.now()): MetaEvent[] {
   const root = obj(body);
   if (root.object !== 'instagram' || !Array.isArray(root.entry)) return [];
   const events: MetaEvent[] = [];
-  for (const e of root.entry.slice(0, 100)) {
+  if (root.entry.length > 1000) throw new Error('Webhook batch exceeds Meta limit');
+  for (const e of root.entry) {
     const entry = obj(e),
       accountId = id(entry.id);
     if (!accountId) continue;
     const entryAt = date(entry.time, now);
-    for (const raw of (Array.isArray(entry.messaging) ? entry.messaging : []).slice(0, 100)) {
+    for (const raw of Array.isArray(entry.messaging) ? entry.messaging : []) {
       const m = obj(raw),
         message = obj(m.message),
         postback = obj(m.postback);
@@ -80,7 +81,7 @@ export function parseMetaEvents(body: unknown, now = Date.now()): MetaEvent[] {
         });
       }
     }
-    for (const raw of (Array.isArray(entry.changes) ? entry.changes : []).slice(0, 100)) {
+    for (const raw of Array.isArray(entry.changes) ? entry.changes : []) {
       const change = obj(raw),
         value = obj(change.value),
         from = obj(value.from);
@@ -101,6 +102,7 @@ export function parseMetaEvents(body: unknown, now = Date.now()): MetaEvent[] {
       });
     }
   }
+  if (events.length > 1000) throw new Error('Webhook batch exceeds Meta limit');
   return events;
 }
 export function constantTimeEqual(a: string, b: string): boolean {

@@ -32,7 +32,7 @@ serve(async (req) => {
     !(await verifyMetaSignature(
       raw,
       req.headers.get('x-hub-signature-256'),
-      env('META_APP_SECRET'),
+      env('META_WEBHOOK_SECRET'),
     ))
   )
     throw new HttpError(403, 'Invalid webhook signature');
@@ -44,8 +44,7 @@ serve(async (req) => {
   }
   const db = database(),
     events = parseMetaEvents(body);
-  for (const event of events)
-    await rpc(db, 'service_enqueue', { job_kind: 'event', key: event.key, data: event });
+  if (events.length) await rpc(db, 'service_enqueue_events', { events });
   if (events.length) background(wakeWorker());
   return json({ received: true });
 });

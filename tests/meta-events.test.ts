@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { parseMetaEvents, verifyMetaSignature } from '../shared/meta-events.ts';
 describe('Meta webhook normalization', () => {
+  it('keeps messages beyond the first hundred instead of acknowledging a truncated batch', () => {
+    const messaging = Array.from({ length: 130 }, (_, n) => ({
+      sender: { id: '200' },
+      recipient: { id: '100' },
+      message: { mid: 'batch.' + n, text: 'прайс' },
+    }));
+    const result = parseMetaEvents({ object: 'instagram', entry: [{ id: '100', messaging }] });
+    expect(result).toHaveLength(130);
+    expect(result[129].messageId).toBe('batch.129');
+  });
   it('ignores deliveries and keeps stable message identities across retries', () => {
     const payload = {
       object: 'instagram',
