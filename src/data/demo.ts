@@ -99,24 +99,22 @@ export function demoSnapshot(now = Date.now()): Snapshot {
     created_at: date(200 + i * 100),
     updated_at: date(5 + i * 10),
   }));
-  const conversations = contacts
-    .slice(0, 3)
-    .map((c, i) => ({
-      id: `33333333-3333-4333-8333-33333333333${i}`,
-      workspace_id: DEMO_WORKSPACE,
-      account_id: 'demo-account',
-      contact_id: c.id,
-      status: 'open' as const,
-      mode: i === 2 ? ('human' as const) : ('bot' as const),
-      window_expires_at: new Date(now + 23 * 3600000).toISOString(),
-      last_message: [
-        'Здравствуйте! Можно узнать про обучение?',
-        'Спасибо, материалы получил!',
-        'Хочу обсудить программу с менеджером',
-      ][i],
-      last_message_at: date(5 + i * 12),
-      unread_count: i === 0 ? 1 : 0,
-    }));
+  const conversations = contacts.slice(0, 3).map((c, i) => ({
+    id: `33333333-3333-4333-8333-33333333333${i}`,
+    workspace_id: DEMO_WORKSPACE,
+    account_id: 'demo-account',
+    contact_id: c.id,
+    status: 'open' as const,
+    mode: i === 2 ? ('human' as const) : ('bot' as const),
+    window_expires_at: new Date(now + 23 * 3600000).toISOString(),
+    last_message: [
+      'Здравствуйте! Можно узнать про обучение?',
+      'Спасибо, материалы получил!',
+      'Хочу обсудить программу с менеджером',
+    ][i],
+    last_message_at: date(5 + i * 12),
+    unread_count: i === 0 ? 1 : 0,
+  }));
   const messages = conversations.map((c, i) => ({
     id: crypto.randomUUID(),
     workspace_id: DEMO_WORKSPACE,
