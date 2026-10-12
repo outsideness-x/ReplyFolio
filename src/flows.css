@@ -445,7 +445,7 @@
 .option-editor select {
   background: white;
 }
-.mobile-add {
+.mobile-add.button {
   display: none;
   margin-bottom: 15px;
 }
@@ -468,7 +468,7 @@
     width: 190px;
     z-index: 5;
   }
-  .mobile-add {
+  .mobile-add.button {
     display: inline-flex;
   }
   .flow-card {
@@ -477,9 +477,6 @@
   }
   .flow-card-actions {
     gap: 6px;
-  }
-  .flow-card-actions > .icon-button {
-    display: none;
   }
 }
 @media (max-width: 700px) {

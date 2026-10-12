@@ -205,6 +205,7 @@ function WorkspaceApp({ repo }: { repo: Repository }) {
     [query, setQuery] = useState(''),
     [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const navigate = (value: Page) => {
+    if (!window.dispatchEvent(new Event('replyfolio:navigate', { cancelable: true }))) return;
     location.hash = '/' + value;
     setPage(value);
     setMobile(false);

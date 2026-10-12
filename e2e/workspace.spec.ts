@@ -117,6 +117,45 @@ test('workspace settings persist and reset explicitly replaces demonstration dat
   await page.getByRole('button', { name: 'Сбросить демосреду', exact: true }).click();
   await expect(page.getByLabel('Название', { exact: true })).toHaveValue('EdTech команда');
 });
+test('unsaved flow edits are protected when switching sections', async ({ page }) => {
+  await open(page, 'flows');
+  await page
+    .locator('.flow-card')
+    .first()
+    .getByRole('button', { name: 'Открыть', exact: true })
+    .click();
+  await page.getByLabel('Текст блока').fill('Не теряем изменения');
+  page.once('dialog', (dialog) => dialog.dismiss());
+  await page.getByRole('button', { name: 'Материалы', exact: true }).click();
+  await expect(page.getByLabel('Текст блока')).toHaveValue('Не теряем изменения');
+  page.once('dialog', (dialog) => dialog.accept());
+  await page.getByRole('button', { name: 'Материалы', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Материалы', exact: true })).toBeVisible();
+});
+test('new comment flow can be configured and enabled on a phone', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await open(page, 'flows');
+  await expect(page.locator('.sidebar')).toHaveCSS('transform', 'matrix(1, 0, 0, 1, -238, 0)');
+  await page.getByRole('button', { name: 'Новый сценарий', exact: true }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: /Из комментария в Direct/ })
+    .click();
+  await page.getByLabel('Название сценария').fill('Мобильный урок');
+  await page.locator('.trigger-node').click();
+  await page.getByLabel('Ключевые слова').fill('курс');
+  await page.getByLabel('Публикации').fill('123456789');
+  await page.getByLabel('Сценарий активен').check();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
+    true,
+  );
+  await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
+  await expect(page.getByRole('alert')).toContainText('Сценарий сохранён');
+  await page.getByRole('button', { name: 'Назад к сценариям' }).click();
+  const flow = page.locator('.flow-card').filter({ hasText: 'Мобильный урок' });
+  await expect(flow.getByRole('switch')).toBeChecked();
+  await expect(flow).toContainText('курс');
+});
 for (const width of [390, 768, 1440])
   test('all pages fit viewport ' + width, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });

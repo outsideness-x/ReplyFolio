@@ -298,7 +298,14 @@ function FlowEditor({ flow, onClose }: { flow: Flow; onClose: () => void }) {
       }
     }
     window.addEventListener('beforeunload', before);
-    return () => window.removeEventListener('beforeunload', before);
+    function beforeNavigation(e: Event) {
+      if (dirty && !confirm('Выйти без сохранения изменений сценария?')) e.preventDefault();
+    }
+    window.addEventListener('replyfolio:navigate', beforeNavigation);
+    return () => {
+      window.removeEventListener('beforeunload', before);
+      window.removeEventListener('replyfolio:navigate', beforeNavigation);
+    };
   }, [dirty]);
   function change(value: Flow) {
     setDraft(value);
