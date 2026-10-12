@@ -9,3 +9,5 @@
 - Persist incoming events and outbound work before acknowledging them. Do not blindly retry an outbound request whose result is ambiguous.
 - Verify substantive changes with relevant tests and a production build. Verify the UI in a browser.
 - Cloud projects and Instagram credentials do not exist yet. Prepare migrations, functions, setup instructions, and local simulation; do not invent credentials or create external projects.
+
+- Visual direction: minimalist, aesthetic application UI inspired by the simplicity of Muse. Do not derive the palette or layout from photos in its Instagram feed. Use restrained colors, generous spacing, readable typography, and few decorative elements.
