@@ -11,3 +11,4 @@
 - Cloud projects and Instagram credentials do not exist yet. Prepare migrations, functions, setup instructions, and local simulation; do not invent credentials or create external projects.
 
 - Visual direction: minimalist, aesthetic application UI inspired by the simplicity of Muse. Do not derive the palette or layout from photos in its Instagram feed. Use restrained colors, generous spacing, readable typography, and few decorative elements.
+- Updated direction: exceptionally polished Arc/Linear-inspired landing and workspace. Keep team email addresses out of every repository file and browser asset; provisioning lives outside this repository. Closed-team access is enforced server-side, with email proof and mandatory MFA. Never promise invulnerability or claim cloud security was verified without a deployed environment.
