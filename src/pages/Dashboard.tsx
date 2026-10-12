@@ -82,52 +82,6 @@ export function Dashboard() {
           Создать сценарий
         </button>
       </div>
-      <section className="welcome">
-        <div>
-          <Badge tone="blue">
-            <span className="status-dot" />{' '}
-            {repo.mode === 'demo'
-              ? 'Демонстрационное пространство'
-              : data.account?.status === 'connected'
-                ? 'Instagram подключён'
-                : 'Подключение Instagram'}
-          </Badge>
-          <h2>
-            Ваш Direct.
-            <br />
-            <span>Без суеты.</span>
-          </h2>
-          <p>Материалы, ответы и заявки — в одном потоке.</p>
-          <button
-            className="text-button"
-            onClick={() => navigate(repo.mode === 'demo' ? 'lab' : 'settings')}
-          >
-            {repo.mode === 'demo' ? 'Проверить свой сценарий' : 'Настроить подключение'}
-            <ArrowRight size={17} />
-          </button>
-        </div>
-        <div className="welcome-minimal" aria-hidden="true">
-          <div className="welcome-stack">
-            <span>
-              <MessagesSquare size={17} />
-              Новый интерес
-              <i />
-            </span>
-            <div />
-            <span>
-              <BookOpen size={17} />
-              Полезный ответ
-              <i />
-            </span>
-            <div />
-            <span>
-              <Users size={17} />
-              Следующий шаг
-              <i />
-            </span>
-          </div>
-        </div>
-      </section>
       <div className="stats-grid">
         {stats.map((s) => (
           <article className="stat-card" key={s.label}>

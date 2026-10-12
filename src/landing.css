@@ -1153,13 +1153,6 @@
   }
 }
 
-@font-face {
-  font-family: 'ReplyFolio Script';
-  src: url('/fonts/BadScript-Regular.ttf') format('truetype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
 .landing-glow,
 .login-card:before,
 .showcase-window:after {
@@ -1205,8 +1198,8 @@
 }
 .hero-caption {
   margin-top: 30px;
-  font-size: 23px;
-  font-family: 'ReplyFolio Script', cursive;
+  font-size: 12px;
+  font-family: inherit;
   letter-spacing: 0;
   text-transform: none;
   color: #a69bad;
@@ -1224,25 +1217,6 @@
 .app-shell .material-cover {
   background: var(--accent-wash);
 }
-.app-shell .welcome {
-  background: #f4f1f5;
-  box-shadow: none;
-  border-color: #d9cfdf50;
-}
-.app-shell[data-theme='dark'] .welcome {
-  background: #201c24;
-  border-color: #ffffff0b;
-}
-.app-shell .welcome:after {
-  display: none;
-}
-.app-shell .welcome h2 > span {
-  font-family: 'ReplyFolio Script', cursive;
-  font-size: 36px;
-  line-height: 1.5;
-  font-weight: 400;
-  letter-spacing: -0.5px;
-}
 .app-shell .flow-canvas {
   background-image: none;
 }
@@ -1251,11 +1225,8 @@
 }
 @media (max-width: 540px) {
   .hero-caption {
-    font-size: 22px;
+    font-size: 12px;
     letter-spacing: 0;
     margin-top: 21px;
-  }
-  .app-shell .welcome h2 > span {
-    font-size: 33px;
   }
 }

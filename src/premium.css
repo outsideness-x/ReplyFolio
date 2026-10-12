@@ -387,105 +387,6 @@
   background: #aa8dbf12;
   color: var(--muted);
 }
-.app-shell .welcome {
-  background: none;
-  border-color: #b79bc721;
-  border-radius: 12px;
-  padding: 30px 32px;
-  min-height: 242px;
-  margin-bottom: 22px;
-  box-shadow: inset 0 1px 0 #ffffff22;
-}
-.app-shell .welcome:after {
-  content: '';
-  width: 380px;
-  height: 380px;
-  right: 0;
-  top: -72px;
-  position: absolute;
-  border: 1px solid #baa2ce08;
-  border-radius: 50%;
-  pointer-events: none;
-  box-shadow:
-    0 0 0 53px #b29bc702,
-    0 0 0 104px #a88bba02;
-}
-.app-shell .welcome h2 {
-  font-size: 35px;
-  line-height: 1.13;
-  letter-spacing: -1.1px;
-  font-weight: 500;
-  margin-top: 17px;
-  color: var(--ink);
-}
-.app-shell .welcome h2 > span {
-  color: var(--muted);
-}
-.app-shell .welcome p {
-  font-size: 12px;
-  color: var(--muted);
-  margin-top: 12px;
-}
-.app-shell .welcome .badge {
-  color: var(--muted);
-  background: #bbaac911;
-  border: 1px solid #bbaac911;
-  font-size: 9px;
-}
-.app-shell .welcome .status-dot {
-  width: 4px;
-  height: 4px;
-  background: #b69ac6;
-}
-.app-shell .welcome .text-button {
-  font-size: 11px;
-  color: var(--muted);
-  margin-top: 24px;
-  font-weight: 500;
-}
-.app-shell .welcome-minimal {
-  width: 260px;
-  position: relative;
-  z-index: 2;
-}
-.welcome-stack {
-  width: 206px;
-  transform: rotate(-3deg);
-  position: relative;
-}
-.welcome-stack > span {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  background: var(--surface);
-  border: 1px solid #b8a3c627;
-  border-radius: 10px;
-  color: var(--muted);
-  font-size: 11px;
-  box-shadow: 0 4px 15px #63447605;
-}
-.welcome-stack > span:nth-of-type(2) {
-  transform: translateX(18px) rotate(4deg);
-  color: var(--muted);
-}
-.welcome-stack > span:nth-of-type(3) {
-  transform: translateX(3px) rotate(1deg);
-  color: var(--muted);
-}
-.welcome-stack > span > i {
-  width: 4px;
-  height: 4px;
-  background: #bfb0c9;
-  border-radius: 50%;
-  margin-left: auto;
-}
-.welcome-stack > div {
-  height: 10px;
-  width: 1px;
-  background: #bfa7ca25;
-  margin: 0 auto;
-}
 .app-shell .stats-grid {
   gap: 0;
   border: 1px solid var(--border);
@@ -1264,18 +1165,8 @@
     padding-left: 26px;
     padding-right: 26px;
   }
-  .app-shell .welcome {
-    padding: 26px;
-    min-height: 225px;
-  }
-  .app-shell .welcome h2 {
-    font-size: 31px;
-  }
   .app-shell .stat-card {
     padding: 20px;
-  }
-  .app-shell .welcome-minimal {
-    width: 210px;
   }
   .app-shell .panel {
     padding: 20px;
@@ -1285,9 +1176,6 @@
   }
 }
 @media (max-width: 900px) {
-  .app-shell .welcome-minimal {
-    display: none;
-  }
   .app-shell .stats-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -1372,16 +1260,6 @@
     min-height: 34px;
     padding: 8px 10px;
   }
-  .app-shell .welcome {
-    padding: 25px;
-    min-height: 218px;
-  }
-  .app-shell .welcome h2 {
-    font-size: 32px;
-  }
-  .app-shell .welcome p {
-    font-size: 11px;
-  }
   .app-shell .stat-card {
     padding: 17px;
   }
@@ -1413,9 +1291,6 @@
   .app-shell .app-footer {
     padding: 0 18px 20px;
     font-size: 8px;
-  }
-  .app-shell .welcome-stack {
-    display: none;
   }
   .app-shell .app-footer a {
     font-size: 9px;
@@ -1459,9 +1334,6 @@
 .app-shell .quiet-note strong,
 .app-shell .message-body {
   color: var(--ink);
-}
-.app-shell .welcome h2 > span {
-  color: var(--accent-ink);
 }
 .app-shell .badge.green {
   color: #498367;
