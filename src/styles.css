@@ -14,7 +14,7 @@
   font-size: 14px;
   --primary: #202126;
   --border: #e9eaee;
-  --muted: #92949d;
+  --muted: #6f7480;
   --nav: #101b30;
   --shadow: 0 2px 15px #172c5005;
 }
@@ -178,7 +178,7 @@ label small {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1;
   font-weight: 600;
   padding: 7px 9px;
@@ -260,7 +260,7 @@ label small {
   line-height: 1.7;
 }
 .eyebrow {
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 1.5px;
   color: #91a0b5;
   font-weight: 600;
@@ -306,7 +306,7 @@ label small {
 .avatar.small {
   width: 30px;
   height: 30px;
-  font-size: 10px;
+  font-size: 11px;
 }
 .modal-backdrop {
   position: fixed;
@@ -453,7 +453,7 @@ label small {
 }
 .auth-card small {
   display: block;
-  font-size: 10px;
+  font-size: 11px;
   color: #9ba8b9;
   line-height: 1.6;
   margin-top: 22px;
@@ -477,7 +477,7 @@ label small {
 }
 .auth-decoration > span {
   display: block;
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 2px;
   color: #97a7c1;
   margin-top: 30px;
@@ -499,5 +499,69 @@ label small {
     max-width: calc(100% - 32px);
     min-width: 0;
     width: max-content;
+  }
+}
+
+/* Keep everyday controls readable, and hide mobile controls on desktop. */
+.mobile-only.icon-button {
+  display: none;
+}
+.workspace-switch strong {
+  font-size: 12px;
+}
+.workspace-switch small,
+.connection-small,
+.help-card small {
+  color: #a0a9b9;
+}
+.nav-label,
+.sidebar-version {
+  color: #929cab;
+}
+.breadcrumb,
+.global-search,
+.demo-banner,
+.stat-top,
+.stat-card > small,
+.preview-row small,
+.activity-row small,
+.activity-row > time,
+.handoff-row p,
+.handoff-row small,
+.chart-summary {
+  color: #727987;
+}
+.preview-row strong,
+.activity-row strong,
+.handoff-row strong {
+  color: #434b59;
+}
+.button,
+.text-button,
+input,
+select,
+textarea,
+.message-body,
+.phone-messages .message-body {
+  font-size: 13px;
+}
+.panel-heading p,
+.page-heading p,
+.form-hint,
+.material-card p,
+.flow-card-body p,
+.lab-controls label,
+.lab-controls input,
+.lab-controls textarea,
+.lab-controls select {
+  font-size: 12px;
+}
+.message-meta,
+.message-meta time {
+  color: #707887;
+}
+@media (max-width: 700px) {
+  .mobile-only.icon-button {
+    display: inline-flex;
   }
 }

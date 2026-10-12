@@ -26,7 +26,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #9ba2af;
+  color: #6b7280;
   padding: 17px 15px 7px;
 }
 .list-search input {
@@ -45,9 +45,9 @@
   border: 0;
   background: transparent;
   padding: 5px 7px;
-  font-size: 9px;
+  font-size: 11px;
   border-radius: 5px;
-  color: #9a9ea6;
+  color: #6b7280;
 }
 .inbox-filters button.active {
   background: #f0f2f6;
@@ -92,16 +92,16 @@
   text-overflow: ellipsis;
 }
 .conversation-item-head time {
-  font-size: 8px;
-  color: #a4acb9;
+  font-size: 11px;
+  color: #6b7280;
   flex-shrink: 0;
 }
 .conversation-item p {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size: 10px;
-  color: #9da6b3;
+  font-size: 11px;
+  color: #6b7280;
   margin-top: 7px;
 }
 .conversation-item-foot {
@@ -114,8 +114,8 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 8px;
-  color: #9eabbc;
+  font-size: 11px;
+  color: #6b7280;
 }
 .conversation-item-foot > b {
   font-weight: 400;
@@ -126,7 +126,7 @@
   display: grid;
   place-items: center;
   border-radius: 50%;
-  font-size: 8px;
+  font-size: 11px;
 }
 .chat {
   min-width: 0;
@@ -150,8 +150,8 @@
 }
 .chat-heading small {
   display: block;
-  font-size: 10px;
-  color: #a0a9b9;
+  font-size: 11px;
+  color: #6b7280;
   margin-top: 5px;
 }
 .chat-heading .avatar {
@@ -164,8 +164,8 @@
   gap: 10px;
   padding: 11px 20px;
   background: #fcfdfe;
-  font-size: 9px;
-  color: #9aa6b5;
+  font-size: 11px;
+  color: #6b7280;
   border-bottom: 1px solid #f1f4f7;
 }
 .chat-status > span {
@@ -182,8 +182,8 @@
 }
 .chat-day {
   text-align: center;
-  font-size: 9px;
-  color: #a6afbb;
+  font-size: 11px;
+  color: #6b7280;
   margin-bottom: 22px;
 }
 .message-row {
@@ -218,8 +218,8 @@
   align-items: center;
   justify-content: flex-end;
   gap: 7px;
-  color: #a1adbf;
-  font-size: 8px;
+  color: #6b7280;
+  font-size: 11px;
   margin-top: 8px;
 }
 .message-meta > span:first-child {
@@ -230,13 +230,13 @@
 }
 .message-error {
   display: block;
-  color: #b17e82;
-  font-size: 9px;
+  color: #6b7280;
+  font-size: 11px;
   line-height: 1.6;
   margin-top: 8px;
 }
 .message-error-status {
-  color: #b17e82;
+  color: #6b7280;
 }
 .quick-replies {
   display: flex;
@@ -246,11 +246,11 @@
 }
 .quick-replies button {
   border: 1px solid #d7dfec;
-  color: #788aab;
+  color: #6b7280;
   background: #fff9;
   padding: 6px 9px;
   border-radius: 14px;
-  font-size: 10px;
+  font-size: 11px;
 }
 .composer {
   padding: 13px 19px;
@@ -263,14 +263,14 @@
   padding-bottom: 10px;
 }
 .compose-mode button {
-  font-size: 9px;
+  font-size: 11px;
   background: transparent;
   border: 0;
-  color: #a0aabc;
+  color: #6b7280;
   padding: 5px 8px;
 }
 .compose-mode button.active {
-  color: #677d9e;
+  color: #6b7280;
   background: #f1f4f9;
   border-radius: 5px;
 }
@@ -298,8 +298,8 @@
   display: flex;
   justify-content: space-between;
   gap: 9px;
-  color: #a7afbc;
-  font-size: 8px;
+  color: #6b7280;
+  font-size: 11px;
   line-height: 1.5;
   margin-top: 8px;
 }
@@ -318,7 +318,7 @@
   width: 58px;
   font-size: 16px;
   background: #f1f3f8;
-  color: #8694b0;
+  color: #6b7280;
 }
 .contact-cover h3 {
   font-size: 12px;
@@ -326,8 +326,8 @@
   color: #627188;
 }
 .contact-cover p {
-  font-size: 10px;
-  color: #a3afc2;
+  font-size: 11px;
+  color: #6b7280;
   margin: 7px 0 13px;
 }
 .detail-section {
@@ -338,9 +338,9 @@
   border: 0;
 }
 .detail-section h4 {
-  font-size: 8px;
+  font-size: 11px;
   letter-spacing: 1.2px;
-  color: #a0adc0;
+  color: #6b7280;
   font-weight: 500;
   margin: 0 0 15px;
 }
@@ -348,23 +348,23 @@
   margin: 0;
 }
 .detail-section dt {
-  font-size: 9px;
-  color: #a8b2c2;
+  font-size: 11px;
+  color: #6b7280;
   margin-top: 13px;
 }
 .detail-section dd {
   margin: 5px 0 0;
   font-size: 11px;
-  color: #788aa4;
+  color: #6b7280;
   overflow-wrap: anywhere;
 }
 .detail-section select {
-  font-size: 10px;
+  font-size: 11px;
   padding: 9px;
-  color: #8796b0;
+  color: #6b7280;
 }
 .detail-section .button {
-  font-size: 10px;
+  font-size: 11px;
   min-height: 33px;
   margin-bottom: 9px;
 }
@@ -375,7 +375,7 @@
   margin-top: 15px;
 }
 .tag-list .badge {
-  font-size: 8px;
+  font-size: 11px;
   padding: 6px;
 }
 .table-scroll {
@@ -387,8 +387,8 @@
   text-align: left;
 }
 .data-table th {
-  font-size: 9px;
-  color: #9ea9ba;
+  font-size: 11px;
+  color: #6b7280;
   font-weight: 500;
   letter-spacing: 0.5px;
   border-bottom: 1px solid var(--border);
@@ -398,7 +398,7 @@
   padding: 18px 13px;
   border-bottom: 1px solid #f0f3f7;
   font-size: 11px;
-  color: #8190a6;
+  color: #6b7280;
 }
 .data-table tr:last-child td {
   border-bottom: 0;
@@ -415,9 +415,9 @@
 }
 .table-person small {
   display: block;
-  font-size: 9px;
+  font-size: 11px;
   margin-top: 5px;
-  color: #acb7c9;
+  color: #6b7280;
 }
 .table-toolbar {
   display: flex;
@@ -430,7 +430,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #a0abbd;
+  color: #6b7280;
   max-width: 280px;
 }
 .table-search input {
@@ -462,7 +462,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #acb6c7;
+  color: #6b7280;
   margin-bottom: 20px;
 }
 .material-cover svg {
@@ -475,7 +475,7 @@
 }
 .material-card p {
   font-size: 11px;
-  color: #a0adbf;
+  color: #6b7280;
   line-height: 1.8;
   flex: 1;
   min-height: 45px;
@@ -495,8 +495,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 9px;
-  color: #b0bbcc;
+  font-size: 11px;
+  color: #6b7280;
   margin-top: 15px;
 }
 .upload-zone {
@@ -509,12 +509,12 @@
   border: 1px dashed #d4dfef;
   border-radius: 10px;
   margin-bottom: 20px;
-  color: #8ba0bf;
+  color: #6b7280;
   background: #fafcff;
   font-size: 11px;
 }
 .upload-zone input {
-  font-size: 10px;
+  font-size: 11px;
 }
 @media (max-width: 1200px) {
   .inbox-layout {
@@ -556,7 +556,7 @@
     padding: 15px;
   }
   .chat-status {
-    font-size: 8px;
+    font-size: 11px;
     padding: 10px 15px;
   }
   .composer {
@@ -584,8 +584,8 @@
   border: 0;
   background: #f5f7fa;
   padding: 7px 9px;
-  font-size: 10px;
-  color: #8391a7;
+  font-size: 11px;
+  color: #6b7280;
   min-width: 115px;
 }
 .row-actions {
@@ -622,7 +622,7 @@
   font-size: 12px;
 }
 .lab-controls .panel-heading > svg {
-  color: #a8b6ca;
+  color: #6b7280;
 }
 .lab-suggestions {
   display: flex;
@@ -631,8 +631,8 @@
   margin: 16px 0 24px;
 }
 .lab-suggestions > button {
-  font-size: 9px;
-  color: #96a6bd;
+  font-size: 11px;
+  color: #6b7280;
   background: #f5f8fc;
   border: 1px solid #e8eef6;
   border-radius: 14px;
@@ -646,23 +646,23 @@
   border: 1px solid #edf1f7;
   border-radius: 9px;
   margin-bottom: 20px;
-  color: #a4b3c9;
+  color: #6b7280;
 }
 .lab-matching small {
-  font-size: 7px;
+  font-size: 11px;
   letter-spacing: 1px;
-  color: #abb7c8;
+  color: #6b7280;
   display: block;
 }
 .lab-matching strong {
   font-size: 11px;
-  color: #8091ab;
+  color: #6b7280;
   display: block;
   margin-top: 7px;
 }
 .lab-matching p {
-  font-size: 9px;
-  color: #a9b5c6;
+  font-size: 11px;
+  color: #6b7280;
   line-height: 1.7;
   margin-top: 7px;
 }
@@ -682,9 +682,9 @@
   display: flex;
   align-items: center;
   gap: 7px;
-  font-size: 8px;
+  font-size: 11px;
   letter-spacing: 1.8px;
-  color: #a9b6c9;
+  color: #6b7280;
   margin-bottom: 19px;
 }
 .preview-label > span {
@@ -719,21 +719,21 @@
   gap: 9px;
   padding: 7px 18px 15px;
   border-bottom: 1px solid var(--border);
-  color: #a2aec1;
+  color: #6b7280;
 }
 .phone-header > div {
   flex: 1;
 }
 .phone-header strong {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 500;
-  color: #7f8fa7;
+  color: #6b7280;
 }
 .phone-header small {
-  font-size: 8px;
+  font-size: 11px;
   display: block;
   margin-top: 4px;
-  color: #a9b6c8;
+  color: #6b7280;
 }
 .phone-messages {
   flex: 1;
@@ -747,18 +747,18 @@
   padding: 10px 12px;
 }
 .phone-messages .message-body {
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1.8;
 }
 .phone-messages .quick-replies button {
-  font-size: 9px;
+  font-size: 11px;
 }
 .phone-bottom {
   text-align: center;
   padding: 16px 10px;
-  font-size: 7px;
+  font-size: 11px;
   letter-spacing: 1.1px;
-  color: #b2bece;
+  color: #6b7280;
   border-top: 1px solid var(--border);
 }
 @media (max-width: 1100px) {
@@ -800,7 +800,7 @@
   max-width: 460px;
 }
 .settings-icon {
-  color: #7b8090;
+  color: #6b7280;
 }
 .integration-status {
   display: flex;
@@ -847,14 +847,14 @@
   width: 31px;
   height: 31px;
   background: #f2f3f6;
-  color: #7b8090;
+  color: #6b7280;
   font-size: 11px;
   border-radius: 50%;
   flex-shrink: 0;
 }
 .setup-step > span.done {
   background: #e7f7ef;
-  color: #309372;
+  color: #6b7280;
 }
 .setup-step strong {
   font-size: 13px;
@@ -878,7 +878,7 @@
   gap: 14px;
   padding: 8px 4px;
   line-height: 1.7;
-  color: #737883;
+  color: #6b7280;
 }
 .quiet-note svg {
   flex-shrink: 0;

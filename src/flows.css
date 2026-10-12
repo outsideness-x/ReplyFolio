@@ -19,7 +19,7 @@
   border: 1px solid #e8edf5;
   border-radius: 13px;
   background: #f8fafc;
-  color: #a0aec2;
+  color: #6b7280;
   flex-shrink: 0;
 }
 .flow-card-body {
@@ -37,7 +37,7 @@
 }
 .flow-card-body > p {
   font-size: 11px;
-  color: #a0adc0;
+  color: #6b7280;
   line-height: 1.7;
   margin-top: 8px;
 }
@@ -46,8 +46,8 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 9px;
-  font-size: 9px;
-  color: #a7b3c5;
+  font-size: 11px;
+  color: #6b7280;
   margin-top: 13px;
 }
 .flow-metadata i {
@@ -100,7 +100,7 @@
   text-align: left;
   gap: 9px;
   padding: 20px;
-  color: #a2b0c6;
+  color: #6b7280;
   align-items: center;
 }
 .template-options > button:hover {
@@ -113,11 +113,11 @@
 }
 .template-options strong {
   font-size: 12px;
-  color: #687b99;
+  color: #6b7280;
 }
 .template-options span {
-  font-size: 10px;
-  color: #a2aec0;
+  font-size: 11px;
+  color: #6b7280;
   grid-column: 2;
 }
 .template-options > button > svg:last-child {
@@ -146,8 +146,8 @@
   box-shadow: none;
 }
 .editor-heading > div > span {
-  font-size: 9px;
-  color: #a1b0c4;
+  font-size: 11px;
+  color: #6b7280;
   display: block;
   margin-top: 7px;
 }
@@ -167,11 +167,11 @@
 }
 .node-palette h3 {
   font-size: 12px;
-  color: #78879f;
+  color: #6b7280;
 }
 .node-palette p {
-  font-size: 10px;
-  color: #aab5c6;
+  font-size: 11px;
+  color: #6b7280;
   line-height: 1.7;
   margin: 8px 0 22px;
 }
@@ -179,7 +179,7 @@
   display: flex;
   align-items: center;
   gap: 9px;
-  color: #9aabc4;
+  color: #6b7280;
   border: 1px solid #eef1f6;
   background: white;
   border-radius: 7px;
@@ -194,15 +194,15 @@
 }
 .node-palette > button > span {
   flex: 1;
-  font-size: 9px;
+  font-size: 11px;
 }
 .node-palette > button > svg {
   stroke-width: 1.5;
   flex-shrink: 0;
 }
 .palette-hint {
-  font-size: 9px;
-  color: #b3bece;
+  font-size: 11px;
+  color: #6b7280;
   line-height: 1.7;
   margin-top: 24px;
 }
@@ -226,7 +226,7 @@
   padding: 15px;
   text-align: left;
   box-shadow: 0 2px 6px #1e376209;
-  color: #97a9c5;
+  color: #6b7280;
 }
 .trigger-node > div {
   flex: 1;
@@ -234,15 +234,15 @@
 }
 .trigger-node small {
   display: block;
-  font-size: 7px;
+  font-size: 11px;
   letter-spacing: 1.2px;
-  color: #a7b5c9;
+  color: #6b7280;
   margin-bottom: 6px;
 }
 .trigger-node strong {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 500;
-  color: #7a8da9;
+  color: #6b7280;
 }
 .node-icon {
   width: 28px;
@@ -251,7 +251,7 @@
   place-items: center;
   border-radius: 7px;
   background: #f1f5fc;
-  color: #91a7c9;
+  color: #6b7280;
 }
 .canvas-start-line,
 .canvas-link {
@@ -260,7 +260,7 @@
   justify-content: center;
   align-items: center;
   position: relative;
-  color: #bac7da;
+  color: #6b7280;
 }
 .canvas-start-line:before,
 .canvas-link:before {
@@ -291,7 +291,7 @@
   padding: 15px;
   text-align: left;
   box-shadow: 0 2px 7px #19396005;
-  color: #8f9eb6;
+  color: #6b7280;
 }
 .workflow-node:hover {
   border-color: #bbcae1;
@@ -309,21 +309,21 @@
 .workflow-node-heading > strong {
   font-size: 11px;
   font-weight: 500;
-  color: #7d8faa;
+  color: #6b7280;
 }
 .workflow-node-heading > small {
   margin-left: auto;
-  font-size: 8px;
-  color: #b1bfd1;
+  font-size: 11px;
+  color: #6b7280;
 }
 .workflow-node-heading .badge {
-  font-size: 7px;
+  font-size: 11px;
   padding: 4px 5px;
 }
 .workflow-node > p {
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1.7;
-  color: #a3afc2;
+  color: #6b7280;
   margin: 12px 0 0;
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -339,8 +339,8 @@
   padding: 7px 9px;
   background: #f7f9fc;
   border-radius: 5px;
-  color: #9cabc2;
-  font-size: 8px;
+  color: #6b7280;
+  font-size: 11px;
   margin-top: 9px;
 }
 .node-transitions {
@@ -349,8 +349,8 @@
   border-top: 1px solid #eff3f8;
   margin-top: 12px;
   padding-top: 9px;
-  font-size: 8px;
-  color: #9fadc2;
+  font-size: 11px;
+  color: #6b7280;
 }
 .node-inspector {
   padding: 22px;
@@ -363,34 +363,34 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 24px;
-  color: #acb9cd;
+  color: #6b7280;
 }
 .inspector-heading h3 {
   font-size: 12px;
-  color: #8292aa;
+  color: #6b7280;
 }
 .inspector-heading > span {
-  font-size: 9px;
-  color: #b6c2d3;
+  font-size: 11px;
+  color: #6b7280;
 }
 .node-inspector label {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 500;
-  color: #93a2b9;
+  color: #6b7280;
   margin-bottom: 19px;
 }
 .node-inspector input,
 .node-inspector textarea,
 .node-inspector select {
   padding: 9px;
-  font-size: 10px;
-  color: #899ab4;
+  font-size: 11px;
+  color: #6b7280;
   line-height: 1.7;
   border-color: #e5ebf3;
 }
 .node-inspector label small {
-  font-size: 8px;
-  color: #b0bbcc;
+  font-size: 11px;
+  color: #6b7280;
 }
 .node-inspector .checkbox-label {
   line-height: 1.5;
@@ -402,8 +402,8 @@
   padding: 13px;
   border-radius: 8px;
   background: #f7f9fc;
-  color: #a4b0c3;
-  font-size: 9px;
+  color: #6b7280;
+  font-size: 11px;
   line-height: 1.8;
   margin-bottom: 22px;
 }
@@ -413,9 +413,9 @@
   padding-top: 20px;
 }
 .field-heading {
-  font-size: 8px;
+  font-size: 11px;
   letter-spacing: 1px;
-  color: #9eacc1;
+  color: #6b7280;
   font-weight: 500;
   margin: 0 0 14px;
 }
@@ -428,7 +428,7 @@
 }
 .option-editor label {
   margin-bottom: 8px;
-  font-size: 9px;
+  font-size: 11px;
 }
 .option-editor label:last-child {
   margin-bottom: 0;
@@ -533,7 +533,7 @@
   }
   .editor-heading > .button {
     padding: 10px;
-    font-size: 10px;
+    font-size: 11px;
   }
   .node-inspector input,
   .node-inspector select,

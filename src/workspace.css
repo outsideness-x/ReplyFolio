@@ -78,11 +78,11 @@
 .workspace-switch small {
   display: block;
   margin-top: 5px;
-  font-size: 9px;
+  font-size: 11px;
   color: #6f839f;
 }
 .nav-label {
-  font-size: 8px;
+  font-size: 11px;
   letter-spacing: 1.6px;
   color: #607391;
   padding: 29px 13px 13px;
@@ -119,12 +119,12 @@
   background: #fff2;
   color: #fff;
   border-radius: 5px;
-  font-size: 9px;
+  font-size: 11px;
   padding: 3px 5px;
 }
 .nav-mini {
   margin-left: auto;
-  font-size: 7px;
+  font-size: 11px;
   letter-spacing: 0.6px;
   border: 1px solid #ffffff17;
   padding: 3px 4px;
@@ -139,7 +139,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 9px;
+  font-size: 11px;
   color: #8296b5;
   padding: 10px 8px 16px;
 }
@@ -160,13 +160,13 @@
 .help-card strong {
   display: block;
   color: #abbdd7;
-  font-size: 9px;
+  font-size: 11px;
   line-height: 1.6;
 }
 .help-card small {
   display: block;
   color: #697f9f;
-  font-size: 9px;
+  font-size: 11px;
   margin-top: 4px;
 }
 .help-icon {
@@ -178,7 +178,7 @@
   display: flex;
   justify-content: space-between;
   padding: 24px 8px 0;
-  font-size: 8px;
+  font-size: 11px;
   letter-spacing: 1.8px;
   color: #4c6487;
 }
@@ -231,7 +231,7 @@
   font-family: inherit;
   border: 1px solid #e4eaf2;
   border-radius: 4px;
-  font-size: 9px;
+  font-size: 11px;
   padding: 2px 5px;
   color: #9facbf;
 }
@@ -245,7 +245,7 @@
   border: 1px solid #e3eaf6;
   border-radius: 50%;
   font-weight: 600;
-  font-size: 10px;
+  font-size: 11px;
 }
 .demo-banner {
   display: flex;
@@ -255,7 +255,7 @@
   color: #9298a3;
   background: #f1f3f6;
   border-bottom: 1px solid #e7e9ee;
-  font-size: 10px;
+  font-size: 11px;
 }
 .demo-banner strong {
   color: #636c7c;
@@ -270,7 +270,7 @@
   border: 0;
   background: none;
   color: #6c7687;
-  font-size: 10px;
+  font-size: 11px;
   white-space: nowrap;
 }
 .workspace-main {
@@ -283,13 +283,13 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 9px;
+  font-size: 11px;
   color: #a5b0bf;
   max-width: 1500px;
   margin: 0 auto;
 }
 .app-footer > span:last-child {
-  font-size: 8px;
+  font-size: 11px;
   letter-spacing: 1px;
 }
 .welcome {
@@ -326,7 +326,7 @@
 .welcome .badge {
   background: #fff9;
   border: 1px solid #e2ebfa;
-  font-size: 9px;
+  font-size: 11px;
 }
 .welcome-art {
   width: 370px;
@@ -387,12 +387,12 @@
 }
 .art-card strong {
   display: block;
-  font-size: 10px;
+  font-size: 11px;
   color: #526887;
 }
 .art-card small {
   display: block;
-  font-size: 8px;
+  font-size: 11px;
   color: #9daac0;
   margin-top: 5px;
 }
@@ -476,7 +476,7 @@
 }
 .stat-card > small {
   color: #a0acbe;
-  font-size: 9px;
+  font-size: 11px;
 }
 .dashboard-grid,
 .dashboard-grid.lower {
@@ -501,7 +501,7 @@
   padding: 5px 9px;
   color: #90a0b7;
   background: white;
-  font-size: 9px;
+  font-size: 11px;
 }
 .segmented button.active {
   background: #edf3ff;
@@ -518,7 +518,7 @@
 .chart-summary {
   display: flex;
   justify-content: space-between;
-  font-size: 9px;
+  font-size: 11px;
   margin-top: 13px;
   color: #8494ad;
 }
@@ -561,7 +561,7 @@
 }
 .preview-row strong {
   display: block;
-  font-size: 10px;
+  font-size: 11px;
   color: #62748e;
   overflow: hidden;
   white-space: nowrap;
@@ -569,13 +569,13 @@
 }
 .preview-row small {
   display: block;
-  font-size: 9px;
+  font-size: 11px;
   color: #a2aec0;
   margin-top: 5px;
 }
 .scenarios-preview > .button {
   margin-top: 18px;
-  font-size: 10px;
+  font-size: 11px;
   min-height: 35px;
 }
 .activity-row {
@@ -612,19 +612,19 @@
   flex: 1;
 }
 .activity-row strong {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 500;
   color: #5f708b;
 }
 .activity-row small {
   display: block;
   color: #a0adc1;
-  font-size: 9px;
+  font-size: 11px;
   line-height: 1.6;
   margin-top: 3px;
 }
 .activity-row > time {
-  font-size: 9px;
+  font-size: 11px;
   color: #a6b1c3;
 }
 .handoff-row {
@@ -644,13 +644,13 @@
   color: #60718e;
 }
 .handoff-row p {
-  font-size: 10px;
+  font-size: 11px;
   color: #96a6bd;
   margin: 6px 0;
   line-height: 1.6;
 }
 .handoff-row small {
-  font-size: 9px;
+  font-size: 11px;
   color: #b0bac9;
 }
 .mobile-only,
@@ -781,7 +781,7 @@
   }
   .demo-banner {
     padding: 10px 18px;
-    font-size: 9px;
+    font-size: 11px;
     align-items: flex-start;
     line-height: 1.6;
   }
@@ -790,7 +790,7 @@
     margin-top: 3px;
   }
   .demo-banner button {
-    font-size: 9px;
+    font-size: 11px;
   }
   .demo-banner button > svg {
     display: none;
@@ -803,7 +803,7 @@
     font-size: 25px;
   }
   .page-heading > .button {
-    font-size: 10px;
+    font-size: 11px;
     padding: 10px;
   }
   .page-heading p {
@@ -825,10 +825,10 @@
     font-size: 27px;
   }
   .stat-card > small {
-    font-size: 8px;
+    font-size: 11px;
   }
   .stat-top {
-    font-size: 10px;
+    font-size: 11px;
   }
   .app-footer {
     padding: 8px 20px 22px;
@@ -840,7 +840,7 @@
     padding: 19px;
   }
   .chart-summary {
-    font-size: 8px;
+    font-size: 11px;
   }
 }
 
@@ -864,7 +864,7 @@
   font-size: 34px;
 }
 .stat-card > small {
-  font-size: 10px;
+  font-size: 11px;
 }
 .stat-top {
   font-size: 12px;
@@ -881,7 +881,7 @@
 }
 .preview-row small,
 .activity-row small {
-  font-size: 10px;
+  font-size: 11px;
 }
 .welcome .badge {
   background: #f5f6f8;
