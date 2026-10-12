@@ -42,6 +42,12 @@ beforeAll(async () => {
       'utf8',
     ),
   );
+  await db.exec(
+    await readFile(
+      new URL('../supabase/migrations/202610120005_flow_cleanup.sql', import.meta.url),
+      'utf8',
+    ),
+  );
   await asUser(userA);
   wsA = (
     await db.query<{ create_workspace: string }>("select public.create_workspace('Команда A')")
@@ -259,5 +265,50 @@ describe('real PostgreSQL permissions and queue transactions', () => {
         )
       ).rows[0],
     ).toMatchObject({ email: 'student@example.com', is_lead: true });
+  });
+  it('removes a deleted flow session so its old assets are no longer permanently locked', async () => {
+    await db.exec('reset role');
+    const flow = '55555555-5555-4555-8555-555555555555',
+      asset = '66666666-6666-4666-8666-666666666666';
+    const c = (
+      await db.query<{ id: string }>('select id from public.conversations where workspace_id=$1', [
+        wsA,
+      ])
+    ).rows[0].id;
+    await db.query(
+      "insert into public.flows(id,workspace_id,name,trigger_kind,definition) values($1,$2,'Удаляемый','dm_keyword','{}')",
+      [flow, wsA],
+    );
+    await db.query('insert into private.sessions(conversation_id,data) values($1,$2::jsonb)', [
+      c,
+      JSON.stringify({ flowId: flow, definition: { nodes: [{ assetId: asset }] } }),
+    ]);
+    await db.query("select public.service_enqueue('resume','removed-flow',$1::jsonb)", [
+      JSON.stringify({ flowId: flow, conversationId: c }),
+    ]);
+    expect(
+      (
+        await db.query<{ service_asset_in_use: boolean }>(
+          'select public.service_asset_in_use($1,$2)',
+          [wsA, asset],
+        )
+      ).rows[0].service_asset_in_use,
+    ).toBe(true);
+    await db.query('delete from public.flows where id=$1', [flow]);
+    expect(
+      (
+        await db.query<{ service_asset_in_use: boolean }>(
+          'select public.service_asset_in_use($1,$2)',
+          [wsA, asset],
+        )
+      ).rows[0].service_asset_in_use,
+    ).toBe(false);
+    expect(
+      (
+        await db.query<{ status: string }>(
+          "select status from private.jobs where event_key='removed-flow'",
+        )
+      ).rows[0].status,
+    ).toBe('done');
   });
 });
