@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ArrowRight,
   BookOpen,
@@ -18,6 +18,7 @@ export function Settings() {
   const [name, setName] = useState(data.workspace.name),
     [confirm, setConfirm] = useState<'reset' | 'disconnect' | null>(null);
   const connected = data.account?.status === 'connected';
+  useEffect(() => setName(data.workspace.name), [data.workspace.name]);
   const publicUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
   const webhook = publicUrl ? publicUrl + '/functions/v1/instagram-webhook' : '';
   async function connect() {
