@@ -1,18 +1,51 @@
 # ReplyFolio
 
-Instagram Direct automation for an EdTech business: educational materials, pricing, conversations, and leads. No AI provider is required.
+Минималистичный кабинет автоматизации Instagram Direct для собственного EdTech-бизнеса. Без ИИ.
 
-## Scope
+Готовы интерфейс, движок сценариев, локальный симулятор и серверная интеграция для подключения. **Реальный Instagram пока не подключён:** Supabase-проект, приложение Meta и профессиональный аккаунт ещё не созданы. Live-доставку нужно подтвердить после настройки.
 
-- One Instagram professional account per workspace.
-- Keyword and comment triggers, branching flows, contact capture, material delivery, and operator handoff.
-- React dashboard hosted on Cloudflare Pages; database, authentication, storage, and Edge Functions hosted on Supabase.
-- A clearly labeled local demo works without cloud credentials. Production mode connects to Supabase and the official Instagram API.
+## Запуск
 
-## Delivery status
+Node.js 24+:
 
-Implementation is in progress. A live Supabase project, Meta app, and professional Instagram account have not been created or connected. Real message delivery must be verified after connecting these services.
+```sh
+npm ci
+npm run dev
+```
 
-## Commit policy
+Откройте http://localhost:5173. Без .env работает демосреда: изменения сохраняются в этом браузере, сообщений в Instagram нет.
 
-Each independently completed change is committed separately. Secrets and generated files are excluded from Git.
+## Что работает
+
+- Диалоги: поиск, карточка контакта, ручной ответ, пауза бота.
+- Сценарии: keywords в Direct, комментарии по ключевым словам, выбранные публикации по ID, ветки, кнопки, сбор контакта, задержки, теги, заявка и менеджер.
+- Библиотека HTTPS-ссылок и PDF (облачная загрузка после подключения).
+- Заявки со статусами, фильтрами и CSV.
+- Симулятор, который использует тот же движок, что и сервер.
+- Google Auth, OAuth Instagram, подписанные webhook, очередь, контроль окна ответа, зашифрованные токены и обновление доступа — подготовлены для Supabase.
+- Адаптация для телефона и планшета.
+
+## Подключение
+
+[Пошаговая инструкция](docs/SETUP.md) · [Архитектура и границы проверки](docs/ARCHITECTURE.md)
+
+Фронтенд: React/TypeScript/Vite → Cloudflare Pages Free. Backend: Supabase Free. Notion подходит для справки/ссылки на кабинет; Vercel Hobby не выбран для коммерческого использования. Требования Meta к рабочему webhook включают Live-режим, Advanced Access и Business Verification; их нельзя подтвердить локальными тестами.
+
+Скопируйте .env.example в .env.local только когда готовы подключить Supabase. Серверные секреты задаются отдельно через supabase/.env.example и никогда не попадают во фронтенд.
+
+## Проверка
+
+```sh
+npm test
+npm run build
+npm run check:edge
+npx playwright install chromium
+npm run test:e2e
+npm run format:check
+```
+
+32 unit/integration теста и 11 браузерных проверок. CI включает те же команды. Нет автоматической отправки или публикации во внешние аккаунты.
+
+## Git
+
+Отдельный локальный репозиторий на main. Каждое самостоятельно завершённое изменение — отдельный коммит. Remote не задан. Секреты, зависимости и сборка исключены из Git.
