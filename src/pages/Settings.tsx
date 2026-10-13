@@ -3,7 +3,6 @@ import {
   ArrowRight,
   BookOpen,
   Check,
-  Copy,
   Database,
   Download,
   Camera,
@@ -14,12 +13,11 @@ import {
 } from 'lucide-react';
 import { Badge, day, download, Modal, useUI } from '../ui.tsx';
 export function Settings() {
-  const { data, repo, perform, busy, notify } = useUI();
+  const { data, repo, perform, busy } = useUI();
   const [name, setName] = useState(data.workspace.name),
     [confirm, setConfirm] = useState<'reset' | 'disconnect' | null>(null);
   const connected = data.account?.status === 'connected';
   useEffect(() => setName(data.workspace.name), [data.workspace.name]);
-  const webhook = '';
   async function connect() {
     if (repo.mode === 'demo') {
       window.open('/setup.html', '_blank', 'noopener');
@@ -220,25 +218,10 @@ export function Settings() {
               </div>
               <Link2 size={19} className="settings-icon" />
             </div>
-            {webhook ? (
-              <>
-                <div className="webhook-address">{webhook}</div>
-                <button
-                  className="button small"
-                  onClick={() =>
-                    void navigator.clipboard
-                      .writeText(webhook)
-                      .then(() => notify('Адрес скопирован.'))
-                      .catch(() => notify('Скопируйте адрес вручную.'))
-                  }
-                >
-                  <Copy size={13} />
-                  Скопировать
-                </button>
-              </>
-            ) : (
-              <p className="form-hint">Адрес появится после подключения вашего проекта Supabase.</p>
-            )}
+            <p className="form-hint">
+              Адрес зависит от вашего проекта Supabase. Возьмите его из инструкции подключения и
+              добавьте в настройки Meta.
+            </p>
           </section>
           <section className="quiet-note">
             <ShieldCheck size={19} />
