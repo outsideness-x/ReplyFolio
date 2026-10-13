@@ -38,6 +38,14 @@ React/TypeScript/Vite, Cloudflare Pages Functions шлюз, шесть Supabase 
 
 По умолчанию отображается landing с email-входом. DEV demo включается явно через ?demo=1; production demo выключено. LocalRepository содержит вымышленные данные, SupabaseRepository обращается к same-origin API и опрашивает данные раз в 15 секунд, пока вкладка видима.
 
+## Подготовленные разделы аналитики
+
+Аналитика приложения, Instagram и взаимосвязи доступны внутри того же закрытого кабинета и через ⌘K. Пока это статические экраны: нет SDK событий, ingest API, таблиц аналитики, фоновой загрузки Insights, фильтров или расчётов. Прочерки обозначают отсутствие данных, а не нулевые значения. Backend Direct не меняется.
+
+Будущее подключение Instagram Insights требует отдельного instagram_business_manage_insights для Instagram Login. Это разрешение сейчас не запрашивается. Официальный API поддерживает статистику собственных профессиональных Business/Creator аккаунтов и их контента; доступность метрик и истории ограничена Meta. [Instagram Insights](https://developers.facebook.com/documentation/instagram-platform/insights).
+
+Экран взаимосвязей предусматривает сопоставление агрегированной динамики. Для атрибуции кампаний к событиям приложения позднее понадобятся размеченные ссылки и события; совпадение дат само по себе не устанавливает причинность или личность пользователя.
+
 ## Проверки и границы
 
 48 unit/integration тестов и 18 Chromium проверок: движок, webhook batch, очереди, PostgreSQL RLS и закрытые grants, приглашения, session binding, MFA factor pinning, OAuth, CSRF, подписи, waitlist, навигация и 390/768/1440px. TypeScript/build и Deno проверяют исходники. Privacy scan проверяет файлы, историю Git и build.
