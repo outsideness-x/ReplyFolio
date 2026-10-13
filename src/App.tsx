@@ -157,8 +157,8 @@ function WorkspaceApp({ repo }: { repo: Repository }) {
     if (status) {
       setToast(
         status === 'connected'
-          ? 'Instagram подключён.'
-          : 'Подключение не завершено. Проверьте настройки Meta и повторите вход.',
+          ? 'Instagram connected.'
+          : 'Connection incomplete. Check your Meta settings and sign in again.',
       );
       history.replaceState(null, '', location.pathname + location.hash);
     }
@@ -171,7 +171,7 @@ function WorkspaceApp({ repo }: { repo: Repository }) {
       if (message) setToast(message);
       return true;
     } catch (e) {
-      setToast(e instanceof Error ? e.message : 'Не удалось выполнить операцию.');
+      setToast(e instanceof Error ? e.message : 'Unable to complete this action.');
       return false;
     } finally {
       setBusy(false);
@@ -182,10 +182,10 @@ function WorkspaceApp({ repo }: { repo: Repository }) {
       <div className="auth-screen">
         <section className="auth-card">
           <Brand />
-          <h1>Не удалось загрузить кабинет</h1>
+          <h1>Unable to load your workspace</h1>
           <p>{loadError}</p>
           <button className="button primary" onClick={() => location.reload()}>
-            Повторить
+            Try again
           </button>
         </section>
       </div>
@@ -210,11 +210,11 @@ function WorkspaceApp({ repo }: { repo: Repository }) {
     >
       <div className="app-shell" data-theme={theme}>
         {stepUp && (
-          <Modal title="Подтвердите вход" onClose={() => setStepUp(false)}>
+          <Modal title="Verify your sign-in" onClose={() => setStepUp(false)}>
             <MfaChallenge
               onDone={() => {
                 setStepUp(false);
-                setToast('Вход подтверждён. Повторите действие.');
+                setToast('Sign-in verified. Try the action again.');
               }}
             />
           </Modal>
@@ -224,7 +224,7 @@ function WorkspaceApp({ repo }: { repo: Repository }) {
             <Brand />
             <button
               className="mobile-only icon-button"
-              aria-label="Закрыть меню"
+              aria-label="Close menu"
               onClick={() => setMobile(false)}
             >
               <X size={20} />
@@ -234,13 +234,11 @@ function WorkspaceApp({ repo }: { repo: Repository }) {
             <span className="workspace-monogram">{data.workspace.name[0]}</span>
             <div>
               <strong>{data.workspace.name}</strong>
-              <small>
-                {repo.mode === 'demo' ? 'Демонстрационный режим' : 'Рабочее пространство'}
-              </small>
+              <small>{repo.mode === 'demo' ? 'Demo mode' : 'Workspace'}</small>
             </div>
             <ChevronRight size={15} />
           </button>
-          <nav aria-label="Разделы рабочего пространства">
+          <nav aria-label="Workspace sections">
             {navigationGroups.map((group) => (
               <div className="nav-group" key={group.id}>
                 {group.label && <div className="nav-label">{group.label}</div>}
@@ -259,7 +257,7 @@ function WorkspaceApp({ repo }: { repo: Repository }) {
                         <span className="nav-count">{unread}</span>
                       )}
                       {p.id === 'lab' && <span className="nav-mini">TEST</span>}
-                      {p.upcoming && <span className="nav-mini">Скоро</span>}
+                      {p.upcoming && <span className="nav-mini">Coming soon</span>}
                     </button>
                   ))}
               </div>
@@ -272,10 +270,10 @@ function WorkspaceApp({ repo }: { repo: Repository }) {
               />
               <span>
                 {repo.mode === 'demo'
-                  ? 'Локальный симулятор'
+                  ? 'Local simulator'
                   : data.account?.status === 'connected'
-                    ? 'Instagram подключён'
-                    : 'Instagram не подключён'}
+                    ? 'Instagram connected'
+                    : 'Instagram not connected'}
               </span>
             </div>
             <button className="help-card" onClick={() => navigate('settings')}>
@@ -283,8 +281,8 @@ function WorkspaceApp({ repo }: { repo: Repository }) {
                 <BookOpen size={18} />
               </span>
               <div>
-                <strong>Готовы подключить Instagram?</strong>
-                <small>Настройка шаг за шагом</small>
+                <strong>Ready to connect Instagram?</strong>
+                <small>Step-by-step setup</small>
               </div>
               <ArrowUpRight size={16} />
             </button>
@@ -296,7 +294,7 @@ function WorkspaceApp({ repo }: { repo: Repository }) {
         {mobile && (
           <button
             className="sidebar-scrim"
-            aria-label="Закрыть меню"
+            aria-label="Close menu"
             onClick={() => setMobile(false)}
           />
         )}
@@ -305,12 +303,12 @@ function WorkspaceApp({ repo }: { repo: Repository }) {
             <div className="breadcrumb">
               <button
                 className="mobile-only icon-button"
-                aria-label="Открыть меню"
+                aria-label="Open menu"
                 onClick={() => setMobile(true)}
               >
                 <Menu size={22} />
               </button>
-              <span>Рабочее пространство</span>
+              <span>Workspace</span>
               <ChevronRight size={14} />
               <strong>{pages.find((p) => p.id === page)?.title}</strong>
             </div>
@@ -318,7 +316,7 @@ function WorkspaceApp({ repo }: { repo: Repository }) {
               <CommandPalette />
               <button
                 className="icon-button theme-toggle"
-                aria-label={theme === 'light' ? 'Тёмная тема' : 'Светлая тема'}
+                aria-label={theme === 'light' ? 'Dark theme' : 'Light theme'}
                 onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
               >
                 {theme === 'light' ? <Moon size={17} /> : <Sun size={17} />}
@@ -330,11 +328,11 @@ function WorkspaceApp({ repo }: { repo: Repository }) {
             <div className="demo-banner">
               <FlaskConical size={15} />
               <span>
-                <strong>Демо-среда.</strong> Данные хранятся в этом браузере; сообщения в Instagram
-                не отправляются.
+                <strong>Demo workspace.</strong> Data stays in this browser; no messages are sent to
+                Instagram.
               </span>
               <button onClick={() => navigate('settings')}>
-                Подключить сервисы
+                Connect services
                 <ArrowRight size={14} />
               </button>
             </div>
@@ -367,10 +365,10 @@ function WorkspaceApp({ repo }: { repo: Repository }) {
             )}
           </main>
           <footer className="app-footer">
-            <span>GrowthThread · Диалоги и данные в одном пространстве</span>
+            <span>GrowthThread · Conversations and data in one workspace</span>
             {repo.mode === 'demo' && (
               <a href="/">
-                На главную
+                Back to home
                 <ArrowUpRight size={12} />
               </a>
             )}
@@ -378,11 +376,11 @@ function WorkspaceApp({ repo }: { repo: Repository }) {
               <button
                 className="text-button"
                 onClick={() =>
-                  void logout().catch(() => setToast('Не удалось выйти. Повторите действие.'))
+                  void logout().catch(() => setToast('Unable to sign out. Please try again.'))
                 }
               >
                 <LogOut size={14} />
-                Выйти
+                Sign out
               </button>
             )}
             <span>{repo.mode === 'demo' ? 'LOCAL DEMO' : 'SUPABASE CONNECTED'}</span>
@@ -394,7 +392,7 @@ function WorkspaceApp({ repo }: { repo: Repository }) {
             <span>{toast}</span>
             <button
               className="icon-button"
-              aria-label="Закрыть уведомление"
+              aria-label="Dismiss notification"
               onClick={() => setToast('')}
             >
               <X size={16} />

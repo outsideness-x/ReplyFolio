@@ -30,14 +30,16 @@ export function isStopCommand(text: string): boolean {
   return ['стоп', 'stop', 'отписаться', 'unsubscribe'].includes(normalize(text));
 }
 export function isHandoffCommand(text: string): boolean {
-  return ['менеджер', 'оператор', 'человек'].includes(normalize(text));
+  return ['team', 'manager', 'operator', 'human', 'менеджер', 'оператор', 'человек'].includes(
+    normalize(text),
+  );
 }
 export function validMessage(text: string): boolean {
   return text.trim().length > 0 && new TextEncoder().encode(text).length <= MESSAGE_BYTE_LIMIT;
 }
 export function assertMessage(text: string): void {
   if (!validMessage(text))
-    throw new Error('Сообщение должно содержать от 1 до 1000 байт UTF-8. Сократите текст.');
+    throw new Error('The message must be between 1 and 1000 UTF-8 bytes. Shorten the text.');
 }
 export function isHttpsUrl(value: string): boolean {
   try {
@@ -91,29 +93,29 @@ export function validateDefinition(
   value: unknown,
   comment = false,
 ): asserts value is FlowDefinition {
-  if (!value || typeof value !== 'object') throw new Error('Сценарий должен быть объектом.');
+  if (!value || typeof value !== 'object') throw new Error('The flow must be an object.');
   const d = value as FlowDefinition;
   if (d.version !== 1 || !Array.isArray(d.nodes) || d.nodes.length < 1 || d.nodes.length > 50)
-    throw new Error('В сценарии должно быть от 1 до 50 блоков.');
+    throw new Error('A flow must contain between 1 and 50 blocks.');
   const ids = new Set<string>();
   for (const node of d.nodes) {
     if (!node || typeof node.id !== 'string' || !/^[\w-]{1,64}$/.test(node.id) || ids.has(node.id))
-      throw new Error('У блоков должны быть уникальные идентификаторы.');
+      throw new Error('Blocks must have unique IDs.');
     ids.add(node.id);
     if (node.next !== null && typeof node.next !== 'string')
-      throw new Error('Укажите следующий блок.');
+      throw new Error('Choose the next block.');
     switch (node.type) {
       case 'send':
-        if (typeof node.text !== 'string') throw new Error('Укажите текст сообщения.');
+        if (typeof node.text !== 'string') throw new Error('Enter the message text.');
         assertMessage(node.text);
         if (node.assetId !== undefined && typeof node.assetId !== 'string')
-          throw new Error('Некорректный материал.');
+          throw new Error('Invalid material.');
         break;
       case 'choice': {
-        if (typeof node.text !== 'string') throw new Error('Укажите вопрос.');
+        if (typeof node.text !== 'string') throw new Error('Enter a question.');
         assertMessage(node.text);
         if (!Array.isArray(node.options) || node.options.length < 1 || node.options.length > 13)
-          throw new Error('Добавьте от 1 до 13 вариантов ответа.');
+          throw new Error('Add between 1 and 13 quick replies.');
         const optionIds = new Set<string>();
         for (const o of node.options) {
           if (
@@ -126,14 +128,14 @@ export function validateDefinition(
             [...o.label].length > 20 ||
             (o.next !== null && typeof o.next !== 'string')
           )
-            throw new Error('Варианты должны иметь уникальные ID и подписи до 20 символов.');
+            throw new Error('Quick replies must have unique IDs and labels up to 20 characters.');
           optionIds.add(o.id);
         }
         break;
       }
       case 'capture':
         if (!['name', 'email', 'phone'].includes(node.field) || typeof node.text !== 'string')
-          throw new Error('Выберите поле контакта и вопрос.');
+          throw new Error('Choose a contact field and enter a question.');
         assertMessage(node.text);
         break;
       case 'condition':
@@ -142,11 +144,11 @@ export function validateDefinition(
           !['equals', 'contains', 'exists'].includes(node.operator) ||
           typeof node.value !== 'string'
         )
-          throw new Error('Некорректное условие.');
+          throw new Error('Invalid condition.');
         break;
       case 'delay':
         if (!Number.isFinite(node.minutes) || node.minutes < 1 || node.minutes > 1440)
-          throw new Error('Ожидание должно длиться от 1 до 1440 минут.');
+          throw new Error('The delay must be between 1 and 1440 minutes.');
         break;
       case 'tag':
         if (
@@ -154,28 +156,28 @@ export function validateDefinition(
           node.tags.length > 20 ||
           node.tags.some((t) => typeof t !== 'string' || !t.trim() || t.length > 64)
         )
-          throw new Error('Некорректные теги.');
+          throw new Error('Invalid tags.');
         break;
       case 'handoff':
         if (typeof node.text !== 'string' || (node.text.trim() && !validMessage(node.text)))
-          throw new Error('Сократите сообщение менеджера.');
+          throw new Error('Shorten the handoff message.');
         break;
       case 'lead':
       case 'end':
         break;
       default:
-        throw new Error('Неизвестный тип блока.');
+        throw new Error('Unknown block type.');
     }
   }
-  if (!ids.has(d.start)) throw new Error('Выберите начальный блок.');
+  if (!ids.has(d.start)) throw new Error('Choose the starting block.');
   for (const node of d.nodes)
     for (const id of pointers(node))
-      if (id !== null && !ids.has(id))
-        throw new Error('Один из переходов указывает на удалённый блок.');
+      if (id !== null && !ids.has(id)) throw new Error('A connection points to a deleted block.');
   const visiting = new Set<string>(),
     visited = new Set<string>();
   function visit(id: string): void {
-    if (visiting.has(id)) throw new Error('Сценарий содержит цикл. Удалите обратный переход.');
+    if (visiting.has(id))
+      throw new Error('The flow contains a loop. Remove the backward connection.');
     if (visited.has(id)) return;
     visiting.add(id);
     for (const next of pointers(d.nodes.find((n) => n.id === id)!)) if (next) visit(next);
@@ -184,25 +186,25 @@ export function validateDefinition(
   }
   for (const id of ids) visit(id);
   if (comment && d.nodes.find((n) => n.id === d.start)?.type !== 'send')
-    throw new Error('Сценарий комментария должен начинаться с одного текстового сообщения.');
+    throw new Error('A comment flow must start with a single text message.');
 }
 export function validateFlow(flow: Flow): void {
   if (typeof flow.name !== 'string' || !flow.name.trim() || flow.name.length > 120)
-    throw new Error('Укажите название до 120 символов.');
+    throw new Error('Enter a name of up to 120 characters.');
   if (!['dm_keyword', 'dm_any', 'comment_keyword'].includes(flow.trigger_kind))
-    throw new Error('Неизвестный триггер.');
+    throw new Error('Unknown trigger.');
   if (
     !Array.isArray(flow.keywords) ||
     flow.keywords.length > 30 ||
     flow.keywords.some((x) => typeof x !== 'string' || x.length > 100) ||
     (flow.trigger_kind !== 'dm_any' && !flow.keywords.some((x) => normalize(x)))
   )
-    throw new Error('Добавьте хотя бы одно ключевое слово.');
+    throw new Error('Add at least one keyword.');
   if (
     !Array.isArray(flow.post_ids) ||
     flow.post_ids.some((x) => typeof x !== 'string' || !/^\d{1,30}$/.test(x))
   )
-    throw new Error('ID публикаций должны содержать только цифры.');
+    throw new Error('Post IDs must contain digits only.');
   validateDefinition(flow.definition, flow.trigger_kind === 'comment_keyword');
 }
 function capture(field: CaptureField, text: string): string | null {
@@ -273,7 +275,7 @@ export function runFlow(
       if (!option) {
         send(
           node.id,
-          'Пожалуйста, выберите один из вариантов.',
+          'Please choose one of the options.',
           node.options.map((o) => ({ title: o.label, payload: `rf:${node.id}:${o.id}` })),
         );
         return result('choice');
@@ -286,10 +288,10 @@ export function runFlow(
         send(
           node.id,
           node.field === 'email'
-            ? 'Укажите email, например name@example.com.'
+            ? 'Enter an email, such as name@example.com.'
             : node.field === 'phone'
-              ? 'Укажите телефон с кодом страны, например +375291234567.'
-              : 'Напишите имя: от 2 до 120 символов.',
+              ? 'Enter a phone number with a country code, such as +375291234567.'
+              : 'Enter a name between 2 and 120 characters.',
         );
         return result('capture');
       }
@@ -299,15 +301,16 @@ export function runFlow(
   } else if (old?.waiting === 'choice' || old?.waiting === 'capture') return result(old.waiting);
   for (let steps = 0; cursor && steps < 50; steps++) {
     const node = definition.nodes.find((n) => n.id === cursor);
-    if (!node) throw new Error('Текущий блок удалён. Перезапустите сценарий.');
+    if (!node) throw new Error('The current block was deleted. Restart the flow.');
     switch (node.type) {
       case 'send': {
         const material = node.assetId
           ? args.materials?.find((m) => m.id === node.assetId)
           : undefined;
-        if (node.assetId && !material) throw new Error('Материал сценария удалён или недоступен.');
+        if (node.assetId && !material)
+          throw new Error('The flow material was deleted or is unavailable.');
         if (material && !isHttpsUrl(material.url))
-          throw new Error('Материал должен иметь HTTPS-ссылку.');
+          throw new Error('The material must have an HTTPS link.');
         send(node.id, node.text + (material ? `\n${material.url}` : ''));
         cursor = node.next;
         if (args.privateReply) return result(cursor ? 'reply' : null);
@@ -355,6 +358,6 @@ export function runFlow(
         return result();
     }
   }
-  if (cursor) throw new Error('Сценарий превысил лимит шагов.');
+  if (cursor) throw new Error('The flow exceeded its step limit.');
   return result();
 }

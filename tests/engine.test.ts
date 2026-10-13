@@ -18,11 +18,11 @@ const now = Date.parse('2026-10-12T09:00:00Z');
 const flow = (comment = false): Flow => ({
   id: 'flow',
   workspace_id: 'workspace',
-  name: 'Учебные материалы',
+  name: 'Learning resources',
   description: '',
   enabled: true,
   trigger_kind: comment ? 'comment_keyword' : 'dm_keyword',
-  keywords: ['прайс', 'материалы'],
+  keywords: ['price', 'materials'],
   post_ids: [],
   definition: comment ? commentTemplate() : materialTemplate(),
   created_at: new Date(now).toISOString(),
@@ -30,10 +30,10 @@ const flow = (comment = false): Flow => ({
 });
 describe('Instagram rules and validation', () => {
   it('matches whole Unicode phrases, ignoring punctuation and case', () => {
-    expect(matchesKeyword('Пришлите ПРАЙС, пожалуйста!', ['прайс'])).toBe(true);
-    expect(matchesKeyword('прайсовый лист', ['прайс'])).toBe(false);
-    expect(matchesKeyword('хочу бесплатный—урок', ['бесплатный урок'])).toBe(true);
-    expect(matchesKeyword('что угодно', [''])).toBe(false);
+    expect(matchesKeyword('Please send the PRICE!', ['price'])).toBe(true);
+    expect(matchesKeyword('priceless list', ['price'])).toBe(false);
+    expect(matchesKeyword("I'd like a free—lesson", ['free lesson'])).toBe(true);
+    expect(matchesKeyword('anything', [''])).toBe(false);
     expect(normalize(' ＰＲＩＣＥ ')).toBe('price');
   });
   it('uses UTF-8 byte limits, including Cyrillic', () => {
@@ -72,10 +72,10 @@ describe('Instagram rules and validation', () => {
   it('gives keyword flows priority and applies post restrictions', () => {
     const any = { ...flow(), id: 'any', trigger_kind: 'dm_any' as const };
     const keyword = flow();
-    expect(selectFlow([any, keyword], 'dm', 'прайс')?.id).toBe('flow');
+    expect(selectFlow([any, keyword], 'dm', 'price')?.id).toBe('flow');
     const comment = { ...flow(true), post_ids: ['123'] };
-    expect(selectFlow([comment], 'comment', 'прайс', '124')).toBeUndefined();
-    expect(selectFlow([comment], 'comment', 'прайс', '123')?.id).toBe('flow');
+    expect(selectFlow([comment], 'comment', 'price', '124')).toBeUndefined();
+    expect(selectFlow([comment], 'comment', 'price', '123')?.id).toBe('flow');
   });
 });
 describe('durable flow sessions', () => {
@@ -85,7 +85,7 @@ describe('durable flow sessions', () => {
     f.definition.nodes = f.definition.nodes.filter((n) => n.id !== 'price');
     const choice = f.definition.nodes.find((n) => n.id === 'interest');
     if (choice?.type === 'choice') choice.options[1].next = 'email';
-    const result = runFlow(f, { session: start.session, input: { text: 'Стоимость обучения' } });
+    const result = runFlow(f, { session: start.session, input: { text: 'Course pricing' } });
     expect(result.actions[0].nodeId).toBe('price');
   });
   it('persists a choice, rejects forged payloads, captures an email and creates a lead', () => {
@@ -101,7 +101,7 @@ describe('durable flow sessions', () => {
     expect(bad.session?.nodeId).toBe('interest');
     const price = runFlow(f, {
       session: start.session,
-      input: { text: 'Стоимость обучения' },
+      input: { text: 'Course pricing' },
       now,
     });
     expect(price.session?.waiting).toBe('capture');
@@ -115,7 +115,7 @@ describe('durable flow sessions', () => {
     });
     expect(lead.variables.email).toBe('name@example.com');
     expect(lead.lead).toBe(true);
-    expect(lead.tags).toContain('Интерес к обучению');
+    expect(lead.tags).toContain('Interested in learning');
     expect(lead.session).toBeNull();
   });
   it('sends only one private reply until the recipient answers', () => {
@@ -124,7 +124,7 @@ describe('durable flow sessions', () => {
     expect(first.actions).toHaveLength(1);
     expect(first.session?.waiting).toBe('reply');
     expect(runFlow(f, { session: first.session, now }).actions).toHaveLength(0);
-    const resumed = runFlow(f, { session: first.session, input: { text: 'прайс' }, now });
+    const resumed = runFlow(f, { session: first.session, input: { text: 'price' }, now });
     expect(resumed.actions).toHaveLength(2);
     expect(resumed.session?.waiting).toBe('capture');
   });
@@ -135,14 +135,14 @@ describe('durable flow sessions', () => {
       start: 'wait',
       nodes: [
         { id: 'wait', type: 'delay', minutes: 5, next: 'send' },
-        { id: 'send', type: 'send', text: 'Готово', next: null },
+        { id: 'send', type: 'send', text: 'Done', next: null },
       ],
     };
     const waiting = runFlow(f, { now });
     expect(waiting.session?.resumeAt).toBe(new Date(now + 300000).toISOString());
     expect(runFlow(f, { session: waiting.session, now: now + 1000 }).actions).toHaveLength(0);
     expect(runFlow(f, { session: waiting.session, now: now + 300000 }).actions[0].text).toBe(
-      'Готово',
+      'Done',
     );
   });
   it('evaluates branches and ends a handoff', () => {
@@ -161,7 +161,7 @@ describe('durable flow sessions', () => {
           no: 'end',
           next: null,
         },
-        { id: 'human', type: 'handoff', text: 'Передаю менеджеру', next: null },
+        { id: 'human', type: 'handoff', text: 'Passing you to our team', next: null },
         { id: 'end', type: 'end', next: null },
       ],
     };
@@ -173,13 +173,13 @@ describe('durable flow sessions', () => {
     const first = f.definition.nodes[0];
     if (first.type !== 'send') throw new Error('fixture');
     first.assetId = 'asset';
-    expect(() => runFlow(f)).toThrow('Материал');
+    expect(() => runFlow(f)).toThrow('The flow material was deleted or is unavailable.');
     const result = runFlow(f, {
       materials: [
         {
           id: 'asset',
           workspace_id: 'workspace',
-          title: 'Урок',
+          title: 'Lesson',
           description: '',
           kind: 'link',
           url: 'https://example.com/lesson',

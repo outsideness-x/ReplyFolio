@@ -4,21 +4,21 @@ import { exchangeCode, metaRequest } from '../_shared/meta.ts';
 import { OAUTH_COOKIE, readCookie, secureCookie } from '../../../shared/security.ts';
 import { gateway } from '../_shared/gateway.ts';
 serve(async (req) => {
-  if (req.method !== 'GET') throw new HttpError(405, 'Используйте GET.');
+  if (req.method !== 'GET') throw new HttpError(405, 'Use GET.');
   const url = new URL(req.url),
     db = database();
   await gateway(req, db);
   const proof = readCookie(req, OAUTH_COOKIE);
-  if (!proof) throw new HttpError(403, 'Подключение нужно завершить в том же браузере.');
+  if (!proof) throw new HttpError(403, 'Complete the connection in the same browser.');
   const state = url.searchParams.get('state');
   if (!state || !/^[0-9a-f]{64}$/.test(state))
-    throw new HttpError(400, 'Некорректное состояние авторизации.');
+    throw new HttpError(400, 'Invalid authorization state.');
   const workspaceId = await rpc<string | null>(db, 'service_take_oauth_bound', {
     hash: await hash(state),
     proof: await hash(proof),
   });
   if (!workspaceId)
-    throw new HttpError(400, 'Ссылка подключения истекла. Повторите подключение из кабинета.');
+    throw new HttpError(400, 'The connection link expired. Start again from your workspace.');
   const destination = new URL(env('APP_URL'));
   destination.hash = '/settings';
   try {
@@ -83,7 +83,7 @@ serve(async (req) => {
         .update({
           status: 'error',
           last_error:
-            'Не удалось подписаться на события Instagram. Проверьте разрешения Meta и повторите подключение.',
+            'Unable to subscribe to Instagram events. Check Meta permissions and reconnect.',
         })
         .eq('id', account.id);
       throw e;

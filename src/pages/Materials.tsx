@@ -36,25 +36,25 @@ export function Materials() {
       <div className="page-heading">
         <div>
           <div className="eyebrow">YOUR LIBRARY</div>
-          <h1>Материалы</h1>
-          <p>Полезное знакомство с вашим обучением.</p>
+          <h1>Materials</h1>
+          <p>A useful introduction to your courses.</p>
         </div>
         <button className="button primary" onClick={create}>
           <Plus size={16} />
-          Добавить материал
+          Add material
         </button>
       </div>
       <div className="table-toolbar">
         <div className="table-search">
           <Search size={16} />
           <input
-            aria-label="Поиск материалов"
-            placeholder="Поиск по библиотеке"
+            aria-label="Search materials"
+            placeholder="Search the library"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
         </div>
-        <Badge tone="gray">{data.materials.length} материалов</Badge>
+        <Badge tone="gray">{data.materials.length} materials</Badge>
       </div>
       {list.length ? (
         <div className="cards-grid">
@@ -64,26 +64,26 @@ export function Materials() {
                 {m.kind === 'pdf' ? <FileText size={42} /> : <BookOpen size={42} />}
               </div>
               <div>
-                <Badge tone="gray">{m.kind === 'pdf' ? 'PDF' : 'Ссылка'}</Badge>
+                <Badge tone="gray">{m.kind === 'pdf' ? 'PDF' : 'Link'}</Badge>
               </div>
               <h3 style={{ marginTop: 13 }}>{m.title}</h3>
-              <p>{m.description || 'Готов к добавлению в сценарий.'}</p>
+              <p>{m.description || 'Ready to add to a flow.'}</p>
               <div className="material-url">{m.url}</div>
               <div className="card-footer">
                 <a className="button small" href={m.url} target="_blank" rel="noopener noreferrer">
                   <ExternalLink size={13} />
-                  Открыть
+                  Open
                 </a>
                 <button
                   className="icon-button"
-                  aria-label={'Редактировать ' + m.title}
+                  aria-label={'Edit ' + m.title}
                   onClick={() => setEditing(m)}
                 >
                   <Edit3 size={16} />
                 </button>
                 <button
                   className="icon-button"
-                  aria-label={'Удалить ' + m.title}
+                  aria-label={'Delete ' + m.title}
                   onClick={() => setDeleting(m)}
                 >
                   <Trash2 size={15} />
@@ -95,12 +95,12 @@ export function Materials() {
       ) : (
         <section className="panel">
           <Empty
-            title="Ваша библиотека начинается здесь"
-            description="Добавьте бесплатный урок, прайс или полезный PDF, чтобы отправлять его ученикам."
+            title="Your library starts here"
+            description="Add a free lesson, pricing or a useful PDF to share with learners."
           >
             <button className="button primary" onClick={create}>
               <Plus size={16} />
-              Добавить материал
+              Add material
             </button>
           </Empty>
         </section>
@@ -109,24 +109,24 @@ export function Materials() {
         <MaterialEditor key={editing.id} material={editing} onClose={() => setEditing(null)} />
       )}{' '}
       {deleting && (
-        <Modal title="Удалить материал?" onClose={() => setDeleting(null)}>
+        <Modal title="Delete this material?" onClose={() => setDeleting(null)}>
           <p className="form-hint">
-            «{deleting.title}» будет убран из библиотеки. Материал, используемый в сценарии или
-            активном диалоге, удалить нельзя.
+            «{deleting.title}” will be removed from the library. Materials used in a flow or active
+            conversation cannot be deleted.
           </p>
           <div className="modal-footer">
             <button className="button" onClick={() => setDeleting(null)}>
-              Отмена
+              Cancel
             </button>
             <button
               className="button danger"
               disabled={busy}
               onClick={async () => {
-                if (await perform(() => repo.deleteMaterial(deleting.id), 'Материал удалён.'))
+                if (await perform(() => repo.deleteMaterial(deleting.id), 'Material deleted.'))
                   setDeleting(null);
               }}
             >
-              Удалить материал
+              Delete material
             </button>
           </div>
         </Modal>
@@ -139,7 +139,7 @@ function MaterialEditor({ material, onClose }: { material: Material; onClose: ()
     [draft, setDraft] = useState({ ...material }),
     [file, setFile] = useState<File | null>(null);
   return (
-    <Modal title={material.title ? 'Редактировать материал' : 'Новый материал'} onClose={onClose}>
+    <Modal title={material.title ? 'Edit material' : 'New material'} onClose={onClose}>
       <form
         onSubmit={async (e) => {
           e.preventDefault();
@@ -148,10 +148,11 @@ function MaterialEditor({ material, onClose }: { material: Material; onClose: ()
               uploaded: string | null = null;
             if (file) {
               if (!repo.uploadMaterial || repo.mode !== 'live')
-                throw new Error('Загрузка PDF доступна после подключения Supabase.');
-              if (file.size > 25 * 1024 * 1024) throw new Error('PDF должен быть меньше 25 МБ.');
+                throw new Error('PDF uploads are available after connecting Supabase.');
+              if (file.size > 25 * 1024 * 1024)
+                throw new Error('The PDF must be smaller than 25 MB.');
               if (new TextDecoder().decode(await file.slice(0, 5).arrayBuffer()) !== '%PDF-')
-                throw new Error('Выберите PDF-файл.');
+                throw new Error('Choose a PDF file.');
               const result = await repo.uploadMaterial(file);
               uploaded = result.path;
               saved = {
@@ -163,7 +164,7 @@ function MaterialEditor({ material, onClose }: { material: Material; onClose: ()
             }
             if (!isHttpsUrl(saved.url)) {
               if (uploaded) await repo.removeUpload?.(uploaded);
-              throw new Error('Укажите HTTPS-ссылку.');
+              throw new Error('Enter an HTTPS link.');
             }
             try {
               await repo.saveMaterial(saved);
@@ -171,32 +172,32 @@ function MaterialEditor({ material, onClose }: { material: Material; onClose: ()
               if (uploaded) await repo.removeUpload?.(uploaded);
               throw e;
             }
-          }, 'Материал сохранён.');
+          }, 'Material saved.');
           if (ok) onClose();
         }}
       >
         <label>
-          Название
+          Title
           <input
             value={draft.title}
             onChange={(e) => setDraft({ ...draft, title: e.target.value })}
             required
             maxLength={120}
-            placeholder="Например, бесплатный вводный урок"
+            placeholder="For example, a free introductory lesson"
           />
         </label>
         <label>
-          Описание
+          Description
           <textarea
             value={draft.description}
             onChange={(e) => setDraft({ ...draft, description: e.target.value })}
             maxLength={2000}
-            placeholder="Коротко о содержимом"
+            placeholder="A brief description"
             rows={3}
           />
         </label>
         <label>
-          HTTPS-ссылка
+          HTTPS link
           <input
             type="url"
             value={draft.url}
@@ -207,33 +208,31 @@ function MaterialEditor({ material, onClose }: { material: Material; onClose: ()
             placeholder="https://…"
             required={!file}
           />
-          <small>Материал должен быть доступен ученику по этой ссылке.</small>
+          <small>Learners must be able to access the material through this link.</small>
         </label>
         <div className="upload-zone">
           <Upload size={22} />
           <span>
             {repo.mode === 'demo'
-              ? 'PDF можно будет загрузить после подключения сервисов'
-              : 'Или загрузите PDF до 25 МБ'}
+              ? 'You can upload PDFs after connecting services'
+              : 'Or upload a PDF up to 25 MB'}
           </span>
           {repo.mode === 'live' && (
             <input
-              aria-label="Загрузить PDF"
+              aria-label="Upload PDF"
               type="file"
               accept="application/pdf"
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
             />
           )}
-          <small>
-            {file?.name || 'Файлы библиотеки предназначены для выдачи по публичной ссылке.'}
-          </small>
+          <small>{file?.name || 'Library files are shared through public links.'}</small>
         </div>
         <div className="modal-footer">
           <button type="button" className="button" onClick={onClose}>
-            Отмена
+            Cancel
           </button>
           <button className="button primary" disabled={busy || !draft.title.trim()}>
-            Сохранить материал
+            Save material
           </button>
         </div>
       </form>

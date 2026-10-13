@@ -49,13 +49,11 @@ beforeAll(async () => {
     ),
   );
   await asUser(userA);
-  wsA = (
-    await db.query<{ create_workspace: string }>("select public.create_workspace('Команда A')")
-  ).rows[0].create_workspace;
+  wsA = (await db.query<{ create_workspace: string }>("select public.create_workspace('Team A')"))
+    .rows[0].create_workspace;
   await asUser(userB);
-  wsB = (
-    await db.query<{ create_workspace: string }>("select public.create_workspace('Команда B')")
-  ).rows[0].create_workspace;
+  wsB = (await db.query<{ create_workspace: string }>("select public.create_workspace('Team B')"))
+    .rows[0].create_workspace;
 }, 30000);
 afterAll(async () => {
   await db.close();
@@ -66,7 +64,7 @@ describe('real PostgreSQL permissions and queue transactions', () => {
     const events = Array.from({ length: 130 }, (_, n) => ({
       key: 'batch:' + n,
       kind: 'dm',
-      text: 'прайс',
+      text: 'price',
     }));
     const result = await db.query<{ service_enqueue_events: number }>(
       'select public.service_enqueue_events($1::jsonb)',
@@ -108,7 +106,7 @@ describe('real PostgreSQL permissions and queue transactions', () => {
   it('creates one workspace even when provisioning is repeated', async () => {
     await asUser(userA);
     expect(
-      (await db.query<{ create_workspace: string }>("select public.create_workspace('Повтор')"))
+      (await db.query<{ create_workspace: string }>("select public.create_workspace('Repeat')"))
         .rows[0].create_workspace,
     ).toBe(wsA);
   });
@@ -191,7 +189,7 @@ describe('real PostgreSQL permissions and queue transactions', () => {
       "insert into public.instagram_accounts(id,workspace_id,ig_user_id,status) values($1,$2,'100','connected')",
       [account, wsA],
     );
-    const params = [account, '200', 'прайс', 'stable-mid', 'mid.1', new Date().toISOString(), 'dm'];
+    const params = [account, '200', 'price', 'stable-mid', 'mid.1', new Date().toISOString(), 'dm'];
     const first = (
       await db.query<{
         service_ingest: {
@@ -213,7 +211,7 @@ describe('real PostgreSQL permissions and queue transactions', () => {
     await db.exec('reset role');
     const f = '44444444-4444-4444-8444-444444444444';
     await db.query(
-      "insert into public.flows(id,workspace_id,name,trigger_kind,definition) values($1,$2,'Прайс','dm_keyword','{}')",
+      "insert into public.flows(id,workspace_id,name,trigger_kind,definition) values($1,$2,'Pricing','dm_keyword','{}')",
       [f, wsA],
     );
     const c = (
@@ -222,9 +220,9 @@ describe('real PostgreSQL permissions and queue transactions', () => {
       ])
     ).rows[0].id;
     const result = {
-      actions: [{ text: 'Передаю менеджеру', quickReplies: [] }],
+      actions: [{ text: 'Passing you to our team', quickReplies: [] }],
       variables: { email: 'student@example.com' },
-      tags: ['Обучение'],
+      tags: ['Learning'],
       lead: true,
       handoff: true,
       session: null,
@@ -276,7 +274,7 @@ describe('real PostgreSQL permissions and queue transactions', () => {
       ])
     ).rows[0].id;
     await db.query(
-      "insert into public.flows(id,workspace_id,name,trigger_kind,definition) values($1,$2,'Удаляемый','dm_keyword','{}')",
+      "insert into public.flows(id,workspace_id,name,trigger_kind,definition) values($1,$2,'To delete','dm_keyword','{}')",
       [flow, wsA],
     );
     await db.query('insert into private.sessions(conversation_id,data) values($1,$2::jsonb)', [

@@ -89,28 +89,28 @@ export function Inbox({
       <div className="page-heading">
         <div>
           <div className="eyebrow">CONVERSATIONS</div>
-          <h1>Диалоги</h1>
-          <p>Каждое обращение — на своём месте.</p>
+          <h1>Inbox</h1>
+          <p>A place for every conversation.</p>
         </div>
-        <Badge tone="gray">{data.conversations.length} диалогов</Badge>
+        <Badge tone="gray">{data.conversations.length} conversations</Badge>
       </div>
       <div className="inbox-layout">
         <section className="conversation-list">
           <div className="list-search">
             <Search size={16} />
             <input
-              aria-label="Поиск диалогов"
+              aria-label="Search conversations"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Имя или сообщение"
+              placeholder="Name or message"
             />
           </div>
           <div className="inbox-filters">
             {[
-              ['all', 'Все'],
-              ['unread', 'Новые'],
-              ['human', 'Менеджер'],
-              ['closed', 'Закрытые'],
+              ['all', 'All'],
+              ['unread', 'New'],
+              ['human', 'Team'],
+              ['closed', 'Closed'],
             ].map(([key, label]) => (
               <button
                 className={filter === key ? 'active' : ''}
@@ -134,7 +134,7 @@ export function Inbox({
                     <Avatar name={p?.name || p?.username || 'Instagram'} />
                     <div>
                       <div className="conversation-item-head">
-                        <strong>{p?.name || p?.username || 'Пользователь Instagram'}</strong>
+                        <strong>{p?.name || p?.username || 'Instagram user'}</strong>
                         <time>{time(c.last_message_at)}</time>
                       </div>
                       <p>{c.last_message}</p>
@@ -143,12 +143,12 @@ export function Inbox({
                           {c.mode === 'bot' ? (
                             <>
                               <Workflow size={11} />
-                              Сценарий
+                              Flow
                             </>
                           ) : (
                             <>
                               <UserRound size={11} />
-                              Менеджер
+                              Team
                             </>
                           )}
                         </span>
@@ -160,8 +160,8 @@ export function Inbox({
               })
             ) : (
               <Empty
-                title="Диалоги не найдены"
-                description="Попробуйте изменить поиск или фильтр."
+                title="No conversations found"
+                description="Try a different search or filter."
               />
             )}
           </div>
@@ -172,12 +172,12 @@ export function Inbox({
               <header className="chat-heading">
                 <Avatar name={contact.name || contact.username} />
                 <div>
-                  <strong>{contact.name || contact.username || 'Пользователь Instagram'}</strong>
+                  <strong>{contact.name || contact.username || 'Instagram user'}</strong>
                   <small>{contact.username ? '@' + contact.username : 'Instagram Direct'}</small>
                 </div>
                 <button
                   className="icon-button"
-                  aria-label="Редактировать контакт"
+                  aria-label="Edit contact"
                   onClick={() => setEditing(contact)}
                 >
                   <Edit3 size={17} />
@@ -192,13 +192,13 @@ export function Inbox({
                           mode: conversation.mode === 'bot' ? 'human' : 'bot',
                         }),
                       conversation.mode === 'bot'
-                        ? 'Бот на паузе. Диалог передан менеджеру.'
-                        : 'Бот включён для следующих обращений.',
+                        ? 'Bot paused. Your team has taken over.'
+                        : 'Bot enabled for future requests.',
                     )
                   }
                 >
                   {conversation.mode === 'bot' ? <Pause size={13} /> : <Play size={13} />}
-                  <span>{conversation.mode === 'bot' ? 'Пауза' : 'Включить бота'}</span>
+                  <span>{conversation.mode === 'bot' ? 'Pause' : 'Enable bot'}</span>
                 </button>
               </header>
               <div className="chat-status">
@@ -206,11 +206,11 @@ export function Inbox({
                   <span
                     className={`status-dot ${conversation.mode === 'bot' ? 'green' : 'gray'}`}
                   />
-                  {conversation.mode === 'bot' ? 'Сценарий активен' : 'Отвечает менеджер'}
+                  {conversation.mode === 'bot' ? 'Flow active' : 'Team is replying'}
                 </span>
                 <span>
                   <Clock3 size={12} />
-                  {windowOpen ? `Окно ответа: ~${remaining} ч` : 'Окно ответа закрыто'}
+                  {windowOpen ? `Reply window: ~${remaining} h` : 'Reply window closed'}
                 </span>
               </div>
               <div className="messages">
@@ -229,8 +229,8 @@ export function Inbox({
                               disabled={repo.mode !== 'demo' || busy || i !== messages.length - 1}
                               title={
                                 repo.mode === 'demo'
-                                  ? 'Ответить от имени тестового ученика'
-                                  : 'Кнопка в сообщении клиента'
+                                  ? 'Reply as the test learner'
+                                  : "Button in the customer's message"
                               }
                               onClick={() =>
                                 void perform(() =>
@@ -250,11 +250,7 @@ export function Inbox({
                       ) : null}
                       <div className="message-meta">
                         <span>
-                          {m.source === 'bot'
-                            ? 'Сценарий'
-                            : m.source === 'operator'
-                              ? 'Менеджер'
-                              : ''}
+                          {m.source === 'bot' ? 'Flow' : m.source === 'operator' ? 'Team' : ''}
                         </span>
                         <time>{time(m.created_at)}</time>
                         {m.direction === 'out' && (
@@ -265,7 +261,7 @@ export function Inbox({
                               <Clock3 size={12} />
                             ) : (
                               <span className="message-error-status">
-                                {m.status === 'uncertain' ? 'Не подтверждено' : 'Ошибка'}
+                                {m.status === 'uncertain' ? 'Unconfirmed' : 'Error'}
                               </span>
                             )}
                           </span>
@@ -297,35 +293,35 @@ export function Inbox({
                       className={compose === 'operator' ? 'active' : ''}
                       onClick={() => setCompose('operator')}
                     >
-                      Ответ менеджера
+                      Team reply
                     </button>
                     <button
                       type="button"
                       className={compose === 'student' ? 'active' : ''}
                       onClick={() => setCompose('student')}
                     >
-                      Сообщение ученика
+                      Learner message
                     </button>
                   </div>
                 )}
                 <div className="composer-input">
                   <textarea
-                    aria-label={compose === 'student' ? 'Сообщение ученика' : 'Ответ менеджера'}
+                    aria-label={compose === 'student' ? 'Learner message' : 'Team reply'}
                     value={text}
                     onChange={(e) => setText(e.target.value)}
                     placeholder={
                       compose === 'student'
-                        ? 'Напишите от имени тестового ученика…'
+                        ? 'Write as the test learner…'
                         : windowOpen
-                          ? 'Напишите ответ…'
-                          : 'Дождитесь нового сообщения клиента'
+                          ? 'Write a reply…'
+                          : 'Wait for a new message from the customer'
                     }
                     disabled={compose === 'operator' && !windowOpen}
                     rows={2}
                   />
                   <button
                     className="button primary"
-                    aria-label="Отправить сообщение"
+                    aria-label="Send message"
                     disabled={busy || !text.trim() || (compose === 'operator' && !windowOpen)}
                   >
                     <Send size={17} />
@@ -333,36 +329,36 @@ export function Inbox({
                 </div>
                 <small>
                   {compose === 'student'
-                    ? 'Сообщение запустит сценарий в локальном симуляторе.'
-                    : 'Ваш ответ автоматически ставит бота на паузу.'}{' '}
-                  <span>{new TextEncoder().encode(text).length}/1000 байт</span>
+                    ? 'This message will trigger a flow in the local simulator.'
+                    : 'Your reply automatically pauses the bot.'}{' '}
+                  <span>{new TextEncoder().encode(text).length}/1000 bytes</span>
                 </small>
               </form>
             </section>
             <aside className="contact-detail">
               <div className="contact-cover">
                 <Avatar name={contact.name || contact.username} />
-                <h3>{contact.name || 'Пользователь Instagram'}</h3>
+                <h3>{contact.name || 'Instagram user'}</h3>
                 <p>{contact.username ? '@' + contact.username : ''}</p>
                 <Badge tone={contact.is_lead ? 'green' : 'gray'}>
-                  {contact.is_lead ? 'Заявка' : 'Контакт'}
+                  {contact.is_lead ? 'Lead' : 'Contact'}
                 </Badge>
               </div>
               <div className="detail-section">
-                <h4>КОНТАКТ</h4>
+                <h4>CONTACT</h4>
                 <dl>
                   <dt>Email</dt>
-                  <dd>{contact.email || 'Не указан'}</dd>
-                  <dt>Телефон</dt>
-                  <dd>{contact.phone || 'Не указан'}</dd>
-                  <dt>Источник</dt>
+                  <dd>{contact.email || 'Not provided'}</dd>
+                  <dt>Phone</dt>
+                  <dd>{contact.phone || 'Not provided'}</dd>
+                  <dt>Source</dt>
                   <dd>{contact.source}</dd>
                 </dl>
               </div>
               <div className="detail-section">
-                <h4>СТАТУС</h4>
+                <h4>STATUS</h4>
                 <select
-                  aria-label="Статус контакта"
+                  aria-label="Contact status"
                   value={contact.status}
                   onChange={(e) =>
                     void perform(() =>
@@ -389,7 +385,7 @@ export function Inbox({
               <div className="detail-section">
                 <button className="button full" onClick={() => setEditing(contact)}>
                   <Edit3 size={14} />
-                  Редактировать
+                  Edit
                 </button>
                 <button
                   className="button full"
@@ -401,12 +397,14 @@ export function Inbox({
                           status: conversation.status === 'closed' ? 'open' : 'closed',
                           ...(conversation.status === 'open' ? { mode: 'human' as const } : {}),
                         }),
-                      conversation.status === 'closed' ? 'Диалог открыт.' : 'Диалог закрыт.',
+                      conversation.status === 'closed'
+                        ? 'Conversation opened.'
+                        : 'Conversation closed.',
                     )
                   }
                 >
                   <CheckCheck size={14} />
-                  {conversation.status === 'closed' ? 'Открыть диалог' : 'Закрыть диалог'}
+                  {conversation.status === 'closed' ? 'Open conversation' : 'Close conversation'}
                 </button>
               </div>
             </aside>
@@ -414,8 +412,8 @@ export function Inbox({
         ) : (
           <section className="chat">
             <Empty
-              title="Начните с диалога"
-              description="Входящие сообщения появятся здесь после подключения Instagram."
+              title="Start with a conversation"
+              description="Incoming messages will appear here after you connect Instagram."
             />
           </section>
         )}

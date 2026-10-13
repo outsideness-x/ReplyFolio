@@ -21,31 +21,31 @@ export function Dashboard() {
     human = data.conversations.filter((c) => c.mode === 'human' && c.status === 'open');
   const stats = [
     {
-      label: 'Диалоги',
+      label: 'Inbox',
       value: data.conversations.length,
       icon: MessagesSquare,
-      detail: `${data.conversations.filter((c) => c.unread_count > 0).length} с новыми сообщениями`,
+      detail: `${data.conversations.filter((c) => c.unread_count > 0).length} with new messages`,
       color: 'blue',
     },
     {
-      label: 'Заявки',
+      label: 'Leads',
       value: leads.length,
       icon: Users,
-      detail: `${leads.filter((c) => c.status === 'new').length} ждут обработки`,
+      detail: `${leads.filter((c) => c.status === 'new').length} awaiting review`,
       color: 'purple',
     },
     {
-      label: 'Активные сценарии',
+      label: 'Active flows',
       value: data.flows.filter((f) => f.enabled).length,
       icon: Workflow,
-      detail: `из ${data.flows.length} созданных`,
+      detail: `of ${data.flows.length} created`,
       color: 'cyan',
     },
     {
-      label: 'Нужен менеджер',
+      label: 'Needs the team',
       value: human.length,
       icon: MousePointerClick,
-      detail: 'Диалоги на ручном управлении',
+      detail: 'Conversations handled by your team',
       color: 'orange',
     },
   ];
@@ -63,7 +63,7 @@ export function Dashboard() {
     path = points
       .map((p, i) => `${40 + (i * 650) / (period - 1)},${155 - (p.count / max) * 125}`)
       .join(' ');
-  const date = new Intl.DateTimeFormat('ru', {
+  const date = new Intl.DateTimeFormat('en-GB', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -73,13 +73,13 @@ export function Dashboard() {
     <>
       <div className="page-heading">
         <div>
-          <div className="eyebrow">ВАШЕ РАБОЧЕЕ ПРОСТРАНСТВО</div>
-          <h1>Обзор</h1>
-          <p>Всё, что происходит в вашем Instagram Direct.</p>
+          <div className="eyebrow">YOUR WORKSPACE</div>
+          <h1>Overview</h1>
+          <p>Everything happening in your Instagram Direct.</p>
         </div>
         <button className="button primary" onClick={() => navigate('flows')}>
           <Play size={16} />
-          Создать сценарий
+          Create a flow
         </button>
       </div>
       <div className="stats-grid">
@@ -100,24 +100,20 @@ export function Dashboard() {
         <section className="panel">
           <div className="panel-heading">
             <div>
-              <h2>Входящие обращения</h2>
-              <p>Сообщения и комментарии по дням</p>
+              <h2>Incoming requests</h2>
+              <p>Messages and comments by day</p>
             </div>
             <div className="segmented">
               <button className={period === 7 ? 'active' : ''} onClick={() => setPeriod(7)}>
-                7 дней
+                7 days
               </button>
               <button className={period === 14 ? 'active' : ''} onClick={() => setPeriod(14)}>
-                14 дней
+                14 days
               </button>
             </div>
           </div>
           <div className="chart">
-            <svg
-              viewBox="0 0 720 190"
-              role="img"
-              aria-label="Количество входящих обращений по дням"
-            >
+            <svg viewBox="0 0 720 190" role="img" aria-label="Incoming requests by day">
               {[30, 72, 113, 155].map((y) => (
                 <g key={y}>
                   <line x1="40" y1={y} x2="690" y2={y} stroke="#eaf0f7" strokeDasharray="4 5" />
@@ -151,7 +147,7 @@ export function Dashboard() {
                     fill="#8494ad"
                     fontSize="10"
                   >
-                    {new Intl.DateTimeFormat('ru', { day: 'numeric', month: 'numeric' }).format(
+                    {new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'numeric' }).format(
                       p.date,
                     )}
                   </text>
@@ -162,20 +158,20 @@ export function Dashboard() {
           <div className="chart-summary">
             <span>
               <i className="legend-dot" />
-              Входящие обращения
+              Incoming requests
             </span>
-            <strong>{points.reduce((a, p) => a + p.count, 0)} за период</strong>
+            <strong>{points.reduce((a, p) => a + p.count, 0)} in this period</strong>
           </div>
         </section>
         <section className="panel scenarios-preview">
           <div className="panel-heading">
             <div>
-              <h2>Ваши сценарии</h2>
-              <p>От первого сообщения до заявки</p>
+              <h2>Your flows</h2>
+              <p>From the first message to a lead</p>
             </div>
             <button
               className="icon-button"
-              aria-label="Все сценарии"
+              aria-label="All flows"
               onClick={() => navigate('flows')}
             >
               <ArrowUpRight size={19} />
@@ -191,9 +187,9 @@ export function Dashboard() {
                   <strong>{f.name}</strong>
                   <small>
                     {f.trigger_kind === 'comment_keyword'
-                      ? 'Комментарий → Direct'
+                      ? 'Comment → Direct'
                       : f.trigger_kind === 'dm_any'
-                        ? 'Любое сообщение'
+                        ? 'Any message'
                         : f.keywords.slice(0, 2).join(' · ')}
                   </small>
                 </div>
@@ -203,12 +199,12 @@ export function Dashboard() {
             ))
           ) : (
             <Empty
-              title="Начните со сценария"
-              description="Выберите шаблон и добавьте свой материал."
+              title="Start with a flow"
+              description="Choose a template and add your material."
             />
           )}
           <button className="button full" onClick={() => navigate('flows')}>
-            Открыть конструктор
+            Open the builder
             <ArrowRight size={16} />
           </button>
         </section>
@@ -217,10 +213,10 @@ export function Dashboard() {
         <section className="panel">
           <div className="panel-heading">
             <div>
-              <h2>Последняя активность</h2>
+              <h2>Recent activity</h2>
               <p>{date}</p>
             </div>
-            <Badge tone="gray">{repo.mode === 'demo' ? 'Демо' : 'События'}</Badge>
+            <Badge tone="gray">{repo.mode === 'demo' ? 'Demo' : 'Events'}</Badge>
           </div>
           {data.runs.length ? (
             data.runs.slice(0, 5).map((r) => (
@@ -246,17 +242,14 @@ export function Dashboard() {
               </div>
             ))
           ) : (
-            <Empty
-              title="Здесь появятся события"
-              description="Запустите сценарий, чтобы увидеть его результат."
-            />
+            <Empty title="Events will appear here" description="Run a flow to see its results." />
           )}
         </section>
         <section className="panel">
           <div className="panel-heading">
             <div>
-              <h2>Ждут вашего ответа</h2>
-              <p>Диалоги, переданные команде</p>
+              <h2>Waiting for your reply</h2>
+              <p>Conversations handed to the team</p>
             </div>
             <Badge tone="amber">{human.length}</Badge>
           </div>
@@ -266,7 +259,7 @@ export function Dashboard() {
               return (
                 <button className="handoff-row" key={c.id} onClick={() => openInbox(c.id)}>
                   <div>
-                    <strong>{person?.name || person?.username || 'Пользователь Instagram'}</strong>
+                    <strong>{person?.name || person?.username || 'Instagram user'}</strong>
                     <p>{c.last_message}</p>
                     <small>
                       {day(c.last_message_at)} · {time(c.last_message_at)}
@@ -278,8 +271,8 @@ export function Dashboard() {
             })
           ) : (
             <Empty
-              title="Все диалоги под контролем"
-              description="Переданные менеджеру обращения появятся здесь."
+              title="You're all caught up"
+              description="Conversations that need your team will appear here."
             />
           )}
         </section>

@@ -21,11 +21,11 @@ function fixture() {
 describe('local demonstration uses the production scenario engine', () => {
   it('persists choices and leads across browser reloads', async () => {
     const f = fixture(),
-      id = await f.repo.simulate({ kind: 'dm', text: 'материалы' }),
+      id = await f.repo.simulate({ kind: 'dm', text: 'materials' }),
       s = await f.repo.load();
     const contactId = s.conversations.find((c) => c.id === id)!.contact_id;
     const reloaded = new LocalRepository(f.storage, f.now);
-    await reloaded.simulate({ kind: 'dm', text: 'Учебные материалы', contactId });
+    await reloaded.simulate({ kind: 'dm', text: 'Learning resources', contactId });
     await reloaded.simulate({ kind: 'dm', text: 'student@example.com', contactId });
     expect((await reloaded.load()).contacts.find((c) => c.id === contactId)).toMatchObject({
       email: 'student@example.com',
@@ -34,23 +34,23 @@ describe('local demonstration uses the production scenario engine', () => {
   });
   it('does not open a normal window from a comment', async () => {
     const { repo } = fixture(),
-      id = await repo.simulate({ kind: 'comment', text: 'урок' }),
+      id = await repo.simulate({ kind: 'comment', text: 'lesson' }),
       s = await repo.load();
     expect(s.conversations.find((c) => c.id === id)?.window_expires_at).toBeNull();
     expect(
       s.messages.filter((m) => m.conversation_id === id && m.direction === 'out'),
     ).toHaveLength(1);
-    await expect(repo.send(id, 'Здравствуйте')).rejects.toThrow('Окно');
+    await expect(repo.send(id, 'Hello')).rejects.toThrow('The messaging window is closed.');
   });
   it('pauses the bot when an operator replies', async () => {
     const { repo } = fixture(),
-      id = await repo.simulate({ kind: 'dm', text: 'прайс' }),
+      id = await repo.simulate({ kind: 'dm', text: 'price' }),
       s = await repo.load();
-    await repo.send(id, 'Вам ответит команда');
+    await repo.send(id, 'Our team will reply');
     const count = (await repo.load()).messages.length;
     await repo.simulate({
       kind: 'dm',
-      text: 'Стоимость обучения',
+      text: 'Course pricing',
       contactId: s.conversations.find((c) => c.id === id)!.contact_id,
     });
     expect((await repo.load()).messages).toHaveLength(count + 1);
@@ -60,6 +60,6 @@ describe('local demonstration uses the production scenario engine', () => {
       s = await f.repo.load();
     f.advance(25 * 3600000);
     await expect(f.repo.send(s.conversations[0].id, 'test')).rejects.toThrow();
-    await expect(f.repo.deleteMaterial(s.materials[0].id)).rejects.toThrow('используется');
+    await expect(f.repo.deleteMaterial(s.materials[0].id)).rejects.toThrow('used');
   });
 });

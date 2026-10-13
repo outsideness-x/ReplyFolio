@@ -20,17 +20,17 @@ export async function api<T = unknown>(
   try {
     result = await response.json();
   } catch {
-    throw new Error('Подключение сервиса ещё не настроено.');
+    throw new Error('The service connection has not been configured yet.');
   }
   if (!response.ok) {
     if (response.status === 401) window.dispatchEvent(new Event('replyfolio:session-ended'));
     if (response.status === 428) window.dispatchEvent(new Event('replyfolio:step-up'));
     throw new Error(
       response.status === 428
-        ? 'Подтвердите вход аутентификатором и повторите действие.'
+        ? 'Verify your sign-in with your authenticator, then try again.'
         : typeof result.error === 'string'
           ? result.error
-          : 'Не удалось выполнить запрос.',
+          : 'Unable to complete the request.',
     );
   }
   return result as T;

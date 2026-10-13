@@ -25,16 +25,16 @@ export async function sealed(tokens: Tokens, id: string) {
 }
 export async function webSession(req: Request, db: Database, agent: string) {
   const cookie = readCookie(req, SESSION_COOKIE);
-  if (!cookie) throw new HttpError(401, 'Войдите заново.');
+  if (!cookie) throw new HttpError(401, 'Please sign in again.');
   const row = await rpc<WebSession | null>(db, 'service_session_get', {
     hash: await digest(cookie),
   });
   if (!row || row.user_agent_hash !== (await hmac(agent, env('RATE_LIMIT_SECRET'))))
-    throw new HttpError(401, 'Войдите заново.');
+    throw new HttpError(401, 'Please sign in again.');
   const lock = crypto.randomUUID(),
     key = 'web-session:' + row.id;
   if (!(await rpc<boolean>(db, 'service_lock', { key, lock_token: lock })))
-    throw new HttpError(409, 'Сессия обновляется. Повторите через секунду.');
+    throw new HttpError(409, 'Your session is being refreshed. Try again in a moment.');
   const client = userClient();
   let user: User;
   let tokens: Tokens;
@@ -50,7 +50,7 @@ export async function webSession(req: Request, db: Database, agent: string) {
       data.user.id !== row.user_id ||
       !data.user.email_confirmed_at
     )
-      throw new HttpError(401, 'Войдите заново.');
+      throw new HttpError(401, 'Please sign in again.');
     user = data.user;
     tokens = { access_token: data.session.access_token, refresh_token: data.session.refresh_token };
     if (tokens.access_token !== stored.access_token) {
@@ -71,7 +71,7 @@ export async function webSession(req: Request, db: Database, agent: string) {
       : null;
   if (row.state !== 'waitlist' && !teamRole) {
     await rpc(db, 'service_session_revoke', { sid: row.id });
-    throw new HttpError(403, 'Доступ к команде закрыт.');
+    throw new HttpError(403, 'Team access is closed.');
   }
   if (row.state === 'active') {
     const { data, error } = await client.auth.getClaims(tokens.access_token);
@@ -84,7 +84,7 @@ export async function webSession(req: Request, db: Database, agent: string) {
       !trusted ||
       trusted !== row.factor_id
     )
-      throw new HttpError(403, 'Подтвердите двухфакторный вход.');
+      throw new HttpError(403, 'Verify your two-factor sign-in.');
   }
   await rpc(db, 'service_session_touch', { sid: row.id });
   return { row, client, user, tokens, teamRole };

@@ -13,44 +13,45 @@ type AnalyticsSection = Extract<Page, 'app-analytics' | 'instagram-analytics' | 
 const sections = {
   'app-analytics': {
     eyebrow: 'PRODUCT ANALYTICS',
-    title: 'Аналитика приложения',
-    description: 'От первого запуска до привычки возвращаться. iOS и Android в одном пространстве.',
+    title: 'App analytics',
+    description:
+      'From the first launch to the habit of returning. iOS and Android in one workspace.',
     icon: Smartphone,
-    source: 'События приложения',
-    note: 'После подключения событий здесь появятся активность, удержание и путь пользователя.',
+    source: 'App events',
+    note: 'Connect your app events to see activity, retention and the user journey here.',
     metrics: [
-      ['D1 retention', 'Возврат на следующий день'],
-      ['D7 retention', 'Возврат на седьмой день'],
-      ['D30 retention', 'Возврат на тридцатый день'],
-      ['MAU', 'Активные пользователи за месяц'],
+      ['D1 retention', 'Return on the next day'],
+      ['D7 retention', 'Return on day seven'],
+      ['D30 retention', 'Return on day thirty'],
+      ['MAU', 'Monthly active users'],
     ],
   },
   'instagram-analytics': {
     eyebrow: 'INSTAGRAM INSIGHTS',
-    title: 'Аналитика Instagram',
-    description: 'Как контент превращается в интерес: охват, взаимодействия и динамика аккаунта.',
+    title: 'Instagram analytics',
+    description: 'How content creates interest: reach, engagement and account growth.',
     icon: Camera,
     source: 'Instagram Insights',
-    note: 'Подключение Insights будет отдельным шагом. Существующее подключение Direct не загружает эту статистику.',
+    note: 'Insights requires a separate connection. Your existing Direct connection does not load these metrics.',
     metrics: [
-      ['Охват', 'Уникальные аккаунты'],
-      ['Просмотры', 'Просмотры контента'],
-      ['Взаимодействия', 'Реакции на публикации'],
-      ['Подписчики', 'Динамика аудитории'],
+      ['Reach', 'Unique accounts'],
+      ['Views', 'Content views'],
+      ['Engagement', 'Interactions with posts'],
+      ['Followers', 'Audience growth'],
     ],
   },
   relationships: {
     eyebrow: 'CONNECTED ANALYTICS',
-    title: 'Взаимосвязи',
-    description: 'Одна картина для контента, диалогов и поведения в приложении.',
+    title: 'Relationships',
+    description: 'One view of content, conversations and behavior in your app.',
     icon: GitCompareArrows,
-    source: 'Общие данные',
-    note: 'Сопоставления появятся после подключения обоих источников и согласования периодов.',
+    source: 'Shared data',
+    note: 'Comparisons will be available after both sources are connected and their date ranges aligned.',
     metrics: [
-      ['Источники', 'Приложение и Instagram'],
-      ['Общий период', 'Совпадающие даты'],
-      ['Сопоставления', 'Ряды для сравнения'],
-      ['Наблюдения', 'Проверяемые гипотезы'],
+      ['Sources', 'App and Instagram'],
+      ['Shared period', 'Matching dates'],
+      ['Comparisons', 'Time series to compare'],
+      ['Observations', 'Testable hypotheses'],
     ],
   },
 } as const;
@@ -82,8 +83,8 @@ function EmptyPlot({
         </div>
         <div className="analytics-plot-empty">
           <CircleDashed size={24} />
-          <strong>Пока без данных</strong>
-          <span>Здесь появится динамика после подключения.</span>
+          <strong>No data yet</strong>
+          <span>Your trends will appear after connecting a source.</span>
         </div>
       </div>
       <div className="analytics-plot-legend">
@@ -103,7 +104,7 @@ function MetricCards({ metrics }: { metrics: readonly (readonly [string, string]
       {metrics.map(([title, caption]) => (
         <article className="analytics-metric" key={title}>
           <span>{title}</span>
-          <strong aria-label="Нет данных">—</strong>
+          <strong aria-label="No data">—</strong>
           <small>{caption}</small>
         </article>
       ))}
@@ -118,7 +119,7 @@ function Journey({ steps }: { steps: string[] }) {
           <span>{String(index + 1).padStart(2, '0')}</span>
           <div>
             <strong>{step}</strong>
-            <small>Нет данных</small>
+            <small>No data</small>
           </div>
           <b aria-hidden="true">—</b>
         </li>
@@ -144,7 +145,7 @@ function Source({
         <strong>{title}</strong>
         <small>{detail}</small>
       </div>
-      <span className="analytics-source-state">Не подключено</span>
+      <span className="analytics-source-state">Not connected</span>
     </div>
   );
 }
@@ -154,17 +155,17 @@ function Cohorts() {
     <section className="panel analytics-cohorts">
       <div className="panel-heading">
         <div>
-          <h2>Когорты удержания</h2>
-          <p>Возвращение пользователей по дням после первого запуска.</p>
+          <h2>Retention cohorts</h2>
+          <p>User returns by day since their first launch.</p>
         </div>
         <span className="analytics-detail-label">iOS · Android</span>
       </div>
       <div className="analytics-table-scroll">
-        <table aria-label="Когорты удержания без данных">
+        <table aria-label="Retention cohorts without data">
           <thead>
             <tr>
-              <th>Когорта</th>
-              <th>Пользователи</th>
+              <th>Cohort</th>
+              <th>Users</th>
               {days.map((day) => (
                 <th key={day}>{day}</th>
               ))}
@@ -175,7 +176,7 @@ function Cohorts() {
               <tr key={row}>
                 <td>
                   <span className="analytics-skeleton" aria-hidden="true" />
-                  <span className="sr-only">Когорта не загружена</span>
+                  <span className="sr-only">Cohort not loaded</span>
                 </td>
                 <td>—</td>
                 {days.map((day) => (
@@ -190,7 +191,7 @@ function Cohorts() {
       </div>
       <p className="analytics-table-note">
         <CircleDashed size={14} />
-        Когорты появятся после подключения событий приложения.
+        Cohorts will appear after you connect app events.
       </p>
     </section>
   );
@@ -199,26 +200,26 @@ function InstagramPanels() {
   return (
     <>
       <EmptyPlot
-        title="Динамика аккаунта"
-        description="Охват и взаимодействия за один период."
-        labels={['Охват', 'Взаимодействия']}
+        title="Account trends"
+        description="Reach and engagement over the same period."
+        labels={['Reach', 'Engagement']}
       />
       <section className="panel">
         <div className="panel-heading">
           <div>
-            <h2>Контент и отклик</h2>
-            <p>Одна публикация — несколько сигналов.</p>
+            <h2>Content and response</h2>
+            <p>One post. Multiple signals.</p>
           </div>
         </div>
         <div className="analytics-content-types">
-          {['Reels', 'Публикации', 'Stories'].map((type) => (
+          {['Reels', 'Posts', 'Stories'].map((type) => (
             <span key={type}>{type}</span>
           ))}
         </div>
         <div className="analytics-publication-empty">
           <Camera size={28} strokeWidth={1.2} />
-          <strong>Публикации появятся здесь</strong>
-          <p>Доступные метрики зависят от типа контента и разрешений Meta.</p>
+          <strong>Your posts will appear here</strong>
+          <p>Available metrics depend on the content type and Meta permissions.</p>
         </div>
       </section>
     </>
@@ -230,38 +231,38 @@ function RelationshipsPanels() {
       <section className="panel analytics-sources-panel">
         <div className="panel-heading">
           <div>
-            <h2>Два источника. Общий контекст.</h2>
-            <p>Сравнение по датам, платформам и кампаниям.</p>
+            <h2>Two sources. Shared context.</h2>
+            <p>Compare by date, platform and campaign.</p>
           </div>
         </div>
-        <Source icon={Camera} title="Instagram" detail="Контент · охват · взаимодействия" />
+        <Source icon={Camera} title="Instagram" detail="Content · reach · engagement" />
         <div className="analytics-source-bridge" aria-hidden="true">
           <span />
           <GitCompareArrows size={19} />
           <span />
         </div>
-        <Source icon={Smartphone} title="Приложение" detail="Активация · удержание · покупки" />
+        <Source icon={Smartphone} title="App" detail="Activation · retention · purchases" />
         <div className="analytics-source-foot">
           <CircleDashed size={14} />
-          Ожидаем оба источника
+          Waiting for both sources
         </div>
       </section>
       <section className="panel">
         <div className="panel-heading">
           <div>
-            <h2>Что будем сопоставлять</h2>
-            <p>Вопросы, для которых появятся данные.</p>
+            <h2>What we'll compare</h2>
+            <p>Questions your data can help answer.</p>
           </div>
         </div>
         <div className="analytics-questions">
           {[
-            ['Контент', 'Новые пользователи', 'Как меняются первые запуски рядом с публикациями.'],
+            ['Content', 'New users', 'How first launches change around your posts.'],
             [
-              'Диалоги и заявки',
-              'Активация',
-              'Какие кампании приводят к первому полезному действию.',
+              'Conversations and leads',
+              'Activation',
+              'Which campaigns lead to the first meaningful action.',
             ],
-            ['Кампания', 'D7 retention', 'Возвращаются ли пользователи из разных источников.'],
+            ['Campaign', 'D7 retention', 'Whether users from different sources return.'],
           ].map(([from, to, caption]) => (
             <article key={from}>
               <div>
@@ -274,8 +275,8 @@ function RelationshipsPanels() {
           ))}
         </div>
         <p className="analytics-correlation-note">
-          Совпадение динамики — повод проверить гипотезу. Для атрибуции понадобятся размеченные
-          ссылки и события приложения.
+          Similar trends give you a hypothesis to test. Attribution will require tagged links and
+          app events.
         </p>
       </section>
     </>
@@ -291,14 +292,14 @@ export function AnalyticsPreview({ section }: { section: AnalyticsSection }) {
           <h1>{content.title}</h1>
           <p>{content.description}</p>
         </div>
-        <Badge tone="gray">Скоро</Badge>
+        <Badge tone="gray">Coming soon</Badge>
       </div>
       <div className="analytics-context">
         <div>
           <content.icon size={15} />
           <span>{content.source}</span>
           <i />
-          <small>Источник не подключён</small>
+          <small>Source not connected</small>
         </div>
         {section === 'app-analytics' && (
           <span className="analytics-platforms">
@@ -306,7 +307,7 @@ export function AnalyticsPreview({ section }: { section: AnalyticsSection }) {
           </span>
         )}
         {section === 'instagram-analytics' && (
-          <span className="analytics-platforms">Профессиональный аккаунт</span>
+          <span className="analytics-platforms">Professional account</span>
         )}
       </div>
       <MetricCards metrics={content.metrics} />
@@ -315,19 +316,19 @@ export function AnalyticsPreview({ section }: { section: AnalyticsSection }) {
         {section === 'app-analytics' ? (
           <>
             <EmptyPlot
-              title="Активность пользователей"
-              description="Ежедневная, недельная и месячная аудитория."
+              title="User activity"
+              description="Daily, weekly and monthly audiences."
               labels={['DAU', 'WAU', 'MAU']}
             />
             <section className="panel">
               <div className="panel-heading">
                 <div>
-                  <h2>От запуска до ценности</h2>
-                  <p>Где пользователь делает следующий шаг.</p>
+                  <h2>From launch to value</h2>
+                  <p>Where users take their next step.</p>
                 </div>
               </div>
               <Journey
-                steps={['Первый запуск', 'Завершённый onboarding', 'Первый урок', 'Покупка']}
+                steps={['First launch', 'Onboarding completed', 'First lesson', 'Purchase']}
               />
             </section>
           </>
@@ -339,15 +340,15 @@ export function AnalyticsPreview({ section }: { section: AnalyticsSection }) {
       </div>
       {section === 'relationships' && (
         <EmptyPlot
-          title="Динамика рядом"
-          description="Публикации Instagram и ключевые события приложения на общей временной шкале."
-          labels={['Instagram', 'Приложение']}
+          title="Trends side by side"
+          description="Instagram posts and key app events on a shared timeline."
+          labels={['Instagram', 'App']}
         />
       )}
       <div className="analytics-preview-note">
         <CircleDashed size={16} />
         <p>
-          <strong>Раздел подготовлен.</strong> {content.note}
+          <strong>Section prepared.</strong> {content.note}
         </p>
       </div>
     </div>

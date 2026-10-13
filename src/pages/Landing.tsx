@@ -58,7 +58,7 @@ function LoginCard({
       <section className="login-card">
         <MfaChallenge onDone={onAccess} />
         <button className="auth-back" onClick={() => void logout()}>
-          Выйти
+          Sign out
         </button>
       </section>
     );
@@ -68,12 +68,12 @@ function LoginCard({
         <div className="auth-stage-icon">
           <ShieldCheck size={24} />
         </div>
-        <h2>Вы в команде.</h2>
+        <h2>You're on the team.</h2>
         <p>
-          Владелец ещё не создал рабочее пространство. Оно появится здесь после его первого входа.
+          The owner hasn't created the workspace yet. It will appear here after their first sign-in.
         </p>
         <button className="login-button" onClick={() => location.reload()}>
-          Обновить
+          Refresh
           <ArrowRight size={16} />
         </button>
       </section>
@@ -84,14 +84,12 @@ function LoginCard({
         <div className="auth-stage-icon success">
           <Check size={25} />
         </div>
-        <span className="login-kicker">ВЫ В СПИСКЕ</span>
-        <h2>До скорой встречи.</h2>
-        <p>
-          Ваш email сохранён в листе ожидания. Когда откроем доступ, сможем пригласить вас первыми.
-        </p>
+        <span className="login-kicker">YOU'RE ON THE LIST</span>
+        <h2>See you soon.</h2>
+        <p>Your email is on the waitlist. We'll be able to invite you when access opens.</p>
         <div className="auth-line-note">
           <Sparkles size={15} />
-          Хорошим диалогам нужно немного времени.
+          Good conversations take a little time.
         </div>
         <button
           className="auth-back"
@@ -100,7 +98,7 @@ function LoginCard({
             setSent(false);
           }}
         >
-          Вернуться ко входу
+          Back to sign-in
         </button>
       </section>
     );
@@ -112,24 +110,23 @@ function LoginCard({
         </div>
         <span className="login-kicker">EARLY ACCESS</span>
         <h2>
-          Здесь скоро
-          <br />
-          будет место и вам.
+          There will soon be
+          <br />a place for you, too.
         </h2>
         <p>
-          Сейчас GrowthThread открыт для нашей команды. Этот email ещё не приглашён — присоединитесь
-          к листу ожидания.
+          GrowthThread is currently open to our team. This email isn't invited yet — join the
+          waitlist.
         </p>
         <label className="waitlist-consent">
           <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
-          Разрешаю сохранить мой email и связаться со мной по поводу доступа.
+          I agree to have my email saved and to be contacted about access.
         </label>
         <button
           className="login-button"
           disabled={busy || !consent}
           onClick={() => void submit('waitlist', { consent: true })}
         >
-          {busy ? <LoaderCircle size={17} className="spin" /> : null}Присоединиться к листу
+          {busy ? <LoaderCircle size={17} className="spin" /> : null}Join the waitlist
           <ArrowRight size={16} />
         </button>
         {error && (
@@ -138,7 +135,7 @@ function LoginCard({
           </p>
         )}
         <button className="auth-back" onClick={() => void logout()}>
-          Войти с другим email
+          Use a different email
         </button>
       </section>
     );
@@ -148,13 +145,13 @@ function LoginCard({
         <span className="login-symbol">
           <LockKeyhole size={19} />
         </span>
-        <span className="login-kicker">ВАШЕ РАБОЧЕЕ ПРОСТРАНСТВО</span>
+        <span className="login-kicker">YOUR WORKSPACE</span>
       </div>
-      <h2>{access.state === 'code' ? 'Проверьте почту.' : 'Рады вас видеть.'}</h2>
+      <h2>{access.state === 'code' ? 'Check your inbox.' : 'Good to see you.'}</h2>
       <p>
         {access.state === 'code'
-          ? 'Отправили одноразовый код на ' + email + '. Введите его, чтобы продолжить.'
-          : 'Войдите по email. Приглашённые участники попадут в кабинет, остальные — в лист ожидания.'}
+          ? 'We sent a one-time code to ' + email + '. Enter it to continue.'
+          : 'Sign in with email. Invited members enter the workspace; everyone else can join the waitlist.'}
       </p>
       <form
         onSubmit={(e) => {
@@ -167,10 +164,10 @@ function LoginCard({
       >
         {access.state === 'code' ? (
           <label>
-            Код из письма
+            Email code
             <input
               className="otp-input"
-              aria-label="Код из письма"
+              aria-label="Email code"
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 8))}
               inputMode="numeric"
@@ -183,11 +180,11 @@ function LoginCard({
           </label>
         ) : (
           <label>
-            Рабочий email
+            Work email
             <div className="login-email-field">
               <Mail size={17} />
               <input
-                aria-label="Email для входа"
+                aria-label="Sign-in email"
                 type="email"
                 autoComplete="email"
                 placeholder="you@company.com"
@@ -202,7 +199,7 @@ function LoginCard({
         {access.state !== 'code' && (
           <Turnstile
             onToken={setCaptchaToken}
-            onError={() => setError('Проверка браузера недоступна. Обновите страницу.')}
+            onError={() => setError('Browser verification is unavailable. Refresh the page.')}
           />
         )}
         <button
@@ -214,7 +211,7 @@ function LoginCard({
           }
         >
           {busy ? <LoaderCircle size={17} className="spin" /> : null}
-          {access.state === 'code' ? 'Подтвердить email' : 'Продолжить с email'}
+          {access.state === 'code' ? 'Verify email' : 'Continue with email'}
           <ArrowRight size={17} />
         </button>
       </form>
@@ -232,21 +229,21 @@ function LoginCard({
             setCode('');
           }}
         >
-          Другой email или новое письмо
+          Use another email or request a new code
         </button>
       ) : (
         <div className="login-security">
           <ShieldCheck size={14} />
           <span>
-            Подтверждение email. Второй фактор.
+            Verified email. Second factor.
             <br />
-            Доступ только по приглашению.
+            Access by invitation only.
           </span>
         </div>
       )}
       {!ready && demoAllowed && !sent && (
         <div className="local-access-note">
-          Email-вход подключается при запуске. Сейчас доступен демонстрационный кабинет.
+          Email sign-in is configured at launch. The demo workspace is available now.
         </div>
       )}
     </section>
@@ -265,11 +262,11 @@ export function Landing({
     <div className="landing">
       <div className="landing-glow" aria-hidden="true" />
       <header className="landing-nav">
-        <a href="/" aria-label="GrowthThread, главная">
+        <a href="/" aria-label="GrowthThread, home">
           <Brand />
         </a>
         <nav>
-          <a href="#product">Как это ощущается</a>
+          <a href="#product">The experience</a>
           <span className="private-release">
             <span />
             PRIVATE RELEASE
@@ -281,29 +278,29 @@ export function Landing({
           <div className="hero-copy">
             <div className="early-label">
               <span className="early-dot" />
-              Сейчас — только для нашей команды
+              For our team, for now
               <ChevronRight size={13} />
             </div>
             <h1>
-              Каждый шаг.
+              Every step.
               <br />
-              <span>Общая картина.</span>
+              <span>One clear picture.</span>
             </h1>
             <p>
-              От первого интереса до возвращения в приложение.
+              From first interest to lasting habits.
               <br />
-              Диалоги, аудитория и продукт — в одном
-              <br className="desktop-break" /> рабочем пространстве.
+              Conversations, audience and product in one
+              <br className="desktop-break" /> shared workspace.
             </p>
             <div className="hero-caption">
               <span className="hero-line" />
-              <span>Следите за ростом. Оставайтесь на связи.</span>
+              <span>Follow your growth. Stay connected.</span>
             </div>
             {demoAllowed && (
               <a className="demo-link" href="/?demo=1#/dashboard">
-                Заглянуть в кабинет
+                Explore the workspace
                 <ArrowUpRight size={16} />
-                <span>ДЕМО</span>
+                <span>DEMO</span>
               </a>
             )}
           </div>
@@ -311,9 +308,9 @@ export function Landing({
         </section>
         <section className="product-showcase" id="product">
           <div className="showcase-caption">
-            <span>МЕНЬШЕ РУТИНЫ. БОЛЬШЕ ВНИМАНИЯ.</span>
+            <span>LESS ROUTINE. MORE ATTENTION.</span>
             <a href="#experience">
-              Рассмотреть ближе
+              Take a closer look
               <ArrowDown size={14} />
             </a>
           </div>
@@ -323,15 +320,15 @@ export function Landing({
               <div className="mock-team">
                 <span>R</span>
                 <div>
-                  Ваша команда<small>Рабочее пространство</small>
+                  Your team<small>Workspace</small>
                 </div>
               </div>
               {[
-                [Inbox, 'Обзор'],
-                [MessagesSquare, 'Диалоги'],
-                [Workflow, 'Сценарии'],
-                [FileText, 'Материалы'],
-                [Users, 'Заявки'],
+                [Inbox, 'Overview'],
+                [MessagesSquare, 'Inbox'],
+                [Workflow, 'Flows'],
+                [FileText, 'Materials'],
+                [Users, 'Leads'],
               ].map(([Icon, title], i) => {
                 const Glyph = Icon as typeof Inbox;
                 return (
@@ -344,15 +341,15 @@ export function Landing({
               })}
               <div className="mock-connected">
                 <span />
-                Всё на своём месте
+                Everything in its place
               </div>
             </div>
             <div className="showcase-content">
               <div className="mock-topbar">
                 <span>
-                  Диалоги
+                  Inbox
                   <ChevronRight size={12} />
-                  <strong>Новый интерес</strong>
+                  <strong>New interest</strong>
                 </span>
                 <span>
                   <Command size={11} /> K
@@ -363,20 +360,20 @@ export function Landing({
                   <header>
                     <span className="mock-avatar">A</span>
                     <div>
-                      Будущий ученик<small>Instagram Direct</small>
+                      Future learner<small>Instagram Direct</small>
                     </div>
-                    <span className="mock-online">Сценарий активен</span>
+                    <span className="mock-online">Flow active</span>
                   </header>
-                  <div className="mock-date">СЕГОДНЯ</div>
+                  <div className="mock-date">TODAY</div>
                   <div className="mock-bubble incoming">
-                    Привет! Можно вводный урок?<small>12:41</small>
+                    Hi! Can I try an introductory lesson?<small>12:41</small>
                   </div>
                   <div className="mock-bubble outgoing">
-                    Конечно. Хорошее начало — уже здесь.
+                    Of course. A good start is right here.
                     <div className="mock-file">
                       <FileText size={24} />
                       <div>
-                        Первый шаг в обучении<small>Бесплатный вводный урок</small>
+                        Your first step in learning<small>Free introductory lesson</small>
                       </div>
                       <ArrowUpRight size={17} />
                     </div>
@@ -385,19 +382,19 @@ export function Landing({
                     </small>
                   </div>
                   <div className="mock-message-input">
-                    Напишите ответ…
+                    Write a reply…
                     <ArrowRight size={15} />
                   </div>
                 </div>
                 <aside className="showcase-flow">
-                  <span className="flow-kicker">ОДИН МАЛЕНЬКИЙ СЦЕНАРИЙ</span>
+                  <span className="flow-kicker">ONE SMALL FLOW</span>
                   <div className="show-flow-node">
                     <span className="mini-flow-icon">
                       <MessageCircle size={15} />
                     </span>
                     <div>
-                      <small>ТРИГГЕР</small>
-                      <strong>«Хочу урок»</strong>
+                      <small>TRIGGER</small>
+                      <strong>“I'd like a lesson”</strong>
                     </div>
                     <span className="mini-success">
                       <Check size={11} />
@@ -409,8 +406,8 @@ export function Landing({
                       <FileText size={15} />
                     </span>
                     <div>
-                      <small>ОТВЕТ</small>
-                      <strong>Полезный материал</strong>
+                      <small>REPLY</small>
+                      <strong>A useful resource</strong>
                     </div>
                     <span className="mini-success">
                       <Check size={11} />
@@ -422,8 +419,8 @@ export function Landing({
                       <Users size={15} />
                     </span>
                     <div>
-                      <small>РЕЗУЛЬТАТ</small>
-                      <strong>Новый интерес</strong>
+                      <small>RESULT</small>
+                      <strong>New interest</strong>
                     </div>
                     <span className="mini-success">
                       <Check size={11} />
@@ -432,8 +429,9 @@ export function Landing({
                   <div className="showcase-note">
                     <ShieldCheck size={16} />
                     <p>
-                      Команда подключается
-                      <br />в нужный момент.
+                      Your team steps in
+                      <br />
+                      at the right moment.
                     </p>
                   </div>
                 </aside>
@@ -445,16 +443,16 @@ export function Landing({
               <span />
               GROWTHTHREAD IN MOTION
             </span>
-            <p>Не заменяет внимание. Освобождает для него время.</p>
+            <p>More room for attention. More time to give it.</p>
           </div>
         </section>
         <section className="experience" id="experience">
           <div className="experience-heading">
-            <span className="section-kicker">СПОКОЙСТВИЕ — ТОЖЕ ФУНКЦИЯ</span>
+            <span className="section-kicker">CALM IS A FEATURE, TOO</span>
             <h2>
-              Чуть меньше хаоса.
+              A little less chaos.
               <br />
-              <span>Заметно больше ясности.</span>
+              <span>A lot more clarity.</span>
             </h2>
           </div>
           <div className="experience-grid">
@@ -462,20 +460,20 @@ export function Landing({
               [
                 MessagesSquare,
                 '01',
-                'Ответ вовремя.',
-                'Материалы и стоимость приходят в ответ на интерес. Человек продолжает разговор в своём темпе.',
+                'The right reply, on time.',
+                "Materials and pricing meet a person's interest. The conversation continues at their own pace.",
               ],
               [
                 GitBranch,
                 '02',
-                'Логика без шума.',
-                'Соберите путь из простых шагов. Разветвляйте, сохраняйте контакт и зовите менеджера, когда он нужен.',
+                'Logic without the noise.',
+                'Build a path from simple steps. Add branches, collect details and bring in your team when needed.',
               ],
               [
                 ShieldCheck,
                 '03',
-                'Только свои.',
-                'Подтверждённый email, второй фактор и закрытый доступ. Рабочий кабинет остаётся внутри вашей команды.',
+                'Just your people.',
+                'Verified email, a second factor and invitation-only access. Your workspace stays within your team.',
               ],
             ].map(([Icon, n, title, description]) => {
               const Glyph = Icon as typeof Inbox;
@@ -495,7 +493,7 @@ export function Landing({
       </main>
       <footer className="landing-footer">
         <Brand />
-        <p>Место для разговоров, которые имеют значение.</p>
+        <p>A place for conversations that matter.</p>
         <span>© {new Date().getFullYear()} GrowthThread</span>
       </footer>
     </div>

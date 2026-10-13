@@ -38,7 +38,7 @@ export function json(data: unknown, status = 200): Response {
 }
 export async function readBody(req: Request, limit = 65536): Promise<Uint8Array> {
   if (Number(req.headers.get('content-length')) > limit)
-    throw new HttpError(413, 'Слишком большой запрос.');
+    throw new HttpError(413, 'Request too large.');
   const reader = req.body?.getReader();
   if (!reader) return new Uint8Array();
   const chunks: Uint8Array[] = [];
@@ -49,7 +49,7 @@ export async function readBody(req: Request, limit = 65536): Promise<Uint8Array>
     size += value.length;
     if (size > limit) {
       await reader.cancel();
-      throw new HttpError(413, 'Слишком большой запрос.');
+      throw new HttpError(413, 'Request too large.');
     }
     chunks.push(value);
   }
@@ -68,7 +68,7 @@ export async function readJson(req: Request): Promise<Record<string, unknown>> {
     return value;
   } catch (e) {
     if (e instanceof HttpError) throw e;
-    throw new HttpError(400, 'Некорректный JSON.');
+    throw new HttpError(400, 'Invalid JSON.');
   }
 }
 export function uuid(value: unknown): string {
@@ -76,17 +76,17 @@ export function uuid(value: unknown): string {
     typeof value !== 'string' ||
     !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
   )
-    throw new HttpError(400, 'Некорректный идентификатор.');
+    throw new HttpError(400, 'Invalid ID.');
   return value;
 }
 export async function member(req: Request, db: Database, workspaceId: string) {
   const context = await gateway(req, db);
   await limit(db, 'workspace:' + context.ip, 120, 60);
   const s = await webSession(req, db, context.agent);
-  if (s.row.state !== 'active') throw new HttpError(403, 'Нужен подтверждённый вход команды.');
+  if (s.row.state !== 'active') throw new HttpError(403, 'Verified team sign-in required.');
   const teamWorkspace = await rpc<string | null>(db, 'service_team_workspace', { uid: s.user.id });
   if (teamWorkspace !== workspaceId)
-    throw new HttpError(403, 'Нет доступа к рабочему пространству.');
+    throw new HttpError(403, "You don't have access to this workspace.");
   const { data, error } = await db
     .from('workspace_members')
     .select('role')
@@ -94,7 +94,7 @@ export async function member(req: Request, db: Database, workspaceId: string) {
     .eq('user_id', s.user.id)
     .maybeSingle();
   if (error) throw new Error('Membership lookup failed');
-  if (!data) throw new HttpError(403, 'Нет доступа к рабочему пространству.');
+  if (!data) throw new HttpError(403, "You don't have access to this workspace.");
   await rpc(db, 'service_security_event', { event_kind: 'workspace_access', uid: s.user.id });
   return {
     userId: s.user.id,
@@ -112,7 +112,7 @@ export function serve(handler: (req: Request) => Promise<Response>): void {
       'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
       Vary: 'Origin',
     };
-    if (origin && origin !== allowed) return json({ error: 'Недопустимый источник запроса.' }, 403);
+    if (origin && origin !== allowed) return json({ error: 'Request origin not allowed.' }, 403);
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers });
     let response: Response;
     try {
@@ -124,7 +124,7 @@ export function serve(handler: (req: Request) => Promise<Response>): void {
           error:
             e instanceof HttpError
               ? e.message
-              : 'Не удалось выполнить операцию. Проверьте настройки подключения.',
+              : 'Unable to complete this action. Check your connection settings.',
         },
         e instanceof HttpError ? e.status : 500,
       );

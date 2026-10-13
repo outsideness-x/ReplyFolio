@@ -6,7 +6,7 @@ export function Lab() {
   const { data, repo, perform, openInbox, busy } = useUI(),
     [contactId, setContactId] = useState(''),
     [currentId, setCurrentId] = useState<string | null>(null),
-    [text, setText] = useState('материалы'),
+    [text, setText] = useState('materials'),
     [kind, setKind] = useState<'dm' | 'comment'>('dm'),
     [postId, setPostId] = useState(''),
     bottom = useRef<HTMLDivElement>(null);
@@ -39,17 +39,17 @@ export function Lab() {
         <div className="page-heading">
           <div>
             <div className="eyebrow">TRY YOUR FLOW</div>
-            <h1>Симулятор</h1>
-            <p>Проверьте логику, прежде чем запускать её для учеников.</p>
+            <h1>Simulator</h1>
+            <p>Test your flow before running it for learners.</p>
           </div>
         </div>
         <section className="panel">
           <Empty
-            title="Симулятор работает в демосреде"
-            description="Откройте отдельную демосреду, чтобы протестировать сценарии. Реальные сообщения и заявки не изменятся."
+            title="The simulator runs in the demo workspace"
+            description="Open a separate demo workspace to test flows. Live messages and leads will stay unchanged."
           >
             <a className="button primary" href="?demo=1#/lab">
-              Открыть демосреду
+              Open demo workspace
               <ArrowRight size={16} />
             </a>
           </Empty>
@@ -61,59 +61,59 @@ export function Lab() {
       <div className="page-heading">
         <div>
           <div className="eyebrow">TRY YOUR FLOW</div>
-          <h1>Симулятор</h1>
-          <p>Посмотрите на сценарий глазами будущего ученика.</p>
+          <h1>Simulator</h1>
+          <p>See the flow through a future learner's eyes.</p>
         </div>
         <Badge tone="gray">
           <FlaskConical size={12} />
-          Локальный тест
+          Local test
         </Badge>
       </div>
       <div className="lab-grid">
         <section className="panel lab-controls">
           <div className="panel-heading">
             <div>
-              <h2>Первое сообщение</h2>
-              <p>Ответы появятся в диалоге справа.</p>
+              <h2>First message</h2>
+              <p>Replies will appear in the conversation on the right.</p>
             </div>
             <MessageCircle size={19} />
           </div>
           <label>
-            Ученик
+            Learner
             <select
-              aria-label="Ученик в симуляторе"
+              aria-label="Learner in the simulator"
               value={contactId}
               onChange={(e) => {
                 setContactId(e.target.value);
                 setCurrentId(null);
               }}
             >
-              <option value="">Новый тестовый ученик</option>
+              <option value="">New test learner</option>
               {data.contacts.map((p) => (
                 <option value={p.id} key={p.id}>
-                  {p.name || p.username || 'Контакт Instagram'}
+                  {p.name || p.username || 'Instagram contact'}
                 </option>
               ))}
             </select>
           </label>
           <label>
-            Откуда обращение
+            Request source
             <select
-              aria-label="Тип обращения"
+              aria-label="Request type"
               value={kind}
               onChange={(e) => setKind(e.target.value as 'dm' | 'comment')}
             >
-              <option value="dm">Сообщение в Direct</option>
-              <option value="comment">Комментарий к публикации</option>
+              <option value="dm">Direct message</option>
+              <option value="comment">Comment on a post</option>
             </select>
           </label>
           {kind === 'comment' && (
             <label>
-              ID публикации
+              Post ID
               <input
                 value={postId}
                 onChange={(e) => setPostId(e.target.value)}
-                placeholder="Если сценарий привязан к публикации"
+                placeholder="If the flow is linked to a post"
               />
             </label>
           )}
@@ -124,22 +124,22 @@ export function Lab() {
             }}
           >
             <label>
-              Сообщение ученика
+              Learner message
               <textarea
-                aria-label="Тестовое сообщение"
+                aria-label="Test message"
                 value={text}
                 onChange={(e) => setText(e.target.value)}
-                placeholder="Например: хочу материалы"
+                placeholder="For example: I'd like the materials"
                 rows={4}
               />
             </label>
             <button className="button primary full" disabled={busy || !text.trim()}>
               <Send size={15} />
-              Отправить в симулятор
+              Send to simulator
             </button>
           </form>
           <div className="lab-suggestions">
-            {['материалы', 'прайс', 'менеджер', 'стоп'].map((keyword) => (
+            {['materials', 'price', 'team', 'stop'].map((keyword) => (
               <button key={keyword} onClick={() => setText(keyword)}>
                 {keyword}
               </button>
@@ -148,37 +148,35 @@ export function Lab() {
           <div className="lab-matching">
             <Workflow size={18} />
             <div>
-              <small>СЦЕНАРИЙ ПО ТРИГГЕРУ</small>
-              <strong>{matching?.name || 'Нет совпадения'}</strong>
+              <small>MATCHING FLOW</small>
+              <strong>{matching?.name || 'No match'}</strong>
               <p>
                 {c?.mode === 'human'
-                  ? 'Бот на паузе: диалог передан менеджеру.'
+                  ? 'Bot paused: your team has taken over.'
                   : c
-                    ? 'Активный диалог продолжит текущий сценарий.'
+                    ? 'The active conversation will continue its current flow.'
                     : matching
-                      ? 'Готов к запуску.'
-                      : 'Проверьте ключевые слова и активность сценария.'}
+                      ? 'Ready to run.'
+                      : 'Check the keywords and whether the flow is active.'}
               </p>
             </div>
           </div>
-          <p className="form-hint">
-            Данные остаются в этом браузере. В Instagram ничего не отправляется.
-          </p>
+          <p className="form-hint">Data stays in this browser. Nothing is sent to Instagram.</p>
           <div className="lab-bottom">
             <button
               className="button small"
               onClick={() => {
                 setContactId('');
                 setCurrentId(null);
-                setText('материалы');
+                setText('materials');
               }}
             >
               <Plus size={14} />
-              Новый ученик
+              New learner
             </button>
             {c && (
               <button className="button small" onClick={() => openInbox(c.id)}>
-                Открыть диалог
+                Open conversation
                 <ArrowRight size={13} />
               </button>
             )}
@@ -187,15 +185,15 @@ export function Lab() {
         <section className="lab-preview">
           <div className="preview-label">
             <span />
-            ПРЕДПРОСМОТР ДИАЛОГА
+            CONVERSATION PREVIEW
           </div>
           <div className="phone-preview">
             <div className="phone-notch" />
             <div className="phone-header">
-              <Avatar name={person?.name || 'Новый ученик'} size="small" />
+              <Avatar name={person?.name || 'New learner'} size="small" />
               <div>
-                <strong>{person?.name || 'Новый ученик'}</strong>
-                <small>{c?.mode === 'human' ? 'Менеджер' : 'GrowthThread · тестовый бот'}</small>
+                <strong>{person?.name || 'New learner'}</strong>
+                <small>{c?.mode === 'human' ? 'Team' : 'GrowthThread · test bot'}</small>
               </div>
               <MessageCircle size={18} />
             </div>
@@ -231,11 +229,7 @@ export function Lab() {
                       ) : null}
                       <div className="message-meta">
                         <span>
-                          {m.source === 'bot'
-                            ? 'Сценарий'
-                            : m.source === 'operator'
-                              ? 'Менеджер'
-                              : ''}
+                          {m.source === 'bot' ? 'Flow' : m.source === 'operator' ? 'Team' : ''}
                         </span>
                         <time>{time(m.created_at)}</time>
                       </div>
@@ -244,8 +238,8 @@ export function Lab() {
                 ))
               ) : (
                 <Empty
-                  title="Привет, новый диалог"
-                  description="Отправьте первое сообщение и посмотрите, как ответит ваш сценарий."
+                  title="Hello, new conversation"
+                  description="Send the first message and see how your flow responds."
                 />
               )}
               <div ref={bottom} />

@@ -14,5 +14,5 @@ it('does not silently return a partial workspace after a failed page', async () 
       async (from) => ({ data: from ? null : [1, 2], error: from ? new Error('Offline') : null }),
       2,
     ),
-  ).rejects.toThrow('загрузить');
+  ).rejects.toThrow('load');
 });

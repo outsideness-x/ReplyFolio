@@ -6,7 +6,7 @@ export async function loadPages<T>(
   for (let from = 0; ; from += size) {
     const { data, error } = await fetchPage(from, from + size - 1);
     if (error)
-      throw new Error('Не удалось загрузить данные. Проверьте подключение и права доступа.');
+      throw new Error('Unable to load data. Check your connection and access permissions.');
     const page = data ?? [];
     items.push(...page);
     if (page.length < size) return items;

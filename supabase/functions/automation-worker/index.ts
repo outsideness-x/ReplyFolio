@@ -110,7 +110,7 @@ async function eventJob(db: Database, event: MetaEvent): Promise<void> {
         await rpc(db, 'service_queue_message', {
           conversation: c.id,
           key: event.key + ':handoff',
-          body: 'Передаю диалог менеджеру. Он продолжит общение здесь.',
+          body: "I'm passing this conversation to our team. They'll continue chatting with you here.",
           replies: [],
           sender: 'bot',
           allow_handoff: true,
@@ -218,7 +218,7 @@ async function sendJob(db: Database, job: Job): Promise<void> {
     if (a.status !== 'connected') {
       await update(db, 'messages', m.id, {
         status: 'failed',
-        error: 'Instagram отключён. Повторно подключите аккаунт.',
+        error: 'Instagram disconnected. Reconnect your account.',
       });
       return;
     }
@@ -229,7 +229,7 @@ async function sendJob(db: Database, job: Job): Promise<void> {
     ) {
       await update(db, 'messages', m.id, {
         status: 'failed',
-        error: 'Отправка отменена: диалог передан менеджеру.',
+        error: 'Sending canceled: your team has taken over.',
       });
       return;
     }
@@ -239,7 +239,7 @@ async function sendJob(db: Database, job: Job): Promise<void> {
     ) {
       await update(db, 'messages', m.id, {
         status: 'failed',
-        error: 'Разрешённое окно переписки закрыто.',
+        error: 'The permitted messaging window is closed.',
       });
       return;
     }
@@ -249,7 +249,7 @@ async function sendJob(db: Database, job: Job): Promise<void> {
     // Persist uncertainty BEFORE the external request: a crash cannot lead to a duplicate send.
     await update(db, 'messages', m.id, {
       status: 'uncertain',
-      error: 'Результат отправки ещё не подтверждён. Проверьте Direct перед повторной отправкой.',
+      error: 'Delivery is not confirmed yet. Check Direct before sending again.',
     });
     try {
       const message: Record<string, unknown> = { text: m.body };
@@ -277,7 +277,7 @@ async function sendJob(db: Database, job: Job): Promise<void> {
       if (e instanceof MetaError && e.status === 429) {
         await update(db, 'messages', m.id, {
           status: 'queued',
-          error: 'Instagram ограничил частоту запросов. Отправка отложена.',
+          error: 'Instagram rate limit reached. Sending has been delayed.',
         });
         throw new Retry(Math.min(300, 15 * 2 ** job.attempts));
       }
@@ -286,7 +286,7 @@ async function sendJob(db: Database, job: Job): Promise<void> {
         if (e.code === 190 || e.status === 401)
           await update(db, 'instagram_accounts', a.id, {
             status: 'error',
-            last_error: 'Instagram отозвал доступ. Повторно подключите аккаунт.',
+            last_error: 'Instagram revoked access. Reconnect your account.',
           });
       }
       // A network/5xx failure or database failure after acceptance remains uncertain.
@@ -312,7 +312,7 @@ async function refreshJob(db: Database): Promise<void> {
       if (res.status >= 500 || res.status === 429) throw new Retry(60);
       await update(db, 'instagram_accounts', a.id, {
         status: 'error',
-        last_error: 'Не удалось обновить доступ Instagram. Подключите аккаунт повторно.',
+        last_error: 'Unable to refresh Instagram access. Reconnect your account.',
       });
       continue;
     }
@@ -328,7 +328,7 @@ async function refreshJob(db: Database): Promise<void> {
   await rpc(db, 'service_cleanup');
 }
 serve(async (req) => {
-  if (req.method !== 'POST') throw new HttpError(405, 'Используйте POST.');
+  if (req.method !== 'POST') throw new HttpError(405, 'Use POST.');
   if (!constantTimeEqual(req.headers.get('x-worker-secret') ?? '', env('WORKER_SECRET')))
     throw new HttpError(403, 'Invalid worker secret');
   const db = database(),
@@ -360,7 +360,7 @@ serve(async (req) => {
         job: job.id,
         lease_token: job.lease,
         result_status: retry ? 'pending' : 'failed',
-        detail: e instanceof MetaError ? e.message : 'Не удалось обработать задачу.',
+        detail: e instanceof MetaError ? e.message : 'Unable to process the job.',
         retry_at: new Date(
           Date.now() +
             (e instanceof Retry ? e.seconds : Math.min(300, 10 * 2 ** job.attempts)) * 1000,
@@ -372,7 +372,7 @@ serve(async (req) => {
         if (m.status === 'queued')
           await update(db, 'messages', id, {
             status: 'failed',
-            error: 'Лимит повторных попыток исчерпан. Проверьте подключение.',
+            error: 'Retry limit reached. Check your connection.',
           });
       }
     }

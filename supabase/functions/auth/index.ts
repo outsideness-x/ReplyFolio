@@ -13,7 +13,7 @@ import { gateway, limit } from '../_shared/gateway.ts';
 import { sealed, userClient, webSession } from '../_shared/web-session.ts';
 async function captcha(token: unknown, ip: string) {
   if (typeof token !== 'string' || token.length > 2048)
-    throw new HttpError(400, 'Подтвердите проверку браузера.');
+    throw new HttpError(400, 'Complete browser verification.');
   const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
     method: 'POST',
     body: new URLSearchParams({
@@ -30,7 +30,7 @@ async function captcha(token: unknown, ip: string) {
     result.hostname !== new URL(env('APP_URL')).hostname ||
     result.action !== 'login'
   )
-    throw new HttpError(403, 'Повторите проверку браузера.');
+    throw new HttpError(403, 'Repeat browser verification.');
 }
 function cookieResponse(data: unknown, cookies: string[]) {
   const res = json(data);
@@ -56,7 +56,7 @@ serve(async (req) => {
       throw e;
     }
   }
-  if (req.method !== 'POST') throw new HttpError(405, 'Используйте POST.');
+  if (req.method !== 'POST') throw new HttpError(405, 'Use POST.');
   const body = await readJson(req),
     action = body.action;
   if (action === 'start') {
@@ -64,7 +64,7 @@ serve(async (req) => {
     try {
       email = normalizeEmail(body.email);
     } catch {
-      throw new HttpError(400, 'Укажите корректный email.');
+      throw new HttpError(400, 'Enter a valid email.');
     }
     await captcha(body.captchaToken, context.ip);
     await limit(db, 'email:' + email, 3, 900);
@@ -79,11 +79,11 @@ serve(async (req) => {
       body: JSON.stringify({
         from: env('EMAIL_FROM'),
         to: [email],
-        subject: 'Ваш код входа в GrowthThread',
+        subject: 'Your GrowthThread sign-in code',
         text:
-          'Код входа: ' +
+          'Sign-in code: ' +
           data.properties.email_otp +
-          '\n\nНе сообщайте его другим. Если вы не запрашивали вход, проигнорируйте письмо.',
+          "\n\nDon't share this code. If you didn't request it, ignore this email.",
       }),
       signal: AbortSignal.timeout(10000),
     });
@@ -96,12 +96,12 @@ serve(async (req) => {
   if (action === 'verify-email') {
     const token = readCookie(req, LOGIN_COOKIE);
     if (!token || typeof body.code !== 'string' || !/^\d{6,8}$/.test(body.code))
-      throw new HttpError(400, 'Проверьте код из письма.');
+      throw new HttpError(400, 'Check the code in your email.');
     const email = await rpc<string | null>(db, 'service_login_attempt', {
       hash: await digest(token),
     });
     if (!email)
-      throw new HttpError(429, 'Код истёк или попытки исчерпаны. Запросите новое письмо.');
+      throw new HttpError(429, 'The code expired or you ran out of attempts. Request a new email.');
     const client = userClient(),
       { data, error } = await client.auth.verifyOtp({ email, token: body.code, type: 'email' });
     if (
@@ -110,12 +110,12 @@ serve(async (req) => {
       !data.user?.email_confirmed_at ||
       data.user.email?.toLowerCase() !== email
     )
-      throw new HttpError(400, 'Неверный или просроченный код.');
+      throw new HttpError(400, 'Invalid or expired code.');
     await rpc(db, 'service_login_finish', { hash: await digest(token) });
     const role = await rpc<string | null>(db, 'service_claim_invite', { uid: data.user.id });
     const proof = await client.auth.getClaims(data.session.access_token);
     if (proof.error || proof.data?.claims.sub !== data.user.id)
-      throw new HttpError(403, 'Подтверждение входа не завершено.');
+      throw new HttpError(403, 'Sign-in verification incomplete.');
     const id = crypto.randomUUID(),
       sessionToken = opaqueToken(),
       state = role ? 'mfa' : 'waitlist';
@@ -148,12 +148,12 @@ serve(async (req) => {
   }
   if (action === 'waitlist') {
     if (s.row.state !== 'waitlist' || body.consent !== true)
-      throw new HttpError(403, 'Подтвердите согласие на запись в лист ожидания.');
+      throw new HttpError(403, 'Confirm your consent to join the waitlist.');
     await rpc(db, 'service_join_waitlist', { uid: s.user.id });
     await rpc(db, 'service_session_revoke', { sid: s.row.id });
     return cookieResponse({ state: 'joined' }, [secureCookie(SESSION_COOKIE, '', 0)]);
   }
-  if (s.row.state === 'waitlist') throw new HttpError(403, 'Доступ к команде закрыт.');
+  if (s.row.state === 'waitlist') throw new HttpError(403, 'Team access is closed.');
   await limit(db, 'mfa:' + s.row.id, 10, 900);
   if (action === 'mfa-start') {
     const { data, error } = await s.client.auth.mfa.listFactors();
@@ -165,14 +165,14 @@ serve(async (req) => {
     if (trusted && !factor)
       throw new HttpError(
         403,
-        'Фактор недоступен. Восстановление выполняет владелец через защищённую процедуру.',
+        'Authenticator unavailable. The owner must use the secure recovery procedure.',
       );
     if (!trusted) {
       // Never silently choose a factor added through the public Auth API.
       if (data.totp.some((f) => f.status === 'verified'))
         throw new HttpError(
           403,
-          'Существующий фактор требует доверенного подтверждения владельцем.',
+          'The existing authenticator needs trusted approval from the owner.',
         );
       for (const unverified of data.totp) {
         await s.client.auth.mfa.unenroll({ factorId: unverified.id });
@@ -204,22 +204,23 @@ serve(async (req) => {
       typeof body.code !== 'string' ||
       !/^\d{6}$/.test(body.code)
     )
-      throw new HttpError(400, 'Проверьте код аутентификатора.');
+      throw new HttpError(400, 'Check your authenticator code.');
     if (!(await rpc<boolean>(db, 'service_session_attempt', { sid: s.row.id }))) {
       await rpc(db, 'service_session_revoke', { sid: s.row.id });
-      throw new HttpError(429, 'Попытки исчерпаны. Войдите заново.');
+      throw new HttpError(429, 'No attempts remaining. Sign in again.');
     }
     const checked = await s.client.auth.mfa.verify({
       factorId: s.row.factor_id,
       challengeId: s.row.challenge_id,
       code: body.code,
     });
-    if (checked.error) throw new HttpError(400, 'Неверный код аутентификатора.');
+    if (checked.error) throw new HttpError(400, 'Invalid authenticator code.');
     const trusted = await rpc<string | null>(db, 'service_trusted_factor', {
       uid: s.user.id,
       factor: s.row.factor_id,
     });
-    if (trusted !== s.row.factor_id) throw new HttpError(403, 'Доверенный фактор не совпадает.');
+    if (trusted !== s.row.factor_id)
+      throw new HttpError(403, "The trusted authenticator doesn't match.");
     const claims = await s.client.auth.getClaims(checked.data.access_token);
     if (
       claims.error ||
@@ -227,7 +228,7 @@ serve(async (req) => {
       claims.data.claims.sub !== s.user.id ||
       claims.data.claims.session_id !== s.row.auth_session_id
     )
-      throw new HttpError(403, 'Подтверждение MFA не завершено.');
+      throw new HttpError(403, 'MFA verification incomplete.');
     await rpc(db, 'service_session_update', {
       sid: s.row.id,
       sealed: await sealed(checked.data, s.row.id),
@@ -239,5 +240,5 @@ serve(async (req) => {
     await rpc(db, 'service_security_event', { event_kind: 'mfa_verified', uid: s.user.id });
     return json({ state: 'active', workspaceId: ws });
   }
-  throw new HttpError(400, 'Неизвестное действие.');
+  throw new HttpError(400, 'Unknown action.');
 });

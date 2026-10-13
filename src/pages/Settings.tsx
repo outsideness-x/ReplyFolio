@@ -26,7 +26,7 @@ export function Settings() {
     await perform(async () => {
       const url = await repo.connect();
       if (!['www.instagram.com', 'instagram.com'].includes(new URL(url).hostname))
-        throw new Error('Некорректная ссылка авторизации.');
+        throw new Error('Invalid authorization link.');
       location.assign(url);
     });
   }
@@ -35,12 +35,12 @@ export function Settings() {
       <div className="page-heading">
         <div>
           <div className="eyebrow">MAKE IT YOURS</div>
-          <h1>Настройки</h1>
-          <p>Ваше пространство. Ваши подключения.</p>
+          <h1>Settings</h1>
+          <p>Your workspace. Your connections.</p>
         </div>
         <a className="button" href="/setup.html" target="_blank" rel="noopener noreferrer">
           <BookOpen size={15} />
-          Инструкция
+          Setup guide
         </a>
       </div>
       <div className="settings-grid">
@@ -48,19 +48,19 @@ export function Settings() {
           <section className="panel">
             <div className="panel-heading">
               <div>
-                <h2>Рабочее пространство</h2>
-                <p>Название видно только вашей команде.</p>
+                <h2>Workspace</h2>
+                <p>Only your team can see this name.</p>
               </div>
-              <Badge tone="gray">{repo.mode === 'demo' ? 'Демо' : 'Рабочая среда'}</Badge>
+              <Badge tone="gray">{repo.mode === 'demo' ? 'Demo' : 'Live workspace'}</Badge>
             </div>
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                void perform(() => repo.renameWorkspace(name), 'Название сохранено.');
+                void perform(() => repo.renameWorkspace(name), 'Name saved.');
               }}
             >
               <label>
-                Название
+                Title
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -72,7 +72,7 @@ export function Settings() {
                 className="button primary"
                 disabled={busy || !name.trim() || name === data.workspace.name}
               >
-                Сохранить название
+                Save name
               </button>
             </form>
           </section>
@@ -80,7 +80,7 @@ export function Settings() {
             <div className="panel-heading">
               <div>
                 <h2>Instagram</h2>
-                <p>Официальное подключение профессионального аккаунта.</p>
+                <p>An official connection to your professional account.</p>
               </div>
               <Camera size={21} className="settings-icon" />
             </div>
@@ -92,43 +92,44 @@ export function Settings() {
                 <strong>
                   {data.account?.username
                     ? '@' + data.account.username
-                    : 'Аккаунт ещё не подключён'}
+                    : 'No account connected yet'}
                 </strong>
                 <p>
                   {repo.mode === 'demo'
-                    ? 'Локальная симуляция без реальных отправок'
+                    ? 'Local simulation with no live messages'
                     : connected
-                      ? 'Разрешения и подписка на события активны'
-                      : data.account?.last_error || 'Подключите Instagram Business или Creator'}
+                      ? 'Permissions and event subscriptions are active'
+                      : data.account?.last_error ||
+                        'Connect an Instagram Business or Creator account'}
                 </p>
               </div>
               <Badge tone={connected ? 'green' : data.account?.status === 'error' ? 'red' : 'gray'}>
                 {connected
-                  ? 'Подключён'
+                  ? 'Connected'
                   : data.account?.status === 'error'
-                    ? 'Нужен вход'
-                    : 'Не подключён'}
+                    ? 'Sign-in required'
+                    : 'Not connected'}
               </Badge>
             </div>
             {data.account?.token_expires_at && (
               <p className="form-hint" style={{ marginBottom: 20 }}>
-                Доступ действует до {day(data.account.token_expires_at)}. Рабочий сервер обновляет
-                токен автоматически.
+                Access expires on {day(data.account.token_expires_at)}. The server refreshes the
+                token automatically.
               </p>
             )}
             <div className="settings-actions">
               <button className="button primary" disabled={busy} onClick={() => void connect()}>
                 <Link2 size={14} />
                 {repo.mode === 'demo'
-                  ? 'Как подключить'
+                  ? 'How to connect'
                   : connected
-                    ? 'Обновить подключение'
-                    : 'Подключить Instagram'}
+                    ? 'Reconnect'
+                    : 'Connect Instagram'}
               </button>
               {data.account && repo.mode === 'live' && (
                 <button className="button" disabled={busy} onClick={() => setConfirm('disconnect')}>
                   <Unplug size={14} />
-                  Отключить
+                  Disconnect
                 </button>
               )}
             </div>
@@ -136,15 +137,14 @@ export function Settings() {
           <section className="panel">
             <div className="panel-heading">
               <div>
-                <h2>Данные и экспорт</h2>
-                <p>Сохраните копию загруженных данных кабинета.</p>
+                <h2>Data and export</h2>
+                <p>Save a copy of your loaded workspace data.</p>
               </div>
               <Database size={20} className="settings-icon" />
             </div>
             <p className="form-hint">
-              Экспорт содержит контакты, сценарии, материалы и загруженные сообщения. Токены
-              Instagram и серверные секреты в него не входят. Для полного резервного копирования
-              базы используйте инструкцию.
+              The export includes contacts, flows, materials and loaded messages. Instagram tokens
+              and server secrets are excluded. See the setup guide for a full database backup.
             </p>
             <div className="settings-actions" style={{ marginTop: 21 }}>
               <button
@@ -157,12 +157,12 @@ export function Settings() {
                 }
               >
                 <Download size={14} />
-                Скачать текущие данные
+                Download current data
               </button>
               {repo.mode === 'demo' && (
                 <button className="button" onClick={() => setConfirm('reset')}>
                   <RotateCcw size={14} />
-                  Сбросить демоданные
+                  Reset demo data
                 </button>
               )}
             </div>
@@ -172,28 +172,28 @@ export function Settings() {
           <section className="panel setup-checklist">
             <div className="panel-heading">
               <div>
-                <h2>От теста к запуску</h2>
-                <p>Три шага до реального Direct.</p>
+                <h2>From testing to launch</h2>
+                <p>Three steps to your live Direct.</p>
               </div>
               <ShieldCheck size={20} className="settings-icon" />
             </div>
             {[
               [
                 '01',
-                'Подключить Supabase',
-                'База, авторизация команды и библиотека материалов.',
+                'Connect Supabase',
+                'Database, team authentication and your material library.',
                 repo.mode === 'live',
               ],
               [
                 '02',
-                'Настроить приложение Meta',
-                'Разрешения Instagram и адрес получения событий.',
+                'Configure your Meta app',
+                'Instagram permissions and the event endpoint.',
                 connected,
               ],
               [
                 '03',
-                'Авторизовать Instagram',
-                'Подключение через официальный экран Instagram.',
+                'Authorize Instagram',
+                "Connect through Instagram's official sign-in screen.",
                 connected,
               ],
             ].map(([number, title, description, done]) => (
@@ -206,30 +206,30 @@ export function Settings() {
               </div>
             ))}
             <a className="button full" href="/setup.html" target="_blank" rel="noopener noreferrer">
-              Открыть инструкцию
+              Open setup guide
               <ArrowRight size={15} />
             </a>
           </section>
           <section className="panel">
             <div className="panel-heading">
               <div>
-                <h2>Адрес webhook</h2>
-                <p>Для настроек приложения Meta.</p>
+                <h2>Webhook URL</h2>
+                <p>For your Meta app settings.</p>
               </div>
               <Link2 size={19} className="settings-icon" />
             </div>
             <p className="form-hint">
-              Адрес зависит от вашего проекта Supabase. Возьмите его из инструкции подключения и
-              добавьте в настройки Meta.
+              The URL depends on your Supabase project. Get it from the setup guide and add it to
+              your Meta settings.
             </p>
           </section>
           <section className="quiet-note">
             <ShieldCheck size={19} />
             <div>
-              <strong>Окно переписки проверяется перед отправкой.</strong>
+              <strong>The messaging window is checked before sending.</strong>
               <p>
-                Для обычных сообщений — 24 часа после обращения. После комментария отправляется одно
-                первое сообщение; продолжение возможно после ответа ученика.
+                Regular messages: 24 hours after a request. After a comment, one initial message is
+                sent; the flow can continue after the learner replies.
               </p>
             </div>
           </section>
@@ -237,17 +237,17 @@ export function Settings() {
       </div>
       {confirm && (
         <Modal
-          title={confirm === 'reset' ? 'Сбросить демоданные?' : 'Отключить Instagram?'}
+          title={confirm === 'reset' ? 'Reset demo data?' : 'Disconnect Instagram?'}
           onClose={() => setConfirm(null)}
         >
           <p className="form-hint">
             {confirm === 'reset'
-              ? 'Изменения в локальной демосреде будут заменены начальными примерами. Облачные данные не изменятся.'
-              : 'Бот перестанет отправлять сообщения. Сохранённые диалоги и заявки останутся в кабинете.'}
+              ? 'Your local demo changes will be replaced with the original examples. Cloud data will stay unchanged.'
+              : 'The bot will stop sending messages. Saved conversations and leads will remain in the workspace.'}
           </p>
           <div className="modal-footer">
             <button className="button" onClick={() => setConfirm(null)}>
-              Отмена
+              Cancel
             </button>
             <button
               className="button danger"
@@ -256,13 +256,13 @@ export function Settings() {
                 if (
                   await perform(
                     () => (confirm === 'reset' ? repo.reset!() : repo.disconnect()),
-                    confirm === 'reset' ? 'Демосреда сброшена.' : 'Instagram отключён.',
+                    confirm === 'reset' ? 'Demo workspace reset.' : 'Instagram disconnected.',
                   )
                 )
                   setConfirm(null);
               }}
             >
-              {confirm === 'reset' ? 'Сбросить демосреду' : 'Отключить аккаунт'}
+              {confirm === 'reset' ? 'Reset demo workspace' : 'Disconnect account'}
             </button>
           </div>
         </Modal>

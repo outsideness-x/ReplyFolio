@@ -21,18 +21,18 @@ export function Leads() {
       )
       .sort((a, b) => b.updated_at.localeCompare(a.updated_at));
   const stats = [
-    ['new', 'Новые'],
-    ['qualified', 'Заинтересованы'],
-    ['contacted', 'На связи'],
-    ['enrolled', 'Начали обучение'],
+    ['new', 'New'],
+    ['qualified', 'Interested'],
+    ['contacted', 'In touch'],
+    ['enrolled', 'Enrolled'],
   ];
   return (
     <>
       <div className="page-heading">
         <div>
           <div className="eyebrow">YOUR NEXT STUDENTS</div>
-          <h1>Заявки</h1>
-          <p>От интереса к знакомству с вашей командой.</p>
+          <h1>Leads</h1>
+          <p>From interest to a conversation with your team.</p>
         </div>
         <button
           className="button"
@@ -46,7 +46,7 @@ export function Leads() {
           }
         >
           <Download size={15} />
-          Экспорт CSV
+          Export CSV
         </button>
       </div>
       <div className="stats-grid compact">
@@ -69,18 +69,18 @@ export function Leads() {
           <div className="table-search">
             <Search size={16} />
             <input
-              aria-label="Поиск заявок"
+              aria-label="Search leads"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Имя, контакт или тег"
+              placeholder="Name, contact details or tag"
             />
           </div>
           <select
-            aria-label="Фильтр статуса заявки"
+            aria-label="Filter by lead status"
             value={status}
             onChange={(e) => setStatus(e.target.value)}
           >
-            <option value="all">Все статусы</option>
+            <option value="all">All statuses</option>
             {Object.entries(leadLabels).map(([key, label]) => (
               <option key={key} value={key}>
                 {label}
@@ -93,12 +93,12 @@ export function Leads() {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>УЧЕНИК</th>
-                  <th>КОНТАКТ</th>
-                  <th>СТАТУС</th>
-                  <th>ИСТОЧНИК</th>
-                  <th>ДАТА</th>
-                  <th aria-label="Действия" />
+                  <th>LEARNER</th>
+                  <th>CONTACT</th>
+                  <th>STATUS</th>
+                  <th>SOURCE</th>
+                  <th>DATE</th>
+                  <th aria-label="Actions" />
                 </tr>
               </thead>
               <tbody>
@@ -108,13 +108,13 @@ export function Leads() {
                       <div className="table-person">
                         <Avatar name={c.name || c.username} size="small" />
                         <div>
-                          <strong>{c.name || c.username || 'Пользователь Instagram'}</strong>
+                          <strong>{c.name || c.username || 'Instagram user'}</strong>
                           <small>{c.username ? '@' + c.username : ''}</small>
                         </div>
                       </div>
                     </td>
                     <td>
-                      {c.email || c.phone || 'Не указан'}
+                      {c.email || c.phone || 'Not provided'}
                       {c.email && c.phone && (
                         <small style={{ display: 'block', marginTop: 5 }}>{c.phone}</small>
                       )}
@@ -122,7 +122,7 @@ export function Leads() {
                     <td>
                       <select
                         className="inline-select"
-                        aria-label={'Статус ' + (c.name || c.username)}
+                        aria-label={'Status ' + (c.name || c.username)}
                         value={c.status}
                         onChange={(e) =>
                           void perform(() =>
@@ -145,18 +145,18 @@ export function Leads() {
                       <div className="row-actions">
                         <button
                           className="icon-button"
-                          aria-label={'Диалог ' + (c.name || c.username)}
+                          aria-label={'Conversation ' + (c.name || c.username)}
                           onClick={() => {
                             const chat = data.conversations.find((x) => x.contact_id === c.id);
                             if (chat) openInbox(chat.id);
-                            else notify('У этого контакта ещё нет диалога.');
+                            else notify("This contact doesn't have a conversation yet.");
                           }}
                         >
                           <MessageCircle size={16} />
                         </button>
                         <button
                           className="icon-button"
-                          aria-label={'Редактировать ' + (c.name || c.username)}
+                          aria-label={'Edit ' + (c.name || c.username)}
                           onClick={() => setEditing(c)}
                         >
                           <Edit3 size={15} />
@@ -170,8 +170,8 @@ export function Leads() {
           </div>
         ) : (
           <Empty
-            title="Здесь появятся ваши будущие ученики"
-            description="Сценарий сохранит заявку, когда человек оставит контакт. Также можно отметить контакт как заявку в диалоге."
+            title="Your future learners will appear here"
+            description="A flow saves a lead when someone leaves their details. You can also mark a contact as a lead in a conversation."
           />
         )}
       </section>

@@ -17,7 +17,7 @@ function responseHeaders() {
 function failure(status: number) {
   const headers = responseHeaders();
   headers.set('content-type', 'application/json');
-  return new Response(JSON.stringify({ error: 'Запрос недоступен.' }), {
+  return new Response(JSON.stringify({ error: 'Request unavailable.' }), {
     status,
     headers,
   });

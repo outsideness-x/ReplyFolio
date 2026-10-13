@@ -6,7 +6,7 @@ export class MetaError extends Error {
     public code: number,
     public uncertain = false,
   ) {
-    super(`Meta отклонила запрос (HTTP ${status}, код ${code}).`);
+    super(`Meta rejected the request (HTTP ${status}, code ${code}).`);
   }
 }
 export async function metaRequest(

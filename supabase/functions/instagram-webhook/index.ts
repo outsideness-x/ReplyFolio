@@ -26,7 +26,7 @@ serve(async (req) => {
       headers: { 'Content-Type': 'text/plain' },
     });
   }
-  if (req.method !== 'POST') throw new HttpError(405, 'Используйте GET или POST.');
+  if (req.method !== 'POST') throw new HttpError(405, 'Use GET or POST.');
   const raw = await readBody(req, 1024 * 1024);
   if (
     !(await verifyMetaSignature(

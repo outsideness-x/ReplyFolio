@@ -15,7 +15,7 @@ export async function gateway(req: Request, db: Database): Promise<{ ip: string;
     agent.length > 512 ||
     !/^\w{64}$/.test(signature)
   )
-    throw new HttpError(403, 'Защищённый вход недоступен.');
+    throw new HttpError(403, 'Secure sign-in unavailable.');
   const endpoint = new URL(req.url).pathname.split('/').pop()!;
   const body = await readBody(req.clone());
   const expected = await hmac(
@@ -36,7 +36,7 @@ export async function gateway(req: Request, db: Database): Promise<{ ip: string;
     !constantTimeEqual(signature, expected) ||
     !(await rpc<boolean>(db, 'service_proxy_nonce', { nonce_hash: await digest(nonce) }))
   )
-    throw new HttpError(403, 'Защищённый вход недоступен.');
+    throw new HttpError(403, 'Secure sign-in unavailable.');
   return { ip, agent };
 }
 export async function limit(
@@ -53,5 +53,5 @@ export async function limit(
       window_seconds: seconds,
     }))
   )
-    throw new HttpError(429, 'Слишком много попыток. Попробуйте позже.');
+    throw new HttpError(429, 'Too many attempts. Please try again later.');
 }

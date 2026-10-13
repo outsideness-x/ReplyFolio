@@ -61,7 +61,7 @@ export function parseMetaEvents(body: unknown, now = Date.now()): MetaEvent[] {
           kind: echo ? 'echo' : 'dm',
           accountId,
           senderId: peer,
-          text: str(message.text, 10000) || 'Вложение',
+          text: str(message.text, 10000) || 'Attachment',
           payload: str(obj(message.quick_reply).payload, 1000) || undefined,
           messageId: mid,
           at,

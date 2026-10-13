@@ -64,12 +64,12 @@ export class LocalRepository implements Repository {
   }
   private contact(id: string) {
     const c = this.state.snapshot.contacts.find((c) => c.id === id);
-    if (!c) throw new Error('Контакт не найден.');
+    if (!c) throw new Error('Contact not found.');
     return c;
   }
   private conversation(id: string) {
     const c = this.state.snapshot.conversations.find((c) => c.id === id);
-    if (!c) throw new Error('Диалог не найден.');
+    if (!c) throw new Error('Conversation not found.');
     return c;
   }
   async saveFlow(flow: Flow) {
@@ -88,7 +88,7 @@ export class LocalRepository implements Repository {
     this.changed();
   }
   async saveMaterial(m: Material) {
-    if (!m.title.trim() || !isHttpsUrl(m.url)) throw new Error('Укажите название и HTTPS-ссылку.');
+    if (!m.title.trim() || !isHttpsUrl(m.url)) throw new Error('Enter a title and an HTTPS link.');
     const list = this.state.snapshot.materials,
       index = list.findIndex((x) => x.id === m.id);
     if (index < 0) list.push(structuredClone(m));
@@ -104,7 +104,7 @@ export class LocalRepository implements Repository {
         s.definition?.nodes.some((n) => n.type === 'send' && n.assetId === id),
       )
     )
-      throw new Error('Материал используется в сценарии. Сначала уберите его из блоков.');
+      throw new Error('This material is used in a flow. Remove it from the flow blocks first.');
     this.state.snapshot.materials = this.state.snapshot.materials.filter((m) => m.id !== id);
     this.changed();
   }
@@ -144,7 +144,7 @@ export class LocalRepository implements Repository {
     assertMessage(text);
     const c = this.conversation(id);
     if (!canSend(c.window_expires_at, this.now()))
-      throw new Error('Окно переписки закрыто. Дождитесь нового сообщения клиента.');
+      throw new Error('The messaging window is closed. Wait for a new message from the customer.');
     c.mode = 'human';
     delete this.state.sessions[id];
     this.message(c, text, 'out', 'operator');
@@ -166,14 +166,14 @@ export class LocalRepository implements Repository {
       id: crypto.randomUUID(),
       workspace_id: c.workspace_id,
       flow_name: f.name,
-      contact_name: contact.name || contact.username || 'Тестовый клиент',
+      contact_name: contact.name || contact.username || 'Test customer',
       status: result.handoff ? 'handoff' : result.session ? 'waiting' : 'completed',
-      detail: `${result.actions.length} сообщений в симуляторе`,
+      detail: `${result.actions.length} messages in the simulator`,
       created_at: new Date(this.now()).toISOString(),
     });
   }
   async simulate(event: Simulation): Promise<string> {
-    if (!event.text.trim() && !event.payload) throw new Error('Введите сообщение.');
+    if (!event.text.trim() && !event.payload) throw new Error('Enter a message.');
     let contact = event.contactId ? this.contact(event.contactId) : undefined;
     if (!contact) {
       contact = {
@@ -181,12 +181,12 @@ export class LocalRepository implements Repository {
         workspace_id: this.state.snapshot.workspace.id,
         instagram_scoped_id: 'demo-' + crypto.randomUUID(),
         username: 'test.student',
-        name: 'Тестовый клиент',
+        name: 'Test customer',
         email: '',
         phone: '',
         tags: [],
         status: 'new',
-        source: event.kind === 'comment' ? 'Комментарий' : 'Direct',
+        source: event.kind === 'comment' ? 'Comment' : 'Direct',
         is_lead: false,
         created_at: new Date(this.now()).toISOString(),
         updated_at: new Date(this.now()).toISOString(),
@@ -212,7 +212,7 @@ export class LocalRepository implements Repository {
     if (event.kind === 'dm') c.window_expires_at = new Date(this.now() + WINDOW_MS).toISOString();
     this.message(
       c,
-      event.kind === 'comment' ? '[Комментарий] ' + event.text : event.text,
+      event.kind === 'comment' ? '[Comment] ' + event.text : event.text,
       'in',
       'customer',
     );
@@ -220,7 +220,7 @@ export class LocalRepository implements Repository {
       c.mode = 'human';
       delete this.state.sessions[c.id];
       if (isHandoffCommand(event.text) && canSend(c.window_expires_at, this.now()))
-        this.message(c, 'Передаю диалог менеджеру.', 'out', 'bot');
+        this.message(c, "I'm passing this conversation to our team.", 'out', 'bot');
       this.changed();
       return c.id;
     }
@@ -255,7 +255,7 @@ export class LocalRepository implements Repository {
             flow_name: flow.name,
             contact_name: contact.name,
             status: 'failed',
-            detail: e instanceof Error ? e.message : 'Ошибка сценария',
+            detail: e instanceof Error ? e.message : 'Flow error',
             created_at: new Date(this.now()).toISOString(),
           });
           this.changed();
@@ -291,14 +291,14 @@ export class LocalRepository implements Repository {
     this.changed();
   }
   async renameWorkspace(name: string) {
-    if (!name.trim() || name.length > 120) throw new Error('Укажите название до 120 символов.');
+    if (!name.trim() || name.length > 120) throw new Error('Enter a name of up to 120 characters.');
     this.state.snapshot.workspace.name = name.trim();
     this.changed();
   }
   async connect(): Promise<string> {
-    throw new Error('Для реального подключения сначала настройте Supabase и приложение Meta.');
+    throw new Error('Set up Supabase and your Meta app before connecting a live account.');
   }
   async disconnect() {
-    throw new Error('В демонстрационном режиме реальный Instagram не подключён.');
+    throw new Error('A live Instagram account is not connected in demo mode.');
   }
 }

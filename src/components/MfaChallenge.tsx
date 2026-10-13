@@ -32,27 +32,27 @@ export function MfaChallenge({ onDone }: { onDone: (state: AccessState) => void 
       <div className="auth-stage-icon">
         <ShieldCheck size={24} />
       </div>
-      <h2>{challenge?.enrollment ? 'Ваш второй ключ.' : 'Ещё один шаг.'}</h2>
+      <h2>{challenge?.enrollment ? 'Your second key.' : 'One more step.'}</h2>
       <p>
         {challenge?.enrollment
-          ? 'Добавьте GrowthThread в приложение-аутентификатор. Этот шаг защищает вход даже при доступе к вашему email.'
-          : 'Подтвердите вход кодом из вашего аутентификатора.'}
+          ? 'Add GrowthThread to your authenticator app. This protects sign-in even if someone gains access to your email.'
+          : 'Enter the code from your authenticator to verify your sign-in.'}
       </p>
       {!challenge ? (
         <button className="login-button" disabled={busy} onClick={() => void start()}>
-          {busy ? <LoaderCircle size={17} className="spin" /> : <ShieldCheck size={17} />}Открыть
-          проверку
+          {busy ? <LoaderCircle size={17} className="spin" /> : <ShieldCheck size={17} />}Start
+          verification
           <ArrowRight size={16} />
         </button>
       ) : (
         <>
           <div className="mfa-enrollment">
             {qr && (
-              <img src={qr} alt="QR-код для подключения аутентификатора" width={180} height={180} />
+              <img src={qr} alt="QR code to set up your authenticator" width={180} height={180} />
             )}{' '}
             {challenge.secret && (
               <details>
-                <summary>Ввести ключ вручную</summary>
+                <summary>Enter the key manually</summary>
                 <code>{challenge.secret}</code>
               </details>
             )}
@@ -74,9 +74,9 @@ export function MfaChallenge({ onDone }: { onDone: (state: AccessState) => void 
             }}
           >
             <label>
-              Код аутентификатора
+              Authenticator code
               <input
-                aria-label="Код аутентификатора"
+                aria-label="Authenticator code"
                 className="otp-input"
                 inputMode="numeric"
                 autoComplete="one-time-code"
@@ -88,7 +88,7 @@ export function MfaChallenge({ onDone }: { onDone: (state: AccessState) => void 
               />
             </label>
             <button className="login-button" disabled={busy || code.length !== 6}>
-              {busy ? <LoaderCircle size={17} className="spin" /> : null}Подтвердить вход
+              {busy ? <LoaderCircle size={17} className="spin" /> : null}Verify sign-in
               <ArrowRight size={16} />
             </button>
           </form>

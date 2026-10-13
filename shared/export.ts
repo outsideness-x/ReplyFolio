@@ -5,7 +5,7 @@ export function csvCell(value: string): string {
 }
 export function contactsCsv(contacts: Contact[]): string {
   const rows = [
-    ['Имя', 'Instagram', 'Email', 'Телефон', 'Статус', 'Теги', 'Источник', 'Создан'],
+    ['Name', 'Instagram', 'Email', 'Phone', 'Status', 'Tags', 'Source', 'Created'],
     ...contacts.map((c) => [
       c.name,
       c.username,

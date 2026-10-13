@@ -33,7 +33,7 @@ export function CommandPalette() {
       .map(({ id, title, upcoming }) => ({
         id,
         title,
-        hint: upcoming ? 'Раздел · Скоро' : 'Раздел',
+        hint: upcoming ? 'Section · Coming soon' : 'Section',
         choose: () => navigate(id),
       })),
     ...(normalized
@@ -46,8 +46,8 @@ export function CommandPalette() {
               ? [
                   {
                     id: c.id,
-                    title: c.name || c.username || 'Контакт Instagram',
-                    hint: 'Диалог',
+                    title: c.name || c.username || 'Instagram contact',
+                    hint: 'Conversation',
                     choose: () => openInbox(chat.id),
                   },
                 ]
@@ -74,20 +74,20 @@ export function CommandPalette() {
         }}
       >
         <Search size={15} />
-        <span>Поиск или переход…</span>
+        <span>Search or jump to…</span>
         <kbd>
           <Command size={10} /> K
         </kbd>
       </button>
       {open && (
-        <Modal title="Быстрый переход" onClose={() => setOpen(false)} wide>
+        <Modal title="Quick navigation" onClose={() => setOpen(false)} wide>
           <div className="command-palette">
             <div className="command-input">
               <Search size={20} />
               <input
                 ref={input}
-                aria-label="Быстрый поиск"
-                placeholder="Раздел, имя или email…"
+                aria-label="Quick search"
+                placeholder="Section, name or email…"
                 value={query}
                 onChange={(e) => {
                   setQuery(e.target.value);
@@ -111,7 +111,7 @@ export function CommandPalette() {
               {query && (
                 <button
                   className="icon-button"
-                  aria-label="Очистить поиск"
+                  aria-label="Clear search"
                   onClick={() => {
                     setQuery('');
                     setSelected(0);
@@ -131,7 +131,7 @@ export function CommandPalette() {
                     onClick={() => choose(index)}
                   >
                     <span className="command-result-icon">
-                      {item.hint === 'Диалог' ? '@' : '/'}
+                      {item.hint === 'Conversation' ? '@' : '/'}
                     </span>
                     <span>
                       {item.title}
@@ -141,19 +141,19 @@ export function CommandPalette() {
                   </button>
                 ))
               ) : (
-                <p>Ничего не нашли. Попробуйте другое название.</p>
+                <p>No matches. Try a different name.</p>
               )}
             </div>
             <footer>
               <span>
                 <kbd>↑</kbd>
-                <kbd>↓</kbd>выбрать
+                <kbd>↓</kbd>select
               </span>
               <span>
-                <kbd>↵</kbd>открыть
+                <kbd>↵</kbd>open
               </span>
               <span>
-                <kbd>esc</kbd>закрыть
+                <kbd>esc</kbd>close
               </span>
             </footer>
           </div>

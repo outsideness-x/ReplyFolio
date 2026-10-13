@@ -58,18 +58,18 @@ export class SupabaseRepository implements Repository {
       file.size > 25 * 1024 * 1024 ||
       new TextDecoder().decode(await file.slice(0, 5).arrayBuffer()) !== '%PDF-'
     )
-      throw new Error('Выберите PDF до 25 МБ.');
+      throw new Error('Choose a PDF up to 25 MB.');
     const result = await this.call<{ path: string; uploadUrl: string; url: string }>('upload-url');
     const url = new URL(result.uploadUrl);
     if (url.protocol !== 'https:' || !url.hostname.endsWith('.supabase.co'))
-      throw new Error('Загрузка недоступна.');
+      throw new Error('Upload unavailable.');
     const response = await fetch(url, {
       method: 'PUT',
       headers: { 'content-type': 'application/pdf', 'x-upsert': 'false' },
       body: file,
       credentials: 'omit',
     });
-    if (!response.ok) throw new Error('Не удалось загрузить PDF.');
+    if (!response.ok) throw new Error('Unable to upload the PDF.');
     return { path: result.path, url: result.url };
   }
   async removeUpload(path: string) {

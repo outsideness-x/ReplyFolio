@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="ru">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Подключение · GrowthThread</title>
+    <title>Setup · GrowthThread</title>
     <link rel="icon" href="/favicon.svg" />
     <style>
       body {
@@ -64,87 +64,86 @@
   <body>
     <main>
       <a class="brand" href="/">GrowthThread</a>
-      <h1>Подключим ваш Direct.</h1>
+      <h1>Connect your Direct.</h1>
       <p>
-        Для реального запуска подключите Supabase, Cloudflare, почту и приложение Meta. Вход в
-        рабочее пространство разрешён только команде после email-кода и MFA.
+        GrowthThread uses Supabase, Cloudflare Pages, Resend and your Meta app. Workspace access
+        requires a verified team email and an authenticator code.
       </p>
       <p class="note">
-        Полная техническая инструкция лежит в проекте: <code>docs/SETUP.md</code>. Здесь — порядок
-        действий для владельца.
+        The full technical guide is in the project: <code>docs/SETUP.md</code>. Follow these steps
+        when setting up a new environment.
       </p>
       <section>
         <h2>01 · Supabase</h2>
         <ol>
-          <li>Создайте проект и примените все миграции из <code>supabase/migrations</code>.</li>
+          <li>Create a project and apply every migration in <code>supabase/migrations</code>.</li>
           <li>
-            Отключите публичную регистрацию, включите TOTP MFA и настройте email-коды по инструкции.
-            Администратор применяет список приглашений из приватного файла вне репозитория.
+            Close public registration, enable TOTP MFA and configure email codes. An administrator
+            provisions team invitations from a private file outside the repository.
           </li>
           <li>
-            Опубликуйте шесть Edge Functions и задайте серверные секреты. Настройте Resend для писем
-            и Turnstile для формы входа. Токены Supabase остаются на сервере.
+            Deploy the six Edge Functions and set their server secrets. Configure Resend for sign-in
+            emails and Turnstile for browser verification. Supabase tokens stay on the server.
           </li>
-          <li>Настройте защищённый запуск очереди из <code>supabase/setup/schedule.sql</code>.</li>
+          <li>
+            Configure the protected job runner using <code>supabase/setup/schedule.sql</code>.
+          </li>
         </ol>
       </section>
       <section>
-        <h2>02 · Фронтенд</h2>
+        <h2>02 · Frontend</h2>
         <p>
-          Используйте Cloudflare Pages с Pages Functions: сборка <code>npm run build</code>, каталог
-          <code>dist</code>. Деплой через Git integration или Wrangler из корня проекта. Обычная
-          загрузка dist через dashboard не включает папку серверных функций.
+          Use Cloudflare Pages with Pages Functions. Run <code>npm run build</code> and deploy
+          <code>dist</code> with Wrangler from the project root. Uploading static files through the
+          dashboard does not include the server functions.
         </p>
         <p>
-          Публичные переменные: <code>VITE_TURNSTILE_SITE_KEY</code> и
-          <code>VITE_ENABLE_DEMO=false</code>. Серверные bindings Pages —
-          <code>SUPABASE_URL</code> и <code>GATEWAY_SECRET</code>; секрет шлюза должен совпадать с
-          Supabase. Первым входит владелец и настраивает MFA, затем второй участник команды.
+          The public settings are <code>VITE_TURNSTILE_SITE_KEY</code> and
+          <code>VITE_ENABLE_DEMO=false</code>. Server bindings are <code>SUPABASE_URL</code> and
+          <code>GATEWAY_SECRET</code>. The gateway secret must match Supabase. The owner signs in
+          and sets up MFA first.
         </p>
         <p>
-          Notion подходит для страницы помощи и встраивания ссылки на приложение. Он не запускает
-          React-приложение и его сервер. Vercel требует тарифа с разрешённым коммерческим
-          использованием.
+          Notion can host a help page or a link to the workspace. It cannot run the React app and
+          its server. Vercel requires a plan that permits commercial use.
         </p>
       </section>
       <section>
-        <h2>03 · Meta и Instagram</h2>
+        <h2>03 · Meta and Instagram</h2>
         <ol>
-          <li>Переведите Instagram в Business или Creator.</li>
+          <li>Switch Instagram to a Business or Creator account.</li>
           <li>
-            Создайте приложение Meta с Instagram API и Instagram Login. Добавьте свой аккаунт для
-            тестирования, примите приглашение и настройте разрешения. Для рабочего webhook нужны
-            Live-режим, Advanced Access и проверка бизнеса Meta. Тип Instagram-аккаунта может быть
-            Business или Creator.
+            Create a Meta app with the Instagram API and Instagram Login. Add your account for
+            testing, accept the invitation and configure permissions. Live webhooks require Live
+            mode, Advanced Access and Meta business verification. Both Business and Creator accounts
+            are supported.
           </li>
           <li>
-            OAuth callback находится на домене приложения: <code>/api/instagram-callback</code>. В
-            настройках webhook добавьте адрес Supabase
-            <code>…/functions/v1/instagram-webhook</code> и ваш verify token.
+            The OAuth callback is on your app domain: <code>/api/instagram-callback</code>. Add your
+            Supabase webhook endpoint <code>…/functions/v1/instagram-webhook</code> and verify token
+            to Meta.
           </li>
           <li>
-            Опубликуйте собственные страницы политики конфиденциальности и удаления данных. Шаблоны
-            находятся в <code>docs</code>.
+            Publish your privacy policy and data deletion pages. Templates are in <code>docs</code>.
           </li>
           <li>
-            В GrowthThread откройте «Настройки → Подключить Instagram» и пройдите официальный вход.
+            In GrowthThread, open Settings → Connect Instagram and use the official sign-in screen.
           </li>
         </ol>
       </section>
       <section>
-        <h2>04 · Проверка перед запуском</h2>
+        <h2>04 · Before launch</h2>
         <p>
-          Замените демонстрационные ссылки своими материалами, включите сценарий и проверьте с
-          другим тестовым аккаунтом: ключевое слово в Direct, комментарий, ответ на него, сбор
-          заявки и передачу менеджеру. Первое сообщение после комментария не даёт права продолжать
-          переписку без ответа пользователя.
+          Add your own resources, enable a flow and test with another test account: Direct keywords,
+          comments, replies, lead capture and a handoff to your team. An initial private reply to a
+          comment does not allow further messages until the person responds.
         </p>
         <p>
-          Проверка на реальном аккаунте обязательна: локальный симулятор не подтверждает доступ Meta
-          и доставку Instagram.
+          Test with a live account. The local simulator does not verify Meta access or Instagram
+          delivery.
         </p>
       </section>
-      <p><a href="/">← Вернуться в GrowthThread</a></p>
+      <p><a href="/">← Back to GrowthThread</a></p>
     </main>
   </body>
 </html>

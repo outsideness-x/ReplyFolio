@@ -22,15 +22,15 @@ import type { Flow, FlowNode, TriggerKind } from '../../shared/types.ts';
 import { commentTemplate, materialTemplate } from '../../shared/templates.ts';
 import { Badge, Empty, Modal, useUI } from '../ui.tsx';
 const nodeTypes = [
-  ['send', 'Сообщение', MessageCircle],
-  ['choice', 'Варианты ответа', MousePointerClick],
-  ['capture', 'Сбор контакта', UserRound],
-  ['condition', 'Условие', GitBranch],
-  ['delay', 'Ожидание', Clock3],
-  ['tag', 'Добавить тег', Tag],
-  ['lead', 'Создать заявку', Users],
-  ['handoff', 'Передать менеджеру', UserRound],
-  ['end', 'Завершить', X],
+  ['send', 'Message', MessageCircle],
+  ['choice', 'Quick replies', MousePointerClick],
+  ['capture', 'Collect contact details', UserRound],
+  ['condition', 'Condition', GitBranch],
+  ['delay', 'Delay', Clock3],
+  ['tag', 'Add a tag', Tag],
+  ['lead', 'Create a lead', Users],
+  ['handoff', 'Hand off to the team', UserRound],
+  ['end', 'Finish', X],
 ] as const;
 function nodeName(n: FlowNode, index: number) {
   return `${index + 1}. ${nodeTypes.find((t) => t[0] === n.type)?.[1] ?? n.type}`;
@@ -39,31 +39,31 @@ function freshNode(type: FlowNode['type'], id: string, next: string | null): Flo
   const base = { id, next };
   switch (type) {
     case 'send':
-      return { ...base, type, text: 'Новое сообщение' };
+      return { ...base, type, text: 'New message' };
     case 'choice':
       return {
         ...base,
         type,
-        text: 'Что вас интересует?',
-        options: [{ id: 'yes', label: 'Узнать больше', next }],
+        text: 'What are you interested in?',
+        options: [{ id: 'yes', label: 'Learn more', next }],
       };
     case 'capture':
       return {
         ...base,
         type,
         field: 'email',
-        text: 'Оставьте email, если хотите получить ответ команды по поводу обучения. Для выхода напишите «стоп».',
+        text: "Leave your email if you'd like our team to contact you about the courses. Type “stop” to leave.",
       };
     case 'condition':
       return { ...base, type, field: 'email', operator: 'exists', value: '', yes: next, no: null };
     case 'delay':
       return { ...base, type, minutes: 5 };
     case 'tag':
-      return { ...base, type, tags: ['Интерес'] };
+      return { ...base, type, tags: ['Interest'] };
     case 'lead':
       return { ...base, type };
     case 'handoff':
-      return { ...base, type, next: null, text: 'Передаю диалог менеджеру.' };
+      return { ...base, type, next: null, text: "I'm passing this conversation to our team." };
     case 'end':
       return { ...base, type, next: null };
   }
@@ -95,11 +95,11 @@ export function Flows() {
     setEditor({
       id: crypto.randomUUID(),
       workspace_id: data.workspace.id,
-      name: comment ? 'Комментарий → Direct' : 'Новый сценарий',
+      name: comment ? 'Comment → Direct' : 'New flow',
       description: '',
       enabled: false,
       trigger_kind: comment ? 'comment_keyword' : 'dm_keyword',
-      keywords: comment ? ['урок'] : ['прайс'],
+      keywords: comment ? ['lesson'] : ['price'],
       post_ids: [],
       definition: comment ? commentTemplate() : materialTemplate(),
       created_at: now,
@@ -116,20 +116,20 @@ export function Flows() {
       <div className="page-heading">
         <div>
           <div className="eyebrow">YOUR AUTOMATIONS</div>
-          <h1>Сценарии</h1>
-          <p>Простые шаги для каждого нового диалога.</p>
+          <h1>Flows</h1>
+          <p>Simple steps for every new conversation.</p>
         </div>
         <button className="button primary" onClick={() => setCreating(true)}>
           <Plus size={16} />
-          Новый сценарий
+          New flow
         </button>
       </div>
       <div className="table-toolbar">
         <div className="segmented">
           {[
-            ['all', 'Все сценарии'],
-            ['active', 'Активные'],
-            ['draft', 'Черновики'],
+            ['all', 'All flows'],
+            ['active', 'Active'],
+            ['draft', 'Drafts'],
           ].map(([key, label]) => (
             <button
               className={filter === key ? 'active' : ''}
@@ -140,7 +140,7 @@ export function Flows() {
             </button>
           ))}
         </div>
-        <Badge tone="gray">{data.flows.filter((f) => f.enabled).length} активных</Badge>
+        <Badge tone="gray">{data.flows.filter((f) => f.enabled).length} active</Badge>
       </div>
       {list.length ? (
         <div className="flow-list">
@@ -153,19 +153,19 @@ export function Flows() {
                 <div className="flow-title">
                   <h3>{f.name}</h3>
                   <Badge tone={f.enabled ? 'green' : 'gray'}>
-                    {f.enabled ? 'Активен' : 'Черновик'}
+                    {f.enabled ? 'Active' : 'Draft'}
                   </Badge>
                 </div>
-                <p>{f.description || 'Нажмите «Открыть», чтобы настроить шаги сценария.'}</p>
+                <p>{f.description || 'Click “Open” to edit the flow steps.'}</p>
                 <div className="flow-metadata">
                   <span>
                     {f.trigger_kind === 'comment_keyword'
-                      ? 'Комментарий → Direct'
+                      ? 'Comment → Direct'
                       : f.trigger_kind === 'dm_any'
-                        ? 'Любое сообщение'
-                        : 'Ключевое слово в Direct'}
+                        ? 'Any message'
+                        : 'Direct keyword'}
                   </span>
-                  <i /> <span>{f.definition.nodes.length} блоков</span>
+                  <i /> <span>{f.definition.nodes.length} blocks</span>
                   {f.keywords.length > 0 && (
                     <>
                       <i />
@@ -179,29 +179,29 @@ export function Flows() {
                   className={`toggle ${f.enabled ? 'on' : ''}`}
                   role="switch"
                   aria-checked={f.enabled}
-                  aria-label={'Активировать ' + f.name}
+                  aria-label={'Activate ' + f.name}
                   disabled={busy}
                   onClick={() =>
                     void perform(
                       () => repo.saveFlow({ ...f, enabled: !f.enabled }),
-                      f.enabled ? 'Сценарий выключен.' : 'Сценарий включён.',
+                      f.enabled ? 'Flow disabled.' : 'Flow enabled.',
                     )
                   }
                 >
                   <span />
                 </button>
                 <button className="button small" onClick={() => setEditor(structuredClone(f))}>
-                  Открыть
+                  Open
                   <ArrowRight size={13} />
                 </button>
                 <button
                   className="icon-button"
-                  aria-label={'Копировать ' + f.name}
+                  aria-label={'Duplicate ' + f.name}
                   onClick={() =>
                     setEditor({
                       ...structuredClone(f),
                       id: crypto.randomUUID(),
-                      name: f.name + ' — копия',
+                      name: f.name + ' — copy',
                       enabled: false,
                       created_at: new Date().toISOString(),
                     })
@@ -211,7 +211,7 @@ export function Flows() {
                 </button>
                 <button
                   className="icon-button"
-                  aria-label={'Удалить ' + f.name}
+                  aria-label={'Delete ' + f.name}
                   onClick={() => setDeleting(f)}
                 >
                   <Trash2 size={15} />
@@ -223,56 +223,56 @@ export function Flows() {
       ) : (
         <section className="panel">
           <Empty
-            title="Ваш первый сценарий"
-            description="Начните с готового шаблона и адаптируйте его под своё обучение."
+            title="Your first flow"
+            description="Start with a template and adapt it to your courses."
           >
             <button className="button primary" onClick={() => setCreating(true)}>
               <Plus size={16} />
-              Создать сценарий
+              Create a flow
             </button>
           </Empty>
         </section>
       )}
       {creating && (
-        <Modal title="С чего начнём?" onClose={() => setCreating(false)}>
+        <Modal title="Where shall we start?" onClose={() => setCreating(false)}>
           <p className="form-hint">
-            Шаблон уже содержит шаги знакомства, выдачи материала и сбора заявки. Все тексты можно
-            изменить.
+            The template includes an introduction, a resource and lead capture. You can edit every
+            message.
           </p>
           <div className="template-options">
             <button onClick={() => create()}>
               <BookOpen size={25} />
-              <strong>Материалы и прайс</strong>
-              <span>Человек пишет ключевое слово в Direct</span>
+              <strong>Materials and pricing</strong>
+              <span>A customer sends a keyword in Direct</span>
               <ArrowRight size={16} />
             </button>
             <button onClick={() => create(true)}>
               <MessageCircle size={25} />
-              <strong>Из комментария в Direct</strong>
-              <span>Первое сообщение после комментария</span>
+              <strong>From comments to Direct</strong>
+              <span>The first message after a comment</span>
               <ArrowRight size={16} />
             </button>
           </div>
         </Modal>
       )}
       {deleting && (
-        <Modal title="Удалить сценарий?" onClose={() => setDeleting(null)}>
+        <Modal title="Delete this flow?" onClose={() => setDeleting(null)}>
           <p className="form-hint">
-            «{deleting.name}» перестанет запускаться. Переписка и сохранённые заявки останутся.
+            «{deleting.name}” will stop running. Conversations and saved leads will remain.
           </p>
           <div className="modal-footer">
             <button className="button" onClick={() => setDeleting(null)}>
-              Отмена
+              Cancel
             </button>
             <button
               className="button danger"
               disabled={busy}
               onClick={async () => {
-                if (await perform(() => repo.deleteFlow(deleting.id), 'Сценарий удалён.'))
+                if (await perform(() => repo.deleteFlow(deleting.id), 'Flow deleted.'))
                   setDeleting(null);
               }}
             >
-              Удалить сценарий
+              Delete flow
             </button>
           </div>
         </Modal>
@@ -299,7 +299,7 @@ function FlowEditor({ flow, onClose }: { flow: Flow; onClose: () => void }) {
     }
     window.addEventListener('beforeunload', before);
     function beforeNavigation(e: Event) {
-      if (dirty && !confirm('Выйти без сохранения изменений сценария?')) e.preventDefault();
+      if (dirty && !confirm('Leave without saving your flow changes?')) e.preventDefault();
     }
     window.addEventListener('replyfolio:navigate', beforeNavigation);
     return () => {
@@ -364,13 +364,13 @@ function FlowEditor({ flow, onClose }: { flow: Flow; onClose: () => void }) {
   function target(
     value: string | null,
     onChange: (v: string | null) => void,
-    label = 'Следующий блок',
+    label = 'Next block',
   ) {
     return (
       <label>
         {label}
         <select value={value ?? ''} onChange={(e) => onChange(e.target.value || null)}>
-          <option value="">Завершить сценарий</option>
+          <option value="">Finish the flow</option>
           {nodes
             .filter((n) => n.id !== selected)
             .map((n) => (
@@ -383,43 +383,41 @@ function FlowEditor({ flow, onClose }: { flow: Flow; onClose: () => void }) {
     );
   }
   const close = () => {
-    if (!dirty || confirm('Выйти без сохранения изменений сценария?')) onClose();
+    if (!dirty || confirm('Leave without saving your flow changes?')) onClose();
   };
   return (
     <>
       <div className="editor-heading">
-        <button className="icon-button" aria-label="Назад к сценариям" onClick={close}>
+        <button className="icon-button" aria-label="Back to flows" onClick={close}>
           <ArrowLeft size={19} />
         </button>
         <div>
           <input
-            aria-label="Название сценария"
+            aria-label="Flow name"
             value={draft.name}
             onChange={(e) => change({ ...draft, name: e.target.value })}
             maxLength={120}
           />
           <span>
-            {dirty ? 'Есть несохранённые изменения' : 'Сценарий'} · {nodes.length} блоков
+            {dirty ? 'Unsaved changes' : 'Flow'} · {nodes.length} blocks
           </span>
         </div>
-        <Badge tone={draft.enabled ? 'green' : 'gray'}>
-          {draft.enabled ? 'Активен' : 'Черновик'}
-        </Badge>
+        <Badge tone={draft.enabled ? 'green' : 'gray'}>{draft.enabled ? 'Active' : 'Draft'}</Badge>
         <button
           className="button primary"
           disabled={busy}
           onClick={async () => {
-            if (await perform(() => repo.saveFlow(draft), 'Сценарий сохранён.')) setDirty(false);
+            if (await perform(() => repo.saveFlow(draft), 'Flow saved.')) setDirty(false);
           }}
         >
           <Save size={15} />
-          Сохранить
+          Save
         </button>
       </div>
       <div className="flow-editor">
         <aside className={`node-palette ${showPalette ? 'palette-open' : ''}`}>
-          <h3>Добавить блок</h3>
-          <p>Выберите шаг для вашего диалога.</p>
+          <h3>Add a block</h3>
+          <p>Choose a step for your conversation.</p>
           {nodeTypes.map(([type, label, Icon]) => (
             <button key={type} onClick={() => add(type)}>
               <Icon size={17} />
@@ -428,13 +426,13 @@ function FlowEditor({ flow, onClose }: { flow: Flow; onClose: () => void }) {
             </button>
           ))}
           <div className="palette-hint">
-            Выберите блок на схеме, чтобы настроить его текст и переходы.
+            Select a block on the canvas to edit its message and connections.
           </div>
         </aside>
         <section className="flow-canvas">
           <button className="mobile-add button small" onClick={() => setShowPalette(!showPalette)}>
             <Plus size={15} />
-            Добавить блок
+            Add a block
           </button>
           <button
             className={`trigger-node ${inspector === 'trigger' ? 'selected' : ''}`}
@@ -444,13 +442,13 @@ function FlowEditor({ flow, onClose }: { flow: Flow; onClose: () => void }) {
               <Workflow size={19} />
             </span>
             <div>
-              <small>НАЧАЛО СЦЕНАРИЯ</small>
+              <small>FLOW START</small>
               <strong>
                 {draft.trigger_kind === 'comment_keyword'
-                  ? 'Комментарий → Direct'
+                  ? 'Comment → Direct'
                   : draft.trigger_kind === 'dm_any'
-                    ? 'Любое сообщение'
-                    : draft.keywords.join(', ') || 'Настройте ключевые слова'}
+                    ? 'Any message'
+                    : draft.keywords.join(', ') || 'Set your keywords'}
               </strong>
             </div>
             <ChevronDown size={15} />
@@ -465,12 +463,12 @@ function FlowEditor({ flow, onClose }: { flow: Flow; onClose: () => void }) {
                 : n.type === 'tag'
                   ? n.tags.join(', ')
                   : n.type === 'delay'
-                    ? `${n.minutes} мин`
+                    ? `${n.minutes} min`
                     : n.type === 'condition'
-                      ? `${n.field} ${n.operator === 'exists' ? 'заполнено' : n.value}`
+                      ? `${n.field} ${n.operator === 'exists' ? 'is filled' : n.value}`
                       : n.type === 'lead'
-                        ? 'Сохранить контакт как заявку'
-                        : 'Готово';
+                        ? 'Save contact as a lead'
+                        : 'Done';
             const transitions =
               n.type === 'choice'
                 ? n.options.map(
@@ -481,35 +479,35 @@ function FlowEditor({ flow, onClose }: { flow: Flow; onClose: () => void }) {
                               nodes.find((x) => x.id === o.next)!,
                               nodes.findIndex((x) => x.id === o.next),
                             )
-                          : 'Готово'
+                          : 'Done'
                       }`,
                   )
                 : n.type === 'condition'
                   ? [
-                      'Да → ' +
+                      'Yes → ' +
                         (nodes.find((x) => x.id === n.yes)
                           ? nodeName(
                               nodes.find((x) => x.id === n.yes)!,
                               nodes.findIndex((x) => x.id === n.yes),
                             )
-                          : 'Готово'),
-                      'Нет → ' +
+                          : 'Done'),
+                      'No → ' +
                         (nodes.find((x) => x.id === n.no)
                           ? nodeName(
                               nodes.find((x) => x.id === n.no)!,
                               nodes.findIndex((x) => x.id === n.no),
                             )
-                          : 'Готово'),
+                          : 'Done'),
                     ]
                   : n.next
                     ? [
-                        `Далее → ${
+                        `Next → ${
                           nodes.find((x) => x.id === n.next)
                             ? nodeName(
                                 nodes.find((x) => x.id === n.next)!,
                                 nodes.findIndex((x) => x.id === n.next),
                               )
-                            : 'Готово'
+                            : 'Done'
                         }`,
                       ]
                     : [];
@@ -528,14 +526,14 @@ function FlowEditor({ flow, onClose }: { flow: Flow; onClose: () => void }) {
                     </span>
                     <strong>{meta[1]}</strong>
                     <small>{i + 1}</small>
-                    {draft.definition.start === n.id && <Badge tone="gray">Старт</Badge>}
+                    {draft.definition.start === n.id && <Badge tone="gray">Start</Badge>}
                   </div>
                   <p>{text}</p>
                   {n.type === 'send' && n.assetId && (
                     <div className="node-material">
                       <BookOpen size={12} />
                       {data.materials.find((m) => m.id === n.assetId)?.title ||
-                        'Материал недоступен'}
+                        'Material unavailable'}
                     </div>
                   )}
                   {transitions.length > 0 && (
@@ -559,38 +557,38 @@ function FlowEditor({ flow, onClose }: { flow: Flow; onClose: () => void }) {
           {inspector === 'trigger' ? (
             <>
               <div className="inspector-heading">
-                <h3>Начало сценария</h3>
+                <h3>Flow start</h3>
                 <Workflow size={18} />
               </div>
               <label>
-                Триггер
+                Trigger
                 <select
                   value={draft.trigger_kind}
                   onChange={(e) =>
                     change({ ...draft, trigger_kind: e.target.value as TriggerKind })
                   }
                 >
-                  <option value="dm_keyword">Ключевое слово в Direct</option>
-                  <option value="dm_any">Любое сообщение в Direct</option>
-                  <option value="comment_keyword">Комментарий с ключевым словом</option>
+                  <option value="dm_keyword">Direct keyword</option>
+                  <option value="dm_any">Any Direct message</option>
+                  <option value="comment_keyword">Comment keyword</option>
                 </select>
               </label>
               {draft.trigger_kind !== 'dm_any' && (
                 <label>
-                  Ключевые слова
+                  Keywords
                   <input
                     value={draft.keywords.join(', ')}
                     onChange={(e) =>
                       change({ ...draft, keywords: e.target.value.split(',').map((x) => x.trim()) })
                     }
                   />
-                  <small>Через запятую. Регистр и пунктуация не влияют на поиск.</small>
+                  <small>Separate with commas. Matching ignores case and punctuation.</small>
                 </label>
               )}
               {draft.trigger_kind === 'comment_keyword' && (
                 <>
                   <label>
-                    Публикации
+                    Posts
                     <input
                       value={draft.post_ids.join(', ')}
                       onChange={(e) =>
@@ -602,21 +600,21 @@ function FlowEditor({ flow, onClose }: { flow: Flow; onClose: () => void }) {
                             .filter(Boolean),
                         })
                       }
-                      placeholder="ID публикаций через запятую"
+                      placeholder="Post IDs, separated by commas"
                     />
                     <small>
-                      Пустое поле — все публикации. ID можно получить через Instagram API после
-                      подключения аккаунта.
+                      Leave blank for all posts. You can get IDs through the Instagram API after
+                      connecting your account.
                     </small>
                   </label>
                   <p className="inspector-note">
-                    Первым блоком должно быть одно текстовое сообщение. Продолжение запустится после
-                    ответа ученика.
+                    The first block must be a single text message. The flow continues after the
+                    learner replies.
                   </p>
                 </>
               )}
               <label>
-                Описание
+                Description
                 <textarea
                   value={draft.description}
                   onChange={(e) => change({ ...draft, description: e.target.value })}
@@ -629,10 +627,10 @@ function FlowEditor({ flow, onClose }: { flow: Flow; onClose: () => void }) {
                   checked={draft.enabled}
                   onChange={(e) => change({ ...draft, enabled: e.target.checked })}
                 />
-                Сценарий активен
+                Flow active
               </label>
               <label>
-                Первый блок
+                First block
                 <select
                   value={draft.definition.start}
                   onChange={(e) =>
@@ -655,56 +653,56 @@ function FlowEditor({ flow, onClose }: { flow: Flow; onClose: () => void }) {
               </div>
               {'text' in node && (
                 <label>
-                  {node.type === 'capture' ? 'Вопрос ученику' : 'Текст сообщения'}
+                  {node.type === 'capture' ? 'Question for the learner' : 'Message text'}
                   <textarea
-                    aria-label="Текст блока"
+                    aria-label="Block text"
                     value={node.text}
                     onChange={(e) => patch({ text: e.target.value })}
                     rows={6}
                   />
                   <small>
-                    {new TextEncoder().encode(node.text).length}/1000 байт · Можно использовать{' '}
-                    {'{{name}}'}, {'{{email}}'} и {'{{choice}}'}.
+                    {new TextEncoder().encode(node.text).length}/1000 bytes · You can use{' '}
+                    {'{{name}}'}, {'{{email}}'} and {'{{choice}}'}.
                   </small>
                 </label>
               )}
               {node.type === 'send' && (
                 <label>
-                  Материал
+                  Material
                   <select
                     value={node.assetId ?? ''}
                     onChange={(e) => patch({ assetId: e.target.value || undefined })}
                   >
-                    <option value="">Без материала</option>
+                    <option value="">No material</option>
                     {data.materials.map((m) => (
                       <option key={m.id} value={m.id}>
                         {m.title}
                       </option>
                     ))}
                   </select>
-                  <small>Ссылка будет добавлена к сообщению.</small>
+                  <small>The link will be added to the message.</small>
                 </label>
               )}
               {node.type === 'capture' && (
                 <label>
-                  Что сохранить
+                  What to save
                   <select value={node.field} onChange={(e) => patch({ field: e.target.value })}>
                     <option value="email">Email</option>
-                    <option value="phone">Телефон</option>
-                    <option value="name">Имя</option>
+                    <option value="phone">Phone</option>
+                    <option value="name">Name</option>
                   </select>
                 </label>
               )}
               {node.type === 'choice' && (
                 <>
-                  <h4 className="field-heading">ВАРИАНТЫ ОТВЕТА</h4>
+                  <h4 className="field-heading">QUICK REPLIES</h4>
                   {node.options.map((o, i) => (
                     <div className="option-editor" key={o.id}>
                       <label>
-                        Вариант {i + 1}
+                        Option {i + 1}
                         <div className="option-line">
                           <input
-                            aria-label={`Вариант ${i + 1}`}
+                            aria-label={`Option ${i + 1}`}
                             value={o.label}
                             onChange={(e) =>
                               patch({
@@ -717,7 +715,7 @@ function FlowEditor({ flow, onClose }: { flow: Flow; onClose: () => void }) {
                           />
                           <button
                             className="icon-button"
-                            aria-label={'Убрать вариант ' + (i + 1)}
+                            aria-label={'Remove option ' + (i + 1)}
                             onClick={() =>
                               patch({ options: node.options.filter((x) => x.id !== o.id) })
                             }
@@ -732,7 +730,7 @@ function FlowEditor({ flow, onClose }: { flow: Flow; onClose: () => void }) {
                           patch({
                             options: node.options.map((x) => (x.id === o.id ? { ...x, next } : x)),
                           }),
-                        'После выбора',
+                        'After selection',
                       )}
                     </div>
                   ))}
@@ -743,30 +741,30 @@ function FlowEditor({ flow, onClose }: { flow: Flow; onClose: () => void }) {
                       patch({
                         options: [
                           ...node.options,
-                          { id: crypto.randomUUID(), label: 'Новый вариант', next: null },
+                          { id: crypto.randomUUID(), label: 'New option', next: null },
                         ],
                       })
                     }
                   >
                     <Plus size={14} />
-                    Добавить вариант
+                    Add an option
                   </button>
                 </>
               )}
               {node.type === 'condition' && (
                 <>
                   <label>
-                    Поле
+                    Field
                     <select value={node.field} onChange={(e) => patch({ field: e.target.value })}>
                       {['name', 'email', 'phone', 'choice'].map((x) => (
                         <option key={x} value={x}>
                           {
                             (
                               {
-                                name: 'Имя',
+                                name: 'Name',
                                 email: 'Email',
-                                phone: 'Телефон',
-                                choice: 'Выбор ученика',
+                                phone: 'Phone',
+                                choice: "Learner's choice",
                               } as Record<string, string>
                             )[x]
                           }
@@ -775,32 +773,32 @@ function FlowEditor({ flow, onClose }: { flow: Flow; onClose: () => void }) {
                     </select>
                   </label>
                   <label>
-                    Условие
+                    Condition
                     <select
                       value={node.operator}
                       onChange={(e) => patch({ operator: e.target.value })}
                     >
-                      <option value="exists">Заполнено</option>
-                      <option value="equals">Равно</option>
-                      <option value="contains">Содержит</option>
+                      <option value="exists">Is filled</option>
+                      <option value="equals">Equals</option>
+                      <option value="contains">Contains</option>
                     </select>
                   </label>
                   {node.operator !== 'exists' && (
                     <label>
-                      Значение
+                      Value
                       <input
                         value={node.value}
                         onChange={(e) => patch({ value: e.target.value })}
                       />
                     </label>
                   )}
-                  {target(node.yes, (yes) => patch({ yes }), 'Если да')}
-                  {target(node.no, (no) => patch({ no }), 'Если нет')}
+                  {target(node.yes, (yes) => patch({ yes }), 'If yes')}
+                  {target(node.no, (no) => patch({ no }), 'If no')}
                 </>
               )}
               {node.type === 'delay' && (
                 <label>
-                  Ожидание, минут
+                  Delay, minutes
                   <input
                     type="number"
                     value={node.minutes}
@@ -808,12 +806,14 @@ function FlowEditor({ flow, onClose }: { flow: Flow; onClose: () => void }) {
                     max={1440}
                     onChange={(e) => patch({ minutes: Number(e.target.value) })}
                   />
-                  <small>Перед отправкой бот повторно проверит разрешённое окно переписки.</small>
+                  <small>
+                    Before sending, the bot checks the permitted messaging window again.
+                  </small>
                 </label>
               )}
               {node.type === 'tag' && (
                 <label>
-                  Теги
+                  Tags
                   <input
                     value={node.tags.join(', ')}
                     onChange={(e) =>
@@ -829,17 +829,17 @@ function FlowEditor({ flow, onClose }: { flow: Flow; onClose: () => void }) {
               )}
               {node.type === 'lead' && (
                 <p className="inspector-note">
-                  Контакт появится в разделе «Заявки» с данными, собранными на предыдущих шагах.
+                  The contact will appear in Leads with the details collected in previous steps.
                 </p>
               )}
               {node.type === 'handoff' && (
                 <p className="inspector-note">
-                  Бот остановится, а диалог перейдёт на ручное управление.
+                  The bot stops and your team takes over the conversation.
                 </p>
               )}
               {node.type === 'end' && (
                 <p className="inspector-note">
-                  Сценарий завершится. Следующее обращение сможет запустить другой сценарий.
+                  The flow ends. A new request can trigger another flow.
                 </p>
               )}
               {!['choice', 'condition', 'end', 'handoff'].includes(node.type) &&
@@ -851,7 +851,7 @@ function FlowEditor({ flow, onClose }: { flow: Flow; onClose: () => void }) {
                   onClick={remove}
                 >
                   <Trash2 size={13} />
-                  Удалить блок
+                  Delete block
                 </button>
               </div>
             </>

@@ -13,13 +13,14 @@ import { hash } from '../_shared/crypto.ts';
 import { OAUTH_COOKIE, opaqueToken, secureCookie } from '../../../shared/security.ts';
 import { recentMfa } from '../_shared/web-session.ts';
 serve(async (req) => {
-  if (req.method !== 'POST') throw new HttpError(405, 'Используйте POST.');
+  if (req.method !== 'POST') throw new HttpError(405, 'Use POST.');
   // Keep the original body available for the gateway signature check in member().
   const body = await readJson(req.clone()),
     workspaceId = uuid(body.workspaceId),
     db = database();
   const membership = await member(req, db, workspaceId);
-  if (membership.role !== 'owner') throw new HttpError(403, 'Подключить Instagram может владелец.');
+  if (membership.role !== 'owner')
+    throw new HttpError(403, 'Only the owner can connect Instagram.');
   recentMfa(membership.session);
   const state = [...crypto.getRandomValues(new Uint8Array(32))]
     .map((x) => x.toString(16).padStart(2, '0'))

@@ -23,17 +23,17 @@ async function owned(db: Database, table: string, id: string, ws: string) {
     .eq('workspace_id', ws)
     .maybeSingle();
   if (error) throw new Error('Lookup failed');
-  if (!data) throw new HttpError(404, 'Запись недоступна.');
+  if (!data) throw new HttpError(404, 'Record unavailable.');
   return data;
 }
 function text(value: unknown, max: number, required = false) {
   if (typeof value !== 'string' || value.length > max || (required && !value.trim()))
-    throw new HttpError(400, 'Проверьте заполненные поля.');
+    throw new HttpError(400, 'Check the form fields.');
   return value.trim();
 }
 function object(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value))
-    throw new HttpError(400, 'Некорректные данные.');
+    throw new HttpError(400, 'Invalid data.');
   return value as Record<string, unknown>;
 }
 async function save(
@@ -56,7 +56,7 @@ async function save(
   if (result.error) throw new Error('Save failed');
 }
 serve(async (req) => {
-  if (req.method !== 'POST') throw new HttpError(405, 'Используйте POST.');
+  if (req.method !== 'POST') throw new HttpError(405, 'Use POST.');
   // Keep the original body available for the gateway signature check in member().
   const body = await readJson(req.clone()),
     ws = uuid(body.workspaceId),
@@ -128,9 +128,9 @@ serve(async (req) => {
   if (action === 'remove-upload') {
     const path = text(body.path, 300, true);
     if (!new RegExp('^' + ws + '/[0-9a-f-]+\\.pdf$', 'i').test(path))
-      throw new HttpError(403, 'Файл недоступен.');
+      throw new HttpError(403, 'File unavailable.');
     const { data, error } = await db.from('materials').select('id').eq('storage_path', path);
-    if (error || data?.length) throw new HttpError(409, 'Файл используется в библиотеке.');
+    if (error || data?.length) throw new HttpError(409, 'This file is used in the library.');
     const removed = await db.storage.from('materials').remove([path]);
     if (removed.error) throw new Error('Removal failed');
     return json({ ok: true });
@@ -145,12 +145,11 @@ serve(async (req) => {
       name: text(raw.name, 120, true),
       description: text(raw.description ?? '', 2000),
     } as unknown as Flow;
-    if (typeof flow.enabled !== 'boolean')
-      throw new HttpError(400, 'Некорректный статус сценария.');
+    if (typeof flow.enabled !== 'boolean') throw new HttpError(400, 'Invalid flow status.');
     try {
       validateFlow(flow);
     } catch (e) {
-      throw new HttpError(400, e instanceof Error ? e.message : 'Некорректный сценарий.');
+      throw new HttpError(400, e instanceof Error ? e.message : 'Invalid flow.');
     }
     const refs = flow.definition.nodes.flatMap((n) =>
       n.type === 'send' && n.assetId ? [n.assetId] : [],
@@ -163,7 +162,7 @@ serve(async (req) => {
         .in('id', refs);
       if (error) throw new Error('Material lookup failed');
       if (refs.some((id) => !data?.some((m) => m.id === id)))
-        throw new HttpError(400, 'Один из материалов недоступен.');
+        throw new HttpError(400, 'One of the materials is unavailable.');
       for (const n of flow.definition.nodes)
         if (n.type === 'send' && n.assetId) {
           const m = data!.find((m) => m.id === n.assetId)!;
@@ -172,7 +171,7 @@ serve(async (req) => {
           } catch {
             throw new HttpError(
               400,
-              'Сообщение с материалом превышает 1000 байт. Сократите текст.',
+              'The message and material exceed 1000 bytes. Shorten the text.',
             );
           }
         }
@@ -196,17 +195,17 @@ serve(async (req) => {
     const m = object(body.material),
       id = uuid(m.id),
       url = text(m.url, 2048, true);
-    if (!isHttpsUrl(url)) throw new HttpError(400, 'Укажите HTTPS-ссылку.');
+    if (!isHttpsUrl(url)) throw new HttpError(400, 'Enter an HTTPS link.');
     if (!['link', 'pdf'].includes(String(m.kind)))
-      throw new HttpError(400, 'Некорректный тип материала.');
+      throw new HttpError(400, 'Invalid material type.');
     const path = m.storage_path ? text(m.storage_path, 300, true) : null;
     if (path && !new RegExp('^' + ws + '/[0-9a-f-]+\\.pdf$', 'i').test(path))
-      throw new HttpError(400, 'Некорректный путь файла.');
+      throw new HttpError(400, 'Invalid file path.');
     if (
       path &&
       url !== Deno.env.get('SUPABASE_URL') + '/storage/v1/object/public/materials/' + path
     )
-      throw new HttpError(400, 'Файл должен принадлежать этому пространству.');
+      throw new HttpError(400, 'The file must belong to this workspace.');
     await save(db, 'materials', id, ws, {
       title: text(m.title, 120, true),
       description: text(m.description ?? '', 2000),
@@ -218,7 +217,7 @@ serve(async (req) => {
     const id = uuid(body.id);
     await owned(db, 'materials', id, ws);
     if (await rpc<boolean>(db, 'service_asset_in_use', { ws, asset: id }))
-      throw new HttpError(409, 'Материал используется в сценарии или активном диалоге.');
+      throw new HttpError(409, 'This material is used in a flow or active conversation.');
     const { error } = await db.from('materials').delete().eq('id', id).eq('workspace_id', ws);
     if (error) throw new Error('Delete failed');
   } else if (action === 'update-contact') {
@@ -233,22 +232,21 @@ serve(async (req) => {
     ] as const)
       if (field in patch) values[field] = text(patch[field], max);
     if (values.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(values.email)))
-      throw new HttpError(400, 'Проверьте email.');
+      throw new HttpError(400, 'Check the email.');
     if (values.phone && !/^\+?\d{7,15}$/.test(String(values.phone).replace(/[\s()-]/g, '')))
-      throw new HttpError(400, 'Проверьте номер телефона.');
+      throw new HttpError(400, 'Check the phone number.');
     if ('status' in patch) {
       if (!['new', 'qualified', 'contacted', 'enrolled', 'archived'].includes(String(patch.status)))
-        throw new HttpError(400, 'Некорректный статус.');
+        throw new HttpError(400, 'Invalid status.');
       values.status = patch.status;
     }
     if ('tags' in patch) {
       if (!Array.isArray(patch.tags) || patch.tags.length > 20)
-        throw new HttpError(400, 'Не более 20 тегов.');
+        throw new HttpError(400, 'Use no more than 20 tags.');
       values.tags = patch.tags.map((t) => text(t, 64, true));
     }
     if ('is_lead' in patch) {
-      if (typeof patch.is_lead !== 'boolean')
-        throw new HttpError(400, 'Некорректный статус заявки.');
+      if (typeof patch.is_lead !== 'boolean') throw new HttpError(400, 'Invalid lead status.');
       values.is_lead = patch.is_lead;
     }
     const { error } = await db.from('contacts').update(values).eq('id', id).eq('workspace_id', ws);
@@ -259,10 +257,7 @@ serve(async (req) => {
     const lockToken = crypto.randomUUID(),
       key = 'conversation:' + id;
     if (!(await rpc<boolean>(db, 'service_lock', { key, lock_token: lockToken })))
-      throw new HttpError(
-        409,
-        'Диалог сейчас обрабатывается. Повторите действие через несколько секунд.',
-      );
+      throw new HttpError(409, 'This conversation is being processed. Try again in a few seconds.');
     try {
       const c = await owned(db, 'conversations', id, ws);
       if (action === 'send') {
@@ -273,10 +268,12 @@ serve(async (req) => {
           throw new HttpError(400, (e as Error).message);
         }
         if (!canSend(c.window_expires_at))
-          throw new HttpError(409, 'Окно переписки закрыто. Дождитесь нового сообщения клиента.');
+          throw new HttpError(
+            409,
+            'The messaging window is closed. Wait for a new message from the customer.',
+          );
         const account = await owned(db, 'instagram_accounts', c.account_id, ws);
-        if (account.status !== 'connected')
-          throw new HttpError(409, 'Сначала подключите Instagram.');
+        if (account.status !== 'connected') throw new HttpError(409, 'Connect Instagram first.');
         const requestId = uuid(body.requestId);
         const { error } = await db
           .from('conversations')
@@ -297,7 +294,7 @@ serve(async (req) => {
           values: Record<string, unknown> = {};
         if ('mode' in patch) {
           if (!['bot', 'human'].includes(String(patch.mode)))
-            throw new HttpError(400, 'Некорректный режим.');
+            throw new HttpError(400, 'Invalid mode.');
           values.mode = patch.mode;
           if (patch.mode !== c.mode) {
             values.mode_revision = c.mode_revision + 1;
@@ -306,11 +303,11 @@ serve(async (req) => {
         }
         if ('status' in patch) {
           if (!['open', 'closed'].includes(String(patch.status)))
-            throw new HttpError(400, 'Некорректный статус.');
+            throw new HttpError(400, 'Invalid status.');
           values.status = patch.status;
         }
         if ('unread_count' in patch) {
-          if (patch.unread_count !== 0) throw new HttpError(400, 'Некорректный счётчик.');
+          if (patch.unread_count !== 0) throw new HttpError(400, 'Invalid counter.');
           values.unread_count = 0;
         }
         const { error } = await db.from('conversations').update(values).eq('id', id);
@@ -320,7 +317,8 @@ serve(async (req) => {
       await rpc(db, 'service_unlock', { key, lock_token: lockToken });
     }
   } else if (action === 'rename-workspace') {
-    if (membership.role !== 'owner') throw new HttpError(403, 'Действие доступно владельцу.');
+    if (membership.role !== 'owner')
+      throw new HttpError(403, 'Only the owner can perform this action.');
     const { error } = await db
       .from('workspaces')
       .update({ name: text(body.name, 120, true) })
@@ -328,7 +326,8 @@ serve(async (req) => {
     if (error) throw new Error('Workspace update failed');
   } else if (action === 'disconnect') {
     recentMfa(membership.session);
-    if (membership.role !== 'owner') throw new HttpError(403, 'Действие доступно владельцу.');
+    if (membership.role !== 'owner')
+      throw new HttpError(403, 'Only the owner can perform this action.');
     const { data: a, error } = await db
       .from('instagram_accounts')
       .select('*')
@@ -355,6 +354,6 @@ serve(async (req) => {
           /* Sending is already disabled; a temporary unsubscribe failure cannot re-enable it. */
         }
     }
-  } else throw new HttpError(400, 'Неизвестное действие.');
+  } else throw new HttpError(400, 'Unknown action.');
   return json({ ok: true });
 });

@@ -5,7 +5,7 @@ describe('Meta webhook normalization', () => {
     const messaging = Array.from({ length: 130 }, (_, n) => ({
       sender: { id: '200' },
       recipient: { id: '100' },
-      message: { mid: 'batch.' + n, text: 'прайс' },
+      message: { mid: 'batch.' + n, text: 'price' },
     }));
     const result = parseMetaEvents({ object: 'instagram', entry: [{ id: '100', messaging }] });
     expect(result).toHaveLength(130);
@@ -23,7 +23,7 @@ describe('Meta webhook normalization', () => {
               sender: { id: '200' },
               recipient: { id: '100' },
               timestamp: 1791795600000,
-              message: { mid: 'mid.1', text: 'прайс' },
+              message: { mid: 'mid.1', text: 'price' },
             },
             { sender: { id: '200' }, read: { watermark: 1 } },
           ],
@@ -45,7 +45,7 @@ describe('Meta webhook normalization', () => {
             {
               sender: { id: '100' },
               recipient: { id: '200' },
-              message: { mid: 'echo.1', is_echo: true, text: 'Здравствуйте' },
+              message: { mid: 'echo.1', is_echo: true, text: 'Hello' },
             },
           ],
           changes: [
@@ -53,7 +53,7 @@ describe('Meta webhook normalization', () => {
               field: 'comments',
               value: {
                 id: '300',
-                text: 'урок',
+                text: 'lesson',
                 from: { id: '200', username: 'student' },
                 media: { id: '400' },
               },

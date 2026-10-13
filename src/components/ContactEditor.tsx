@@ -6,7 +6,7 @@ export function ContactEditor({ contact, onClose }: { contact: Contact; onClose:
     [draft, setDraft] = useState({ ...contact }),
     [tags, setTags] = useState(contact.tags.join(', '));
   return (
-    <Modal title="Карточка контакта" onClose={onClose}>
+    <Modal title="Contact details" onClose={onClose}>
       <form
         onSubmit={async (e) => {
           e.preventDefault();
@@ -24,14 +24,14 @@ export function ContactEditor({ contact, onClose }: { contact: Contact; onClose:
                     .map((s) => s.trim())
                     .filter(Boolean),
                 }),
-              'Контакт сохранён.',
+              'Contact saved.',
             )
           )
             onClose();
         }}
       >
         <label>
-          Имя
+          Name
           <input
             value={draft.name}
             onChange={(e) => setDraft({ ...draft, name: e.target.value })}
@@ -48,7 +48,7 @@ export function ContactEditor({ contact, onClose }: { contact: Contact; onClose:
             />
           </label>
           <label>
-            Телефон
+            Phone
             <input
               type="tel"
               value={draft.phone}
@@ -58,7 +58,7 @@ export function ContactEditor({ contact, onClose }: { contact: Contact; onClose:
           </label>
         </div>
         <label>
-          Статус заявки
+          Lead status
           <select
             value={draft.status}
             onChange={(e) => setDraft({ ...draft, status: e.target.value as LeadStatus })}
@@ -71,7 +71,7 @@ export function ContactEditor({ contact, onClose }: { contact: Contact; onClose:
           </select>
         </label>
         <label>
-          Теги через запятую
+          Tags, separated by commas
           <input value={tags} onChange={(e) => setTags(e.target.value)} />
         </label>
         <label className="checkbox-label">
@@ -80,14 +80,14 @@ export function ContactEditor({ contact, onClose }: { contact: Contact; onClose:
             checked={draft.is_lead}
             onChange={(e) => setDraft({ ...draft, is_lead: e.target.checked })}
           />
-          Сохранить как заявку
+          Save as a lead
         </label>
         <div className="modal-footer">
           <button type="button" className="button" onClick={onClose}>
-            Отмена
+            Cancel
           </button>
           <button className="button primary" disabled={busy}>
-            Сохранить контакт
+            Save contact
           </button>
         </div>
       </form>

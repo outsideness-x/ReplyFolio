@@ -2,14 +2,14 @@ export const SESSION_COOKIE = '__Host-rf-session';
 export const LOGIN_COOKIE = '__Host-rf-login';
 export const OAUTH_COOKIE = '__Host-rf-oauth';
 export function normalizeEmail(value: unknown): string {
-  if (typeof value !== 'string' || value.length > 254) throw new Error('Укажите корректный email.');
+  if (typeof value !== 'string' || value.length > 254) throw new Error('Enter a valid email.');
   const email = value.trim().toLowerCase();
   if (
     !/^[a-z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/.test(
       email,
     )
   )
-    throw new Error('Укажите корректный email.');
+    throw new Error('Enter a valid email.');
   return email;
 }
 export function opaqueToken(): string {

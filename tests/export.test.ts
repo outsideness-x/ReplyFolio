@@ -5,5 +5,5 @@ it('keeps contact exports from being interpreted as spreadsheet formulas', () =>
     '"\'=HYPERLINK(""https://example.com"")"',
   );
   expect(csvCell('  +123')).toBe('"\'  +123"');
-  expect(csvCell('Анна, "ученица"')).toBe('"Анна, ""ученица"""');
+  expect(csvCell('Anna, "learner"')).toBe('"Anna, ""learner"""');
 });

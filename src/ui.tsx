@@ -116,7 +116,7 @@ export function Modal({
       >
         <div className="modal-heading">
           <h2>{title}</h2>
-          <button className="icon-button" aria-label="Закрыть" onClick={onClose}>
+          <button className="icon-button" aria-label="Close" onClick={onClose}>
             <X size={20} />
           </button>
         </div>
@@ -129,7 +129,7 @@ export function Loading() {
   return (
     <div className="loading">
       <LoaderCircle className="spin" />
-      <span>Загружаем рабочее пространство…</span>
+      <span>Loading your workspace…</span>
     </div>
   );
 }
@@ -144,25 +144,25 @@ export function Avatar({ name, size = 'normal' }: { name: string; size?: 'normal
   return <span className={`avatar ${size}`}>{letters}</span>;
 }
 export function time(value: string) {
-  return new Intl.DateTimeFormat('ru', {
+  return new Intl.DateTimeFormat('en-GB', {
     hour: '2-digit',
     minute: '2-digit',
     timeZone: 'Europe/Minsk',
   }).format(new Date(value));
 }
 export function day(value: string) {
-  return new Intl.DateTimeFormat('ru', {
+  return new Intl.DateTimeFormat('en-GB', {
     day: 'numeric',
     month: 'short',
     timeZone: 'Europe/Minsk',
   }).format(new Date(value));
 }
 export const leadLabels = {
-  new: 'Новая',
-  qualified: 'Заинтересован',
-  contacted: 'Связались',
-  enrolled: 'Начал обучение',
-  archived: 'В архиве',
+  new: 'New',
+  qualified: 'Interested',
+  contacted: 'Contacted',
+  enrolled: 'Enrolled',
+  archived: 'Archived',
 } as const;
 export function download(name: string, content: string, type = 'application/json') {
   const url = URL.createObjectURL(new Blob([content], { type }));
