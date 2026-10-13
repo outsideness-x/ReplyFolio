@@ -1,32 +1,16 @@
 # Подключение ReplyFolio
 
-Проверено по документации поставщиков 12 октября 2026 года. Облачные проекты пока не созданы. Команды ниже выполняются владельцем при подключении; локальное демо уже работает без них.
+Облачные проекты ещё не созданы. Эта инструкция описывает подготовленную конфигурацию. Сначала запускается закрытый вход, затем подключается Instagram и проверяется реальная доставка.
 
-## 1. Локальный запуск
+## 1. Локальный просмотр
 
-Нужен Node.js 24+ и npm. В каталоге проекта:
+Node.js 24+, `npm ci`, затем `npm run dev`. Стартовая страница: http://127.0.0.1:5173/. Демо: http://127.0.0.1:5173/?demo=1. Его изменения сохраняются только в этом браузере. Демоматериалы ведут на example.com.
 
-```sh
-npm ci
-npm run dev
-```
+Vite сам не запускает Pages Functions. Настоящий вход проверяйте на HTTPS-домене Cloudflare после настройки. В production оставьте `VITE_ENABLE_DEMO=false`.
 
-Откройте http://localhost:5173. Без переменных Supabase включается изолированная демосреда в localStorage браузера. Используйте «Симулятор» для теста. Демоматериалы ведут на example.com; замените их перед реальным запуском. Удаление данных браузера удаляет демоданные.
+## 2. Supabase и закрытая команда
 
-Проверки:
-
-```sh
-npm test
-npm run build
-npm run check:edge
-npx playwright install chromium
-npm run test:e2e
-```
-
-## 2. Supabase
-
-1. Создайте Free-проект, сохраните пароль базы в менеджере паролей.
-2. Установите [Supabase CLI](https://supabase.com/docs/guides/local-development/cli/getting-started) по официальной инструкции, войдите и свяжите проект:
+Создайте Free-проект и сохраните пароль базы в менеджере паролей. Установите [Supabase CLI](https://supabase.com/docs/guides/local-development/cli/getting-started), затем:
 
 ```sh
 supabase login
@@ -34,62 +18,110 @@ supabase link --project-ref YOUR_PROJECT_REF
 supabase db push
 ```
 
-Это применит миграции из supabase/migrations. Альтернатива: выполнить каждый SQL-файл по порядку в SQL Editor. Не применяйте миграции повторно вручную.
+Применяются все девять SQL-миграций. Альтернатива — выполнить их по порядку в SQL Editor, без повторного ручного применения.
 
-3. В Supabase Auth включите Google. В Google Cloud создайте OAuth Web Client, задайте consent screen и callback из настроек провайдера Supabase: https://YOUR_PROJECT.supabase.co/auth/v1/callback. Client ID/Secret внесите в Auth → Providers → Google. Укажите URL опубликованного кабинета в Auth → URL Configuration → Site URL и Redirect URLs. Preview-домены добавляйте явно только при необходимости.
-4. Для одного бизнеса отключите публичную регистрацию после создания первого владельца. Команду приглашайте через Supabase Auth и membership ниже. Не давайте произвольным посетителям права создавать аккаунты.
+В облачных настройках Auth явно отключите публичную регистрацию, включите подтверждение email, TOTP enrollment и verification. Установите email OTP: 8 цифр, срок 600 секунд; Site URL — точный HTTPS-адрес приложения. Локальный `supabase/config.toml` описывает эти настройки, но `db push` сам не переносит настройки облачного Auth.
 
-Для локальной работы с настоящим Supabase создайте .env.local по .env.example. В production эти две переменные задаются в Cloudflare Pages:
+Администраторский `generateLink` создаёт код для подтверждения email; письмо отправляет сервер через Resend. Создание Auth identity не означает доступ к приложению: его разрешает только приватное приглашение и MFA.
 
-```env
-VITE_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=YOUR_PUBLIC_KEY
-```
+Вне репозитория подготовлен файл `../.replyfolio-private/team-bootstrap.sql` с двумя согласованными адресами и ролями. Выполните его в SQL Editor после миграций. Не копируйте его в проект, issue, публичные инструкции или build variables. Таблица `private.team_invites` по умолчанию пустая; разрешения по домену нет.
 
-Используйте publishable key (sb_publishable_) или старый anon key. Никогда не вставляйте service_role/sb_secret_ в VITE_*.
+Первым входит владелец: email-код → настройка аутентификатора → TOTP-код. Он создаёт общее пространство. Затем второй участник проходит тот же вход и получает роль manager в этом пространстве. Посетители вне списка видят лист ожидания после подтверждения email, без создания пространства.
 
-## 3. Серверные секреты и функции
+## 3. Turnstile и email
 
-Скопируйте supabase/.env.example в supabase/.env.local (файл исключён из Git). Задайте:
+Создайте [Cloudflare Turnstile](https://developers.cloudflare.com/turnstile/get-started/) widget с точным доменом приложения. Публичный site key идёт в `VITE_TURNSTILE_SITE_KEY`; secret key — только в Supabase. Сервер проверяет token, hostname и action=login. Не используйте тестовые ключи в production.
 
-- APP_URL — точный адрес кабинета, например https://replyfolio.pages.dev. Для локальной проверки http://localhost:5173; это единственный разрешённый browser origin.
-- META_APP_ID и META_APP_SECRET — Instagram App ID и Instagram App Secret из настройки Instagram API with Instagram Login. При нескольких парах ID/Secret берите пару продукта Instagram, а не случайный ID другого продукта.
-- META_WEBHOOK_SECRET — App Secret приложения Meta, подписывающего webhook (App Settings → Basic). При отдельной паре Instagram OAuth используйте секрет подписывающего приложения; он может отличаться от META_APP_SECRET.
-- META_GRAPH_VERSION=v26.0 — версия API, на которой подготовлена интеграция; сверяйте при обновлении Meta.
-- META_VERIFY_TOKEN — произвольная случайная строка для проверки webhook.
-- WORKER_SECRET — независимый секрет запуска очереди.
-- TOKEN_ENCRYPTION_KEY — 32 случайных байта в base64. Ключ шифрует токены Instagram; потеря ключа потребует повторного подключения аккаунта.
+В Resend добавьте свой домен отправителя и подтвердите его DNS-записи. Создайте API key с доступом к отправке для этого домена. `EMAIL_FROM` должен использовать подтверждённого отправителя. [Проверка домена Resend](https://resend.com/docs/dashboard/domains/introduction).
 
-Генерация каждого секрета отдельно:
+Коды входа не публикуются и не записываются в журнал приложения. Первую настоящую доставку письма нужно проверить после настройки сервиса.
+
+## 4. Серверные секреты Supabase
+
+Скопируйте `supabase/.env.example` в исключённый из Git `supabase/.env.local`.
+
+| Переменная                    | Значение                                                     |
+| ----------------------------- | ------------------------------------------------------------ |
+| APP_URL                       | Точный HTTPS-origin приложения, без preview-доменов          |
+| GATEWAY_SECRET                | Независимый случайный hex-секрет; тот же секрет в Cloudflare |
+| RATE_LIMIT_SECRET             | Другой случайный hex-секрет для HMAC ключей лимитов          |
+| SESSION_ENCRYPTION_KEY        | Независимые 32 байта в base64, шифрование токенов входа      |
+| TOKEN_ENCRYPTION_KEY          | Другие 32 байта в base64, шифрование Instagram токенов       |
+| TURNSTILE_SECRET_KEY          | Secret key widget                                            |
+| RESEND_API_KEY                | Серверный ключ отправки                                      |
+| EMAIL_FROM                    | Подтверждённый отправитель                                   |
+| WORKER_SECRET                 | Независимый hex-секрет очереди                               |
+| META_APP_ID / META_APP_SECRET | Пара Instagram Login из продукта Instagram в Meta            |
+| META_WEBHOOK_SECRET           | App Secret приложения, которое подписывает webhook           |
+| META_VERIFY_TOKEN             | Независимая случайная строка проверки webhook                |
+| META_GRAPH_VERSION            | v26.0; сверяйте версию при обновлении Meta                   |
+
+Генерируйте каждое значение отдельно:
 
 ```sh
 openssl rand -hex 32
 openssl rand -base64 32
 ```
 
-Не переиспользуйте значение одного секрета в другом поле. SUPABASE_URL и SUPABASE_SERVICE_ROLE_KEY выдаёт серверный runtime; в браузер они не передаются.
+Не переиспользуйте ключи. SUPABASE_URL, SUPABASE_ANON_KEY и SUPABASE_SERVICE_ROLE_KEY предоставляет Edge runtime; в браузер эти ключи не передаются. Не записывайте секреты в tracked-файлы, логи, `VITE_*` или переписку.
 
 ```sh
 supabase secrets set --env-file supabase/.env.local
+supabase functions deploy auth --no-verify-jwt
+supabase functions deploy workspace-api --no-verify-jwt
 supabase functions deploy instagram-connect --no-verify-jwt
 supabase functions deploy instagram-callback --no-verify-jwt
 supabase functions deploy instagram-webhook --no-verify-jwt
 supabase functions deploy automation-worker --no-verify-jwt
-supabase functions deploy workspace-api --no-verify-jwt
 ```
 
-Отключённая gateway JWT-проверка нужна публичным callback/webhook и современным ключам. Защита реализована внутри: getUser + членство для кабинета, подпись Meta для событий и WORKER_SECRET для очереди.
+JWT-проверка стандартного gateway отключена осознанно: кабинет требует подписанный Pages запрос, серверную cookie-сессию, проверенную Auth identity и MFA; webhook — подпись Meta; worker — собственный секрет. Прямой запрос к защищённым Edge endpoints без подписи Pages не даёт доступа.
 
-## 4. Очередь и расписание
+## 5. Cloudflare Pages + Functions
 
-В Supabase включите расширения Cron (pg_cron), pg_net и Vault. Через интерфейс Vault создайте:
+Приложению нужен и статический фронтенд, и папка `functions`. Настройте Git integration либо Wrangler. Dashboard drag-and-drop папки dist не компилирует Pages Functions; для этого проекта такой способ неполон. [Документация Cloudflare](https://developers.cloudflare.com/pages/get-started/direct-upload/#functions).
 
-- replyfolio_project_url = https://YOUR_PROJECT.supabase.co
-- replyfolio_worker_secret = точное значение WORKER_SECRET
+Для Git integration: корень ReplyFolio, Vite, `npm run build`, каталог `dist`, Node 24+. Локальный Git пока без remote.
 
-Затем выполните supabase/setup/schedule.sql в SQL Editor. Скрипт можно повторить: он заменяет собственную Cron-задачу. Каждую минуту SQL проверяет просроченную очередь; HTTP-вызова при отсутствии задач нет. С подключённым Instagram выполняется также ежедневная проверка токенов. Webhook будит worker сразу, расписание обеспечивает повторы, задержки и восстановление после сбоя.
+Публичные build variables:
 
-Контроль:
+```env
+VITE_TURNSTILE_SITE_KEY=YOUR_PUBLIC_SITE_KEY
+VITE_ENABLE_DEMO=false
+```
+
+Серверные bindings/secrets Pages:
+
+- SUPABASE_URL = HTTPS-адрес проекта Supabase.
+- GATEWAY_SECRET = тот же независимый секрет, что в Supabase Edge.
+
+Задайте GATEWAY_SECRET как secret. Не помещайте service_role, Meta или encryption keys в Pages. Доступ к production секретам не выдавайте preview deployments. Preview без backend-секретов показывает стартовую страницу, но не допускает вход.
+
+При использовании Wrangler выполняйте команды **из корня проекта**, чтобы он обнаружил `functions`:
+
+```sh
+npm run build
+npx wrangler login
+npx wrangler pages project create replyfolio
+npx wrangler pages secret put GATEWAY_SECRET --project-name replyfolio
+npx wrangler pages secret put SUPABASE_URL --project-name replyfolio
+npx wrangler pages deploy dist --project-name replyfolio --branch main
+```
+
+Имя облачного проекта может отличаться; согласуйте его с `wrangler.toml`. После получения домена задайте APP_URL и Turnstile hostname, затем пересоберите с правильным site key. [Конфигурация Pages Functions](https://developers.cloudflare.com/pages/functions/wrangler-configuration/).
+
+Notion подходит для справки и ссылки на кабинет. Он не размещает React и сервер. Cloudflare Pages/Functions имеют отдельные бесплатные лимиты; Vercel Hobby предназначен для личного некоммерческого использования. [Pages limits](https://developers.cloudflare.com/pages/platform/limits/), [Functions pricing](https://developers.cloudflare.com/pages/functions/pricing/), [Vercel Hobby](https://vercel.com/docs/plans/hobby).
+
+Проверьте в живом браузере: HTTPS, CSP/HSTS, HttpOnly Secure SameSite cookie, отсутствие токенов в localStorage и ответах API; email → MFA → workspace; посторонний email → согласие на waitlist; прямой URL кабинета без входа; logout; отзыв приглашения. Не ограничивайтесь визуальным переключением экранов.
+
+## 6. Очередь и очистка
+
+В Supabase включите Cron (pg_cron), pg_net и Vault. В Vault создайте:
+
+- replyfolio_project_url = HTTPS-адрес Supabase.
+- replyfolio_worker_secret = точное значение WORKER_SECRET.
+
+Выполните `supabase/setup/schedule.sql` после миграций. Каждую минуту SQL очищает истёкшие коды, OAuth states, proxy nonces и старые записи безопасности, затем проверяет очередь. HTTP-вызова при отсутствии задач нет. Подключённый Instagram получает ежедневную проверку токенов. [Supabase scheduling](https://supabase.com/docs/guides/functions/schedule-functions).
 
 ```sql
 select jobid, jobname, active from cron.job where jobname='replyfolio-worker';
@@ -98,82 +130,57 @@ select id, kind, status, attempts, error, created_at
 from private.jobs where status='failed' order by created_at desc limit 20;
 ```
 
-Не публикуйте payload очереди: в нём могут быть личные сообщения. Проверьте Cron execution history и Edge Function logs. Если cron работает, но задачи стоят, проверьте Vault, адрес проекта и совпадение WORKER_SECRET. Официальный механизм: [Supabase scheduling](https://supabase.com/docs/guides/functions/schedule-functions).
+Не публикуйте payload: в нём могут быть сообщения. При зависшей очереди проверьте Cron history, Vault и совпадение WORKER_SECRET.
 
-## 5. Cloudflare Pages
+## 7. Meta и Instagram
 
-Для коммерческого проекта выбран бесплатный статический фронтенд Cloudflare Pages. Notion используйте для справки/лендинга и ссылки на кабинет: он не исполняет React и webhook. Vercel Hobby ограничен личным некоммерческим использованием; для бизнеса нужен подходящий платный план. [Vercel Hobby](https://vercel.com/docs/plans/hobby), [Pages limits](https://developers.cloudflare.com/pages/platform/limits/).
+Переведите Instagram в **Business или Creator**. Creator подходит. Business Verification приложения Meta — отдельная процедура. Используется Instagram Login; Facebook Page для этого пути не требуется.
 
-В Pages подключите собственный Git-репозиторий или используйте Direct Upload. Нынешний Git-репозиторий локальный, remote пока отсутствует.
-
-- Framework preset: Vite.
-- Build command: npm run build.
-- Output directory: dist.
-- Root directory: корень ReplyFolio.
-- Environment variables: только VITE_SUPABASE_URL и VITE_SUPABASE_PUBLISHABLE_KEY.
-- Node version: 24.
-
-Для Direct Upload: npm run build, затем загрузите dist через Pages или официальный Wrangler CLI. SPA fallback и HTTP headers уже включены. Секреты Meta и worker остаются в Supabase. После публикации обновите APP_URL, Supabase Site URL/redirects. Пересоберите фронтенд при изменении VITE_*.
-
-## 6. Приложение Meta
-
-Переведите Instagram в Business или Creator: оба типа профессиональных аккаунтов подходят. Creator не нужно менять на Business. Business Verification приложения Meta — отдельная процедура и не означает требование типа Business для самого аккаунта. Интеграция использует Instagram Login; Facebook Page для этого пути не требуется. Создайте Meta developer app с Instagram API и настройкой Instagram Login.
-
-Запросите/настройте разрешения:
+Создайте Meta developer app с Instagram API и Instagram Login. Настройте:
 
 - instagram_business_basic
 - instagram_business_manage_messages
 - instagram_business_manage_comments
 
-Добавьте собственный профессиональный Instagram в роли/тестеры приложения и примите приглашение в Instagram. Standard Access позволяет подготовить тестирование собственных аккаунтов в пределах выданных ролей. Для рабочего запуска webhook актуальная инструкция Meta требует Live-режим, Advanced Access и Business Verification; отдельно Advanced Access требуется для comments. Поэтому не рассчитывайте обойти App Review только потому, что бот нужен своему бизнесу. Пройдите необходимые проверки и подтвердите доставку реальным тестом. [Требования Meta к webhook, обновлены 16 сентября 2026](https://developers.facebook.com/documentation/instagram-platform/webhooks/setup?locale=en_US).
+Добавьте собственный профессиональный аккаунт в роли/тестеры и примите приглашение. Standard Access позволяет готовить тестирование в пределах ролей. Для рабочего webhook актуальная инструкция Meta требует Live-режим, Advanced Access и Business Verification. Не считайте локальный тест подтверждением App Review. [Meta webhook setup](https://developers.facebook.com/documentation/instagram-platform/webhooks/setup?locale=en_US).
 
-В Valid OAuth Redirect URIs внесите точно:
+**OAuth Redirect URI теперь находится на домене приложения:**
 
 ```text
-https://YOUR_PROJECT.supabase.co/functions/v1/instagram-callback
+https://YOUR_APP_DOMAIN/api/instagram-callback
 ```
 
-В webhook Instagram:
+Webhook остаётся прямым Supabase endpoint:
 
-- Callback URL: https://YOUR_PROJECT.supabase.co/functions/v1/instagram-webhook
-- Verify token: ваш META_VERIFY_TOKEN
-- Fields: messages, messaging_postbacks, messaging_referrals, messaging_seen, comments
-- Политика конфиденциальности и инструкция удаления данных: ваши публичные HTTPS-страницы. Заполните шаблоны docs/PRIVACY.template.md и docs/DATA-DELETION.template.md и опубликуйте их. Это тексты-заготовки, а не действующие страницы компании.
-
-Настройте необходимые поля App Settings и режим приложения согласно текущему интерфейсу Meta. В ReplyFolio войдите через Google, создайте пространство, откройте «Настройки → Подключить Instagram» и авторизуйте свой аккаунт. Состояние «Подключён» выставляется только после успешной подписки на события. В одном пространстве разрешено переподключение того же Instagram; другой аккаунт требует нового пространства, чтобы не смешать recipient IDs.
-
-Источники: [Instagram API with Instagram Login](https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/), [Messaging API](https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/messaging-api/), [Private Replies](https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/messaging-api/private-replies/).
-
-## 7. Сценарии и реальная проверка
-
-В новом облачном пространстве список пустой: локальные примеры туда не переносятся автоматически.
-
-1. Добавьте настоящие ссылки/PDF и актуальный прайс.
-2. Создайте сценарий из шаблона, замените тексты, прикрепите материалы к блокам.
-3. Укажите ключевые слова или ID выбранных публикаций. Пустой список ID означает все публикации. В первой версии ID задаются вручную; галереи публикаций нет.
-4. Сохраните и включите сценарий. Если совпало несколько, выбирается сначала keyword-сценарий, затем сценарий любого сообщения. Внутри одного типа приоритет у созданного раньше; при равной дате — по ID.
-5. С другого разрешённого тестового аккаунта отправьте Direct. Проверьте ответ, выбор кнопки, email, заявку.
-6. Напишите комментарий: должно прийти одно первое приватное сообщение. До ответа пользователя последующих сообщений быть не должно. После ответа сценарий продолжится.
-7. Ответьте менеджером из кабинета или Instagram: бот должен встать на паузу. Проверьте «стоп» и «менеджер».
-8. Отключите Instagram в настройках: последующие отправки должны отменяться. Переподключите и проверьте журнал.
-
-Обычные автоматические и ручные ответы в этой версии отправляются только в 24-часовом окне после входящего DM. Приватный ответ на комментарий разрешён в пределах 7 дней и состоит из одного первого сообщения; продолжение — после ответа пользователя. Live comments, HUMAN_AGENT и отдельный 7-дневный режим рекламных Click-to-Instagram сообщений не реализованы. PDF выдаётся ссылкой, не вложением. Текст ограничен 1000 байтами UTF-8, быстрые ответы — до 13 кнопок.
-
-Статус «accepted» означает принятие API, не прочтение. При сетевом сбое после попытки отправки статус остаётся «Не подтверждено»: сначала проверьте Direct, не дублируйте отправку вслепую.
-
-## 8. Команда и обслуживание
-
-Первый авторизованный пользователь создаёт пространство и получает owner. Для менеджера сначала пригласите пользователя через Supabase Auth, затем выполните как администратор базы:
-
-```sql
-insert into public.workspace_members(workspace_id,user_id,role)
-values('WORKSPACE_UUID','AUTH_USER_UUID','manager');
+```text
+https://YOUR_PROJECT.supabase.co/functions/v1/instagram-webhook
 ```
 
-Кнопки управления подключением/названием доступны на сервере только owner. Для одного аккаунта это внутренний кабинет, а не публичный SaaS.
+Verify token — META_VERIFY_TOKEN. Поля: messages, messaging_postbacks, messaging_referrals, messaging_seen, comments. Заполните и опубликуйте собственные HTTPS-страницы политики и удаления данных из шаблонов в docs; внесите их в Meta.
 
-Free-проект Supabase имеет ограниченные базу, Storage, трафик и вызовы; актуальные квоты проверяйте в [pricing](https://supabase.com/pricing). На дату подготовки: база 500 МБ, Storage 1 ГБ, egress 5 ГБ, 500 000 Edge-вызовов. Бесплатный проект может приостанавливаться при неактивности; SLA и автоматических бэкапов уровня платного плана нет. Защищённая очередь не отменяет эти ограничения. Не рассчитывайте на Free как на гарантированно бесперебойный production.
+Владелец входит по email + MFA и открывает «Настройки → Подключить Instagram». При необходимости подтвердит MFA ещё раз, затем повторит действие. OAuth привязан к инициировавшей сессии, роли владельца и отдельной cookie браузера. В одном пространстве разрешено переподключение того же Instagram; подмена другим аккаунтом блокируется.
 
-Экспорт в кабинете содержит загруженные данные: последние 1000 сообщений и 100 событий, не всю базу. Списки остальных сущностей загружаются постранично. Полный бэкап делайте вне веб-интерфейса через Supabase CLI/database backup workflow; файлы Storage сохраняйте отдельно. Шифротокены без TOKEN_ENCRYPTION_KEY восстановить нельзя. Храните бэкап и ключ отдельно с ограниченным доступом.
+Источники: [Instagram Login](https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/), [Messaging API](https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/messaging-api/), [Private Replies](https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/messaging-api/private-replies/).
 
-Служебные завершённые задачи и ключи дедупликации очищаются через 30 дней. Деловые контакты и сообщения автоматически не удаляются: выберите срок хранения и удаляйте по своей политике. После удаления/замены PDF могут оставаться старые объекты Storage; проверяйте ссылки в materials перед ручной очисткой.
+## 8. Реальная проверка бота
+
+Новое облачное пространство пустое: демоданные не переносятся.
+
+1. Добавьте настоящие публичные материалы и прайс.
+2. Создайте сценарий, замените тексты, задайте keywords и при необходимости ID публикаций; сохраните и включите.
+3. С другого разрешённого тестового аккаунта отправьте DM; проверьте ответ, кнопки, контакт и заявку.
+4. Оставьте комментарий: одно первое приватное сообщение, дальнейшие ответы только после DM пользователя.
+5. Ответьте менеджером из кабинета и Instagram; проверьте паузу бота, «стоп» и «менеджер».
+6. Проверьте задержку, очередь, отключение, переподключение и журнал. Сверьте сообщения в самом Instagram.
+
+Обычные сообщения ограничены 24-часовым окном после входящего DM. Приватный ответ на комментарий — одно первое сообщение в пределах 7 дней; продолжение после ответа. HUMAN_AGENT, Live comments и отдельный рекламный 7-дневный режим не реализованы. PDF выдаётся ссылкой. Текст до 1000 байт UTF-8, quick replies до 13.
+
+accepted означает принятие API, а не прочтение. uncertain («Не подтверждено») после сетевого сбоя требует проверки Direct до повторной отправки.
+
+## 9. Обслуживание
+
+Роли, отзыв сессий, MFA recovery и ротация ключей: [SECURITY.md](SECURITY.md). Бесплатные квоты проверяйте в [Supabase pricing](https://supabase.com/pricing); Free не даёт гарантий доступности платного production-плана.
+
+Экспорт кабинета содержит последние 1000 сообщений и 100 событий. Полный бэкап включает базу, Auth identities/их UUID и отдельные Storage-файлы. Ключи шифрования храните отдельно; восстановление приглашения на новый user UUID автоматически запрещено.
+
+Завершённые задачи, дедупликация и security audit очищаются через 30 дней; истёкшие серверные сессии — через день, rate buckets — через три дня. Контакты/переписка и waitlist автоматически не удаляются: определите срок и применяйте свою политику. Проверяйте старые PDF перед ручной очисткой Storage.
