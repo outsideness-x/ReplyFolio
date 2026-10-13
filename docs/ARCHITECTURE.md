@@ -50,7 +50,7 @@ React/TypeScript/Vite, Cloudflare Pages Functions шлюз, шесть Supabase 
 
 48 unit/integration тестов и 18 Chromium проверок: движок, webhook batch, очереди, PostgreSQL RLS и закрытые grants, приглашения, session binding, MFA factor pinning, OAuth, CSRF, подписи, waitlist, навигация и 390/768/1440px. TypeScript/build и Deno проверяют исходники. Privacy scan проверяет файлы, историю Git и build.
 
-Браузерные тесты входа подменяют ответы API; PostgreSQL проверки выполняют настоящие SQL-функции в PGlite. Они не заменяют живой Supabase Auth, email, Turnstile, Storage, Cron/pg_net и Meta. Эти сервисы ещё не подключены; реальная доставка и cloud-конфигурация не подтверждены.
+Браузерные тесты входа подменяют ответы API; PostgreSQL проверки выполняют настоящие SQL-функции в PGlite. Production в Cloudflare Pages и Supabase настроен, включая Turnstile, Resend и Cron/pg_net. Облачные проверки подтверждают границы API и заголовки, но не заменяют первый настоящий email/TOTP-вход, загрузку Storage и проверку доставки через Meta. Instagram пока не подключён.
 
 Первая версия для одного бизнеса: без SaaS billing, AI, рассылок, HUMAN_AGENT, Live comments, галереи публикаций и PDF-вложений. В кабинете доступны последние 1000 сообщений и 100 запусков; более ранние остаются в базе.
 

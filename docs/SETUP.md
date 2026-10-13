@@ -1,6 +1,6 @@
 # Подключение GrowthThread
 
-Облачные проекты ещё не созданы. Эта инструкция описывает подготовленную конфигурацию. Сначала запускается закрытый вход, затем подключается Instagram и проверяется реальная доставка.
+Production: [growththread.pages.dev](https://growththread.pages.dev). На 13 октября 2026 года Supabase, Pages Functions, Turnstile, Resend и Cron настроены. Первый настоящий email/MFA-вход и Instagram ещё проверяются. Ниже — инструкция для воспроизведения конфигурации и последующего подключения Meta.
 
 ## 1. Локальный просмотр
 
@@ -34,7 +34,11 @@ supabase db push
 
 В Resend добавьте свой домен отправителя и подтвердите его DNS-записи. Создайте API key с доступом к отправке для этого домена. `EMAIL_FROM` должен использовать подтверждённого отправителя. [Проверка домена Resend](https://resend.com/docs/dashboard/domains/introduction).
 
+Текущий отправитель: `GrowthThread <login@auth.orot.study>`. Поддомен подтверждён отдельно; добавлены DKIM и два CNAME отправки, DMARC `_dmarc.auth.orot.study` использует `p=reject`. Основные DNS и MX-записи `orot.study` не менялись. Resend key ограничен отправкой с этого поддомена, отслеживание открытий/кликов не включено, TLS — Enforced.
+
 Коды входа не публикуются и не записываются в журнал приложения. Первую настоящую доставку письма нужно проверить после настройки сервиса.
+
+Для базы включено обязательное SSL на внешних SQL-соединениях. Для прямых клиентов используйте `sslmode=verify-full` с CA Supabase. HTTP API работают через HTTPS независимо от этой настройки. [SSL enforcement](https://supabase.com/docs/guides/platform/ssl-enforcement).
 
 ## 4. Серверные секреты Supabase
 
