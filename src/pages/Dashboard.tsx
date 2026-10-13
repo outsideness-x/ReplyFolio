@@ -118,12 +118,6 @@ export function Dashboard() {
               role="img"
               aria-label="Количество входящих обращений по дням"
             >
-              <defs>
-                <linearGradient id="area" x1="0" y1="0" x2="0" y2="1">
-                  <stop stopColor="#65758c" stopOpacity=".16" />
-                  <stop offset="1" stopColor="#65758c" stopOpacity="0" />
-                </linearGradient>
-              </defs>
               {[30, 72, 113, 155].map((y) => (
                 <g key={y}>
                   <line x1="40" y1={y} x2="690" y2={y} stroke="#eaf0f7" strokeDasharray="4 5" />
@@ -132,7 +126,7 @@ export function Dashboard() {
                   </text>
                 </g>
               ))}
-              <polygon points={`40,155 ${path} 690,155`} fill="url(#area)" />
+              <polygon points={`40,155 ${path} 690,155`} fill="currentColor" fillOpacity=".04" />
               <polyline
                 points={path}
                 fill="none"
