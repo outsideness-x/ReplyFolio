@@ -11,6 +11,7 @@ create or replace function private.dispatch_worker() returns bigint
 language plpgsql security definer set search_path = '' as $$
 declare project_url text; worker_secret text; request_id bigint;
 begin
+  perform private.cleanup_access();
   -- Do not invoke Edge Functions while there is no work.
   if not exists(
     select 1 from private.jobs where due_at<=now() and
