@@ -186,21 +186,18 @@ serve(async (req) => {
       qr = enrolled.data.totp.qr_code;
       secret = enrolled.data.totp.secret;
     }
-    const challenge = await s.client.auth.mfa.challenge({ factorId: trusted! });
-    if (challenge.error) throw new Error('MFA challenge failed');
     await rpc(db, 'service_session_update', {
       sid: s.row.id,
       sealed: await sealed(s.tokens, s.row.id),
       session_state: s.row.state,
       factor: trusted,
-      challenge: challenge.data.id,
+      challenge: null,
     });
     return json({ state: 'mfa', enrollment: !!qr, qr, secret });
   }
   if (action === 'mfa-verify') {
     if (
       !s.row.factor_id ||
-      !s.row.challenge_id ||
       typeof body.code !== 'string' ||
       !/^\d{6}$/.test(body.code)
     )
@@ -209,12 +206,24 @@ serve(async (req) => {
       await rpc(db, 'service_session_revoke', { sid: s.row.id });
       throw new HttpError(429, 'No attempts remaining. Sign in again.');
     }
-    const checked = await s.client.auth.mfa.verify({
+    // Separate Edge invocations can use different egress IPs. Supabase binds each
+    // challenge to its issuing IP, so create and verify it in this invocation.
+    const checked = await s.client.auth.mfa.challengeAndVerify({
       factorId: s.row.factor_id,
-      challengeId: s.row.challenge_id,
       code: body.code,
     });
-    if (checked.error) throw new HttpError(400, 'Invalid authenticator code.');
+    if (checked.error) {
+      if (checked.error.code === 'mfa_ip_address_mismatch')
+        throw new HttpError(
+          409,
+          'The verification connection changed. Try a fresh authenticator code.',
+        );
+      if (checked.error.code === 'mfa_challenge_expired')
+        throw new HttpError(409, 'Verification expired. Start verification again.');
+      if (checked.error.status === 429)
+        throw new HttpError(429, 'Too many verification attempts. Please try again later.');
+      throw new HttpError(400, 'Invalid authenticator code.');
+    }
     const trusted = await rpc<string | null>(db, 'service_trusted_factor', {
       uid: s.user.id,
       factor: s.row.factor_id,
