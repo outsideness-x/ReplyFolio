@@ -10,8 +10,9 @@
     "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit",
     "check:edge": "deno check supabase/functions/*/index.ts",
-    "format": "prettier --write src shared tests e2e supabase/functions *.ts *.json public/*.html",
-    "format:check": "prettier --check src shared tests e2e supabase/functions *.ts *.json public/*.html"
+    "format": "prettier --write src shared tests e2e functions scripts supabase/functions *.ts *.json public/*.html",
+    "format:check": "prettier --check src shared tests e2e functions scripts supabase/functions *.ts *.json public/*.html",
+    "check:privacy": "node scripts/check-privacy.mjs"
   },
   "license": "UNLICENSED",
   "type": "module",
