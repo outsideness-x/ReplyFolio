@@ -196,11 +196,7 @@ serve(async (req) => {
     return json({ state: 'mfa', enrollment: !!qr, qr, secret });
   }
   if (action === 'mfa-verify') {
-    if (
-      !s.row.factor_id ||
-      typeof body.code !== 'string' ||
-      !/^\d{6}$/.test(body.code)
-    )
+    if (!s.row.factor_id || typeof body.code !== 'string' || !/^\d{6}$/.test(body.code))
       throw new HttpError(400, 'Check your authenticator code.');
     if (!(await rpc<boolean>(db, 'service_session_attempt', { sid: s.row.id }))) {
       await rpc(db, 'service_session_revoke', { sid: s.row.id });
