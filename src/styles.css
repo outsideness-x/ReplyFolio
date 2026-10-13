@@ -52,7 +52,7 @@ a {
 }
 button:focus-visible,
 a:focus-visible {
-  outline: 3px solid #8bb8ff;
+  outline: 3px solid #929292;
   outline-offset: 3px;
 }
 h1,
