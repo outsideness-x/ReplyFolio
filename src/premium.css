@@ -482,7 +482,7 @@
   fill: var(--surface);
 }
 .app-shell .chart text {
-  fill: #b0b0b0;
+  fill: var(--muted);
 }
 .app-shell .chart line {
   stroke: #aeaeae18;
