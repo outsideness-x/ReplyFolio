@@ -2,10 +2,24 @@ import { hmac, opaqueToken, proxyCanonical, sameOriginMutation } from '../../sha
 type Environment = { SUPABASE_URL: string; GATEWAY_SECRET: string };
 type Context = { request: Request; env: Environment; params: Record<string, string | string[]> };
 const routes = new Set(['auth', 'workspace-api', 'instagram-connect', 'instagram-callback']);
+function responseHeaders() {
+  return new Headers({
+    'cache-control': 'no-store, private',
+    'x-content-type-options': 'nosniff',
+    'referrer-policy': 'no-referrer',
+    'x-frame-options': 'DENY',
+    'strict-transport-security': 'max-age=31536000; includeSubDomains',
+    'cross-origin-opener-policy': 'same-origin',
+    'cross-origin-resource-policy': 'same-origin',
+    'content-security-policy': "default-src 'none'; frame-ancestors 'none'; base-uri 'none'",
+  });
+}
 function failure(status: number) {
+  const headers = responseHeaders();
+  headers.set('content-type', 'application/json');
   return new Response(JSON.stringify({ error: 'Запрос недоступен.' }), {
     status,
-    headers: { 'content-type': 'application/json', 'cache-control': 'no-store' },
+    headers,
   });
 }
 export async function onRequest(context: Context): Promise<Response> {
@@ -76,12 +90,7 @@ export async function onRequest(context: Context): Promise<Response> {
       redirect: 'manual',
       signal: AbortSignal.timeout(20000),
     });
-    const outgoing = new Headers({
-      'cache-control': 'no-store, private',
-      'x-content-type-options': 'nosniff',
-      'referrer-policy': 'no-referrer',
-      'x-frame-options': 'DENY',
-    });
+    const outgoing = responseHeaders();
     for (const name of ['content-type', 'location']) {
       const value = upstream.headers.get(name);
       if (value) outgoing.set(name, value);

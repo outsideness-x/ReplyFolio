@@ -113,6 +113,9 @@ it('forwards only approved endpoints and hides backend authentication headers', 
   expect(result.status).toBe(200);
   expect(result.headers.get('x-secret')).toBeNull();
   expect(result.headers.get('set-cookie')).toContain('HttpOnly');
+  expect(result.headers.get('cache-control')).toContain('no-store');
+  expect(result.headers.get('strict-transport-security')).toContain('max-age=31536000');
+  expect(result.headers.get('content-security-policy')).toContain("default-src 'none'");
   const headers = fetch.mock.calls[0][1]?.headers as Headers;
   expect(headers.get('x-proxy-signature')).toMatch(/^[a-f0-9]{64}$/);
   expect(headers.has('authorization')).toBe(false);
