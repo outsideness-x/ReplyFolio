@@ -174,8 +174,13 @@ serve(async (req) => {
           403,
           'The existing authenticator needs trusted approval from the owner.',
         );
-      for (const unverified of data.totp) {
-        await s.client.auth.mfa.unenroll({ factorId: unverified.id });
+      // The SDK's totp bucket contains verified factors only. Pending enrollment
+      // factors are in all; otherwise a retry fails with a friendly-name conflict.
+      for (const unverified of data.all.filter(
+        (f) => f.factor_type === 'totp' && f.status === 'unverified',
+      )) {
+        const removed = await s.client.auth.mfa.unenroll({ factorId: unverified.id });
+        if (removed.error) throw new Error('Pending MFA enrollment cleanup failed');
       }
       const enrolled = await s.client.auth.mfa.enroll({
         factorType: 'totp',
