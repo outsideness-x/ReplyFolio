@@ -39,7 +39,7 @@ export function Leads() {
           disabled={!list.length}
           onClick={() =>
             download(
-              'replyfolio-leads-' + new Date().toISOString().slice(0, 10) + '.csv',
+              'growththread-leads-' + new Date().toISOString().slice(0, 10) + '.csv',
               contactsCsv(list),
               'text/csv;charset=utf-8',
             )

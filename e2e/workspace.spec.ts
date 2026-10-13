@@ -24,7 +24,7 @@ test('material request becomes a persisted lead and can be exported', async ({ p
   ).toHaveValue('qualified');
   const download = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Экспорт CSV' }).click();
-  expect((await download).suggestedFilename()).toMatch(/replyfolio-leads.*\.csv/);
+  expect((await download).suggestedFilename()).toMatch(/growththread-leads.*\.csv/);
 });
 test('comment emits one private reply and continues only on a DM', async ({ page }) => {
   await open(page, 'lab');

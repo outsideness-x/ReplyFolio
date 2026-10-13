@@ -151,7 +151,7 @@ export function Settings() {
                 className="button"
                 onClick={() =>
                   download(
-                    'replyfolio-' + new Date().toISOString().slice(0, 10) + '.json',
+                    'growththread-' + new Date().toISOString().slice(0, 10) + '.json',
                     JSON.stringify(data, null, 2),
                   )
                 }

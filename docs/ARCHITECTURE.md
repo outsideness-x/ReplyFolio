@@ -1,4 +1,4 @@
-# Как устроен ReplyFolio
+# Как устроен GrowthThread
 
 ## Вход и доступ
 

@@ -94,9 +94,7 @@ for (const width of [390, 768, 1440])
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.goto('/');
-    await expect(
-      page.getByRole('heading', { name: 'Каждый диалог. Следующий шаг.' }),
-    ).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Каждый шаг. Общая картина.' })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
       true,
     );

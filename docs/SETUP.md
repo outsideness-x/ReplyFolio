@@ -1,4 +1,4 @@
-# Подключение ReplyFolio
+# Подключение GrowthThread
 
 Облачные проекты ещё не созданы. Эта инструкция описывает подготовленную конфигурацию. Сначала запускается закрытый вход, затем подключается Instagram и проверяется реальная доставка.
 
@@ -81,7 +81,7 @@ JWT-проверка стандартного gateway отключена осо�
 
 Приложению нужен и статический фронтенд, и папка `functions`. Настройте Git integration либо Wrangler. Dashboard drag-and-drop папки dist не компилирует Pages Functions; для этого проекта такой способ неполон. [Документация Cloudflare](https://developers.cloudflare.com/pages/get-started/direct-upload/#functions).
 
-Для Git integration: корень ReplyFolio, Vite, `npm run build`, каталог `dist`, Node 24+. Локальный Git пока без remote.
+Для Git integration: корень GrowthThread, Vite, `npm run build`, каталог `dist`, Node 24+. Локальный Git пока без remote.
 
 Публичные build variables:
 
@@ -102,10 +102,10 @@ VITE_ENABLE_DEMO=false
 ```sh
 npm run build
 npx wrangler login
-npx wrangler pages project create replyfolio
-npx wrangler pages secret put GATEWAY_SECRET --project-name replyfolio
-npx wrangler pages secret put SUPABASE_URL --project-name replyfolio
-npx wrangler pages deploy dist --project-name replyfolio --branch main
+npx wrangler pages project create growththread
+npx wrangler pages secret put GATEWAY_SECRET --project-name growththread
+npx wrangler pages secret put SUPABASE_URL --project-name growththread
+npx wrangler pages deploy dist --project-name growththread --branch main
 ```
 
 Имя облачного проекта может отличаться; согласуйте его с `wrangler.toml`. После получения домена задайте APP_URL и Turnstile hostname, затем пересоберите с правильным site key. [Конфигурация Pages Functions](https://developers.cloudflare.com/pages/functions/wrangler-configuration/).

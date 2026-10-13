@@ -79,7 +79,7 @@ serve(async (req) => {
       body: JSON.stringify({
         from: env('EMAIL_FROM'),
         to: [email],
-        subject: 'Ваш код входа в ReplyFolio',
+        subject: 'Ваш код входа в GrowthThread',
         text:
           'Код входа: ' +
           data.properties.email_otp +
@@ -179,7 +179,7 @@ serve(async (req) => {
       }
       const enrolled = await s.client.auth.mfa.enroll({
         factorType: 'totp',
-        friendlyName: 'ReplyFolio',
+        friendlyName: 'GrowthThread',
       });
       if (enrolled.error || enrolled.data.type !== 'totp') throw new Error('MFA enrollment failed');
       trusted = enrolled.data.id;

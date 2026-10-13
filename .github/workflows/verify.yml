@@ -1,4 +1,4 @@
-name: Verify ReplyFolio
+name: Verify GrowthThread
 on:
   push:
   pull_request:

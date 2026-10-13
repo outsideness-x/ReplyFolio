@@ -289,7 +289,7 @@ function WorkspaceApp({ repo }: { repo: Repository }) {
               <ArrowUpRight size={16} />
             </button>
             <div className="sidebar-version">
-              REPLYFOLIO <span>v0.1</span>
+              GROWTHTHREAD <span>v0.1</span>
             </div>
           </div>
         </aside>
@@ -323,7 +323,7 @@ function WorkspaceApp({ repo }: { repo: Repository }) {
               >
                 {theme === 'light' ? <Moon size={17} /> : <Sun size={17} />}
               </button>
-              <span className="owner-avatar">RF</span>
+              <span className="owner-avatar">GT</span>
             </div>
           </header>
           {repo.mode === 'demo' && (
@@ -367,7 +367,7 @@ function WorkspaceApp({ repo }: { repo: Repository }) {
             )}
           </main>
           <footer className="app-footer">
-            <span>ReplyFolio · Диалоги и данные в одном пространстве</span>
+            <span>GrowthThread · Диалоги и данные в одном пространстве</span>
             {repo.mode === 'demo' && (
               <a href="/">
                 На главную

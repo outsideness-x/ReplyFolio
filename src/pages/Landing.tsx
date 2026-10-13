@@ -117,8 +117,8 @@ function LoginCard({
           будет место и вам.
         </h2>
         <p>
-          Сейчас ReplyFolio открыт для нашей команды. Этот email ещё не приглашён — присоединитесь к
-          листу ожидания.
+          Сейчас GrowthThread открыт для нашей команды. Этот email ещё не приглашён — присоединитесь
+          к листу ожидания.
         </p>
         <label className="waitlist-consent">
           <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
@@ -265,7 +265,7 @@ export function Landing({
     <div className="landing">
       <div className="landing-glow" aria-hidden="true" />
       <header className="landing-nav">
-        <a href="/" aria-label="ReplyFolio, главная">
+        <a href="/" aria-label="GrowthThread, главная">
           <Brand />
         </a>
         <nav>
@@ -285,19 +285,19 @@ export function Landing({
               <ChevronRight size={13} />
             </div>
             <h1>
-              Каждый диалог.
+              Каждый шаг.
               <br />
-              <span>Следующий шаг.</span>
+              <span>Общая картина.</span>
             </h1>
             <p>
-              Пусть хорошие разговоры продолжаются.
+              От первого интереса до возвращения в приложение.
               <br />
-              Материалы, ответы и заявки — в одном
-              <br className="desktop-break" /> спокойном рабочем пространстве.
+              Диалоги, аудитория и продукт — в одном
+              <br className="desktop-break" /> рабочем пространстве.
             </p>
             <div className="hero-caption">
               <span className="hero-line" />
-              <span>С вашим голосом.</span>
+              <span>Следите за ростом. Оставайтесь на связи.</span>
             </div>
             {demoAllowed && (
               <a className="demo-link" href="/?demo=1#/dashboard">
@@ -381,7 +381,7 @@ export function Landing({
                       <ArrowUpRight size={17} />
                     </div>
                     <small>
-                      ReplyFolio · 12:41 <CheckCheck size={11} />
+                      GrowthThread · 12:41 <CheckCheck size={11} />
                     </small>
                   </div>
                   <div className="mock-message-input">
@@ -443,7 +443,7 @@ export function Landing({
           <div className="showcase-foot">
             <span>
               <span />
-              REPLYFOLIO IN MOTION
+              GROWTHTHREAD IN MOTION
             </span>
             <p>Не заменяет внимание. Освобождает для него время.</p>
           </div>
@@ -496,7 +496,7 @@ export function Landing({
       <footer className="landing-footer">
         <Brand />
         <p>Место для разговоров, которые имеют значение.</p>
-        <span>© {new Date().getFullYear()} ReplyFolio</span>
+        <span>© {new Date().getFullYear()} GrowthThread</span>
       </footer>
     </div>
   );

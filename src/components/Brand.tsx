@@ -4,19 +4,17 @@ export function Brand() {
       <span className="brand-mark" aria-hidden="true">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
           <path
-            d="M5 5.75C5 4.78 5.78 4 6.75 4h10.5C18.22 4 19 4.78 19 5.75v9.5c0 .97-.78 1.75-1.75 1.75H9l-4 3V5.75Z"
-            fill="currentColor"
-          />
-          <path
-            d="M8.5 8h7M8.5 11h5"
-            stroke="var(--brand-cut,#17171c)"
-            strokeWidth="1.7"
+            d="M6 5.5h8.25a3.25 3.25 0 0 1 0 6.5h-4.5a3.25 3.25 0 0 0 0 6.5H18"
+            stroke="currentColor"
+            strokeWidth="2"
             strokeLinecap="round"
           />
+          <circle cx="6" cy="5.5" r="1.5" fill="currentColor" />
+          <circle cx="18" cy="18.5" r="1.5" fill="currentColor" />
         </svg>
       </span>
       <span>
-        ReplyFolio<span className="brand-period">.</span>
+        GrowthThread<span className="brand-period">.</span>
       </span>
     </div>
   );

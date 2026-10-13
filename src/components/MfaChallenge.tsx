@@ -35,7 +35,7 @@ export function MfaChallenge({ onDone }: { onDone: (state: AccessState) => void 
       <h2>{challenge?.enrollment ? 'Ваш второй ключ.' : 'Ещё один шаг.'}</h2>
       <p>
         {challenge?.enrollment
-          ? 'Добавьте ReplyFolio в приложение-аутентификатор. Этот шаг защищает вход даже при доступе к вашему email.'
+          ? 'Добавьте GrowthThread в приложение-аутентификатор. Этот шаг защищает вход даже при доступе к вашему email.'
           : 'Подтвердите вход кодом из вашего аутентификатора.'}
       </p>
       {!challenge ? (

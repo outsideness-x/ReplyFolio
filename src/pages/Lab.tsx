@@ -195,7 +195,7 @@ export function Lab() {
               <Avatar name={person?.name || 'Новый ученик'} size="small" />
               <div>
                 <strong>{person?.name || 'Новый ученик'}</strong>
-                <small>{c?.mode === 'human' ? 'Менеджер' : 'ReplyFolio · тестовый бот'}</small>
+                <small>{c?.mode === 'human' ? 'Менеджер' : 'GrowthThread · тестовый бот'}</small>
               </div>
               <MessageCircle size={18} />
             </div>
