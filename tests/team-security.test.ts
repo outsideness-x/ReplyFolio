@@ -284,6 +284,57 @@ describe('closed-team security in PostgreSQL', () => {
       ).rows[0].service_session_get,
     ).toBeNull();
   });
+  it('rejects a pending OAuth return after owner downgrade or factor replacement', async () => {
+    await db.exec('reset role');
+    const sid = '55555555-5555-4555-8555-555555555555';
+    await db.query(
+      "select public.service_session_create($1,'owner-check',$2,'mfa','sealed','agent',$3)",
+      [sid, owner, authSid],
+    );
+    await db.query(
+      "select public.service_session_update($1,'sealed','active','trusted',null,true)",
+      [sid],
+    );
+    for (const change of ['role', 'factor']) {
+      await db.query('select public.service_put_oauth_bound($1,$2,$3,$4,$5)', [
+        workspace,
+        owner,
+        sid,
+        change,
+        'proof',
+      ]);
+      if (change === 'role')
+        await db.query("update private.team_invites set role='manager' where claimed_user_id=$1", [
+          owner,
+        ]);
+      else
+        await db.query(
+          "update private.team_invites set trusted_factor_id='replacement' where claimed_user_id=$1",
+          [owner],
+        );
+      expect(
+        (
+          await db.query<{ service_take_oauth_bound: string | null }>(
+            'select public.service_take_oauth_bound($1,$2)',
+            [change, 'proof'],
+          )
+        ).rows[0].service_take_oauth_bound,
+      ).toBeNull();
+      await expect(
+        db.query('select public.service_put_oauth_bound($1,$2,$3,$4,$5)', [
+          workspace,
+          owner,
+          sid,
+          'new-' + change,
+          'proof',
+        ]),
+      ).rejects.toThrow(/OAuth access denied/);
+      await db.query(
+        "update private.team_invites set role='owner',trusted_factor_id='trusted' where claimed_user_id=$1",
+        [owner],
+      );
+    }
+  });
   it('revocation blocks an existing team identity immediately', async () => {
     await db.exec('reset role');
     await db.query('update private.team_invites set enabled=false where claimed_user_id=$1', [
