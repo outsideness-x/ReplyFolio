@@ -163,6 +163,9 @@ for (const width of [390, 768, 1440])
     page.on('pageerror', (e) => errors.push(e.message));
     for (const [route, title] of [
       ['dashboard', 'Обзор'],
+      ['app-analytics', 'Аналитика приложения'],
+      ['instagram-analytics', 'Аналитика Instagram'],
+      ['relationships', 'Взаимосвязи'],
       ['inbox', 'Диалоги'],
       ['flows', 'Сценарии'],
       ['materials', 'Материалы'],

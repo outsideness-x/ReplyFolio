@@ -3,14 +3,8 @@ import {
   BookOpen,
   ChevronRight,
   FlaskConical,
-  LayoutDashboard,
   LogOut,
   Menu,
-  MessagesSquare,
-  Search,
-  Settings,
-  Users,
-  Workflow,
   X,
   ArrowUpRight,
   CheckCircle2,
@@ -27,6 +21,8 @@ import type { Snapshot } from '../shared/types.ts';
 import { Brand } from './components/Brand.tsx';
 import { MfaChallenge } from './components/MfaChallenge.tsx';
 import { CommandPalette } from './components/CommandPalette.tsx';
+import { navigation as pages, navigationGroups } from './navigation.ts';
+import { AnalyticsPreview } from './pages/Analytics.tsx';
 import { Landing } from './pages/Landing.tsx';
 import { Dashboard } from './pages/Dashboard.tsx';
 import { Inbox } from './pages/Inbox.tsx';
@@ -36,15 +32,6 @@ import { Flows } from './pages/Flows.tsx';
 import { Lab } from './pages/Lab.tsx';
 import { Settings as SettingsPage } from './pages/Settings.tsx';
 import { Badge, Loading, Modal, UIContext, type Page } from './ui.tsx';
-const pages = [
-  { id: 'dashboard', title: 'Обзор', icon: LayoutDashboard },
-  { id: 'inbox', title: 'Диалоги', icon: MessagesSquare },
-  { id: 'flows', title: 'Сценарии', icon: Workflow },
-  { id: 'materials', title: 'Материалы', icon: BookOpen },
-  { id: 'leads', title: 'Заявки', icon: Users },
-  { id: 'lab', title: 'Симулятор', icon: FlaskConical },
-  { id: 'settings', title: 'Настройки', icon: Settings },
-] as const;
 function initialPage(): Page {
   const value = location.hash.replace('#/', '').split('?')[0];
   return pages.some((p) => p.id === value) ? (value as Page) : 'dashboard';
@@ -253,19 +240,29 @@ function WorkspaceApp({ repo }: { repo: Repository }) {
             </div>
             <ChevronRight size={15} />
           </button>
-          <div className="nav-label">УПРАВЛЕНИЕ</div>
-          <nav>
-            {pages.map((p) => (
-              <button
-                key={p.id}
-                className={`nav-item ${page === p.id ? 'active' : ''}`}
-                onClick={() => navigate(p.id)}
-              >
-                <p.icon size={19} />
-                <span>{p.title}</span>
-                {p.id === 'inbox' && unread > 0 && <span className="nav-count">{unread}</span>}
-                {p.id === 'lab' && <span className="nav-mini">TEST</span>}
-              </button>
+          <nav aria-label="Разделы рабочего пространства">
+            {navigationGroups.map((group) => (
+              <div className="nav-group" key={group.id}>
+                {group.label && <div className="nav-label">{group.label}</div>}
+                {pages
+                  .filter((p) => p.group === group.id)
+                  .map((p) => (
+                    <button
+                      key={p.id}
+                      className={`nav-item ${page === p.id ? 'active' : ''}`}
+                      aria-current={page === p.id ? 'page' : undefined}
+                      onClick={() => navigate(p.id)}
+                    >
+                      <p.icon size={19} />
+                      <span>{p.label || p.title}</span>
+                      {p.id === 'inbox' && unread > 0 && (
+                        <span className="nav-count">{unread}</span>
+                      )}
+                      {p.id === 'lab' && <span className="nav-mini">TEST</span>}
+                      {p.upcoming && <span className="nav-mini">Скоро</span>}
+                    </button>
+                  ))}
+              </div>
             ))}
           </nav>
           <div className="sidebar-bottom">
@@ -351,6 +348,10 @@ function WorkspaceApp({ repo }: { repo: Repository }) {
           <main className={`workspace-main ${page === 'inbox' ? 'inbox-main' : ''}`}>
             {page === 'dashboard' ? (
               <Dashboard />
+            ) : page === 'app-analytics' ||
+              page === 'instagram-analytics' ||
+              page === 'relationships' ? (
+              <AnalyticsPreview section={page} />
             ) : page === 'inbox' ? (
               <Inbox selectedId={selectedConversation} query={query} />
             ) : page === 'materials' ? (
@@ -366,7 +367,7 @@ function WorkspaceApp({ repo }: { repo: Repository }) {
             )}
           </main>
           <footer className="app-footer">
-            <span>ReplyFolio · Из Direct в заявку</span>
+            <span>ReplyFolio · Диалоги и данные в одном пространстве</span>
             {repo.mode === 'demo' && (
               <a href="/">
                 На главную

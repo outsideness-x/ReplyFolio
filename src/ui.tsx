@@ -2,7 +2,17 @@ import { createContext, useContext, useEffect, useRef, type ReactNode } from 're
 import { X, Inbox, LoaderCircle } from 'lucide-react';
 import type { Snapshot } from '../shared/types.ts';
 import type { Repository } from './data/repository.ts';
-export type Page = 'dashboard' | 'inbox' | 'flows' | 'materials' | 'leads' | 'lab' | 'settings';
+export type Page =
+  | 'dashboard'
+  | 'app-analytics'
+  | 'instagram-analytics'
+  | 'relationships'
+  | 'inbox'
+  | 'flows'
+  | 'materials'
+  | 'leads'
+  | 'lab'
+  | 'settings';
 export type UIContextValue = {
   data: Snapshot;
   repo: Repository;

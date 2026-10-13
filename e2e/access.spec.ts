@@ -80,6 +80,12 @@ test('theme and command search are functional while the welcome banner is absent
   await page.getByLabel('Быстрый поиск').fill('материалы');
   await page.keyboard.press('Enter');
   await expect(page.getByRole('heading', { name: 'Материалы', exact: true })).toBeVisible();
+  await page.keyboard.press('Control+k');
+  await page.getByLabel('Быстрый поиск').fill('d7');
+  await page.keyboard.press('Enter');
+  await expect(
+    page.getByRole('heading', { name: 'Аналитика приложения', exact: true }),
+  ).toBeVisible();
 });
 for (const width of [390, 768, 1440])
   test('landing composition fits viewport ' + width, async ({ page }) => {

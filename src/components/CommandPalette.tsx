@@ -1,15 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowUpRight, Command, Search, X } from 'lucide-react';
-import { Modal, useUI, type Page } from '../ui.tsx';
-const destinations: [Page, string][] = [
-  ['dashboard', 'Обзор'],
-  ['inbox', 'Диалоги'],
-  ['flows', 'Сценарии'],
-  ['materials', 'Материалы'],
-  ['leads', 'Заявки'],
-  ['lab', 'Симулятор'],
-  ['settings', 'Настройки'],
-];
+import { Modal, useUI } from '../ui.tsx';
+import { navigation } from '../navigation.ts';
 export function CommandPalette() {
   const { data, navigate, openInbox } = useUI(),
     [open, setOpen] = useState(false),
@@ -36,9 +28,14 @@ export function CommandPalette() {
   }, [open]);
   const normalized = query.trim().toLowerCase();
   const items = [
-    ...destinations
-      .filter(([, title]) => title.toLowerCase().includes(normalized))
-      .map(([page, title]) => ({ id: page, title, hint: 'Раздел', choose: () => navigate(page) })),
+    ...navigation
+      .filter((item) => [item.title, item.keywords].join(' ').toLowerCase().includes(normalized))
+      .map(({ id, title, upcoming }) => ({
+        id,
+        title,
+        hint: upcoming ? 'Раздел · Скоро' : 'Раздел',
+        choose: () => navigate(id),
+      })),
     ...(normalized
       ? data.contacts
           .filter((c) => [c.name, c.username, c.email].join(' ').toLowerCase().includes(normalized))
