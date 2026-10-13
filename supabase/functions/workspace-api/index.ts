@@ -57,7 +57,8 @@ async function save(
 }
 serve(async (req) => {
   if (req.method !== 'POST') throw new HttpError(405, 'Используйте POST.');
-  const body = await readJson(req),
+  // Keep the original body available for the gateway signature check in member().
+  const body = await readJson(req.clone()),
     ws = uuid(body.workspaceId),
     db = database(),
     membership = await member(req, db, ws);

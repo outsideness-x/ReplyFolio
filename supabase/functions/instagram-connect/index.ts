@@ -14,7 +14,8 @@ import { OAUTH_COOKIE, opaqueToken, secureCookie } from '../../../shared/securit
 import { recentMfa } from '../_shared/web-session.ts';
 serve(async (req) => {
   if (req.method !== 'POST') throw new HttpError(405, 'Используйте POST.');
-  const body = await readJson(req),
+  // Keep the original body available for the gateway signature check in member().
+  const body = await readJson(req.clone()),
     workspaceId = uuid(body.workspaceId),
     db = database();
   const membership = await member(req, db, workspaceId);
