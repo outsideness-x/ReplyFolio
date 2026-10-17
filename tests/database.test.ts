@@ -48,6 +48,12 @@ beforeAll(async () => {
       'utf8',
     ),
   );
+  await db.exec(
+    await readFile(
+      new URL('../supabase/migrations/202610170001_english_runs_reopen.sql', import.meta.url),
+      'utf8',
+    ),
+  );
   await asUser(userA);
   wsA = (await db.query<{ create_workspace: string }>("select public.create_workspace('Team A')"))
     .rows[0].create_workspace;
@@ -263,6 +269,78 @@ describe('real PostgreSQL permissions and queue transactions', () => {
         )
       ).rows[0],
     ).toMatchObject({ email: 'student@example.com', is_lead: true });
+  });
+  it('reopens a closed conversation when the customer writes again', async () => {
+    await db.exec('reset role');
+    const account = '33333333-3333-4333-8333-333333333333';
+    const c = (
+      await db.query<{ id: string }>('select id from public.conversations where workspace_id=$1', [
+        wsA,
+      ])
+    ).rows[0].id;
+    await db.query("update public.conversations set status='closed' where id=$1", [c]);
+    await db.query(
+      "select public.service_ingest($1,'200','hello again','reopen-mid','mid.reopen',$2,'dm')",
+      [account, new Date().toISOString()],
+    );
+    expect(
+      (
+        await db.query<{ status: string }>('select status from public.conversations where id=$1', [
+          c,
+        ])
+      ).rows[0].status,
+    ).toBe('open');
+  });
+  it('labels comment contacts and automation runs in English', async () => {
+    await db.exec('reset role');
+    const account = '33333333-3333-4333-8333-333333333333',
+      f = '44444444-4444-4444-8444-444444444444';
+    const ingested = (
+      await db.query<{ service_ingest: { conversation: { id: string } } }>(
+        "select public.service_ingest($1,'300','lesson','comment-key',null,$2,'comment')",
+        [account, new Date().toISOString()],
+      )
+    ).rows[0].service_ingest;
+    expect(
+      (
+        await db.query<{ source: string }>(
+          "select source from public.contacts where instagram_scoped_id='300'",
+        )
+      ).rows[0].source,
+    ).toBe('Comment');
+    expect(
+      (
+        await db.query<{ body: string }>(
+          "select body from public.messages where operation_key='incoming:comment-key'",
+        )
+      ).rows[0].body,
+    ).toBe('[Comment] lesson');
+    const apply = (key: string, result: object) =>
+      db.query('select public.service_apply_result($1,$2,$3,$4::jsonb)', [
+        ingested.conversation.id,
+        f,
+        key,
+        JSON.stringify({ variables: {}, tags: [], lead: false, handoff: false, ...result }),
+      ]);
+    await apply('english-one', { actions: [{ text: 'Hi', quickReplies: [] }], session: null });
+    await apply('english-note', { actions: [], session: null, note: 'Stopped after 3 replies' });
+    const runs = (
+      await db.query<{ operation_key: string; detail: string; contact_name: string }>(
+        "select operation_key,detail,contact_name from public.automation_runs where operation_key like 'english-%' order by operation_key",
+      )
+    ).rows;
+    expect(runs).toEqual([
+      {
+        operation_key: 'english-note',
+        detail: 'Stopped after 3 replies',
+        contact_name: 'Instagram user',
+      },
+      {
+        operation_key: 'english-one',
+        detail: '1 message prepared',
+        contact_name: 'Instagram user',
+      },
+    ]);
   });
   it('removes a deleted flow session so its old assets are no longer permanently locked', async () => {
     await db.exec('reset role');
