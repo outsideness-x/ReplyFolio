@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type InputHTMLAttributes } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
@@ -67,6 +67,38 @@ function freshNode(type: FlowNode['type'], id: string, next: string | null): Flo
     case 'end':
       return { ...base, type, next: null };
   }
+}
+function parseList(text: string): string[] {
+  return text
+    .split(',')
+    .map((x) => x.trim())
+    .filter(Boolean);
+}
+// Keeps the typed text so spaces and commas survive until the next item is complete.
+function ListInput({
+  value,
+  onChange,
+  ...props
+}: { value: string[]; onChange: (value: string[]) => void } & Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  'value' | 'onChange'
+>) {
+  const [raw, setRaw] = useState(value.join(', '));
+  useEffect(() => {
+    setRaw((current) =>
+      parseList(current).join('\n') === value.join('\n') ? current : value.join(', '),
+    );
+  }, [value]);
+  return (
+    <input
+      {...props}
+      value={raw}
+      onChange={(e) => {
+        setRaw(e.target.value);
+        onChange(parseList(e.target.value));
+      }}
+    />
+  );
 }
 function replaceTarget(n: FlowNode, old: string, next: string | null): FlowNode {
   if (n.type === 'choice')
@@ -576,11 +608,10 @@ function FlowEditor({ flow, onClose }: { flow: Flow; onClose: () => void }) {
               {draft.trigger_kind !== 'dm_any' && (
                 <label>
                   Keywords
-                  <input
-                    value={draft.keywords.join(', ')}
-                    onChange={(e) =>
-                      change({ ...draft, keywords: e.target.value.split(',').map((x) => x.trim()) })
-                    }
+                  <ListInput
+                    aria-label="Keywords"
+                    value={draft.keywords}
+                    onChange={(keywords) => change({ ...draft, keywords })}
                   />
                   <small>Separate with commas. Matching ignores case and punctuation.</small>
                 </label>
@@ -589,18 +620,11 @@ function FlowEditor({ flow, onClose }: { flow: Flow; onClose: () => void }) {
                 <>
                   <label>
                     Posts
-                    <input
-                      value={draft.post_ids.join(', ')}
-                      onChange={(e) =>
-                        change({
-                          ...draft,
-                          post_ids: e.target.value
-                            .split(',')
-                            .map((s) => s.trim())
-                            .filter(Boolean),
-                        })
-                      }
+                    <ListInput
+                      value={draft.post_ids}
+                      onChange={(post_ids) => change({ ...draft, post_ids })}
                       placeholder="Post IDs, separated by commas"
+                      inputMode="numeric"
                     />
                     <small>
                       Leave blank for all posts. You can get IDs through the Instagram API after
@@ -814,17 +838,13 @@ function FlowEditor({ flow, onClose }: { flow: Flow; onClose: () => void }) {
               {node.type === 'tag' && (
                 <label>
                   Tags
-                  <input
-                    value={node.tags.join(', ')}
-                    onChange={(e) =>
-                      patch({
-                        tags: e.target.value
-                          .split(',')
-                          .map((x) => x.trim())
-                          .filter(Boolean),
-                      })
-                    }
+                  <ListInput
+                    key={node.id}
+                    aria-label="Tags"
+                    value={node.tags}
+                    onChange={(tags) => patch({ tags })}
                   />
+                  <small>Separate with commas.</small>
                 </label>
               )}
               {node.type === 'lead' && (
