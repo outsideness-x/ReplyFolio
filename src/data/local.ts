@@ -2,6 +2,7 @@ import {
   assertMessage,
   canPrivateReply,
   canSend,
+  HANDOFF_REPLY,
   isHandoffCommand,
   isHttpsUrl,
   isStopCommand,
@@ -221,7 +222,7 @@ export class LocalRepository implements Repository {
       c.mode = 'human';
       delete this.state.sessions[c.id];
       if (isHandoffCommand(event.text) && canSend(c.window_expires_at, this.now()))
-        this.message(c, "I'm passing this conversation to our team.", 'out', 'bot');
+        this.message(c, HANDOFF_REPLY, 'out', 'bot');
       this.changed();
       return c.id;
     }

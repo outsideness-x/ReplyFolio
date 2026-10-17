@@ -19,7 +19,12 @@ import {
   X,
 } from 'lucide-react';
 import type { Flow, FlowNode, TriggerKind } from '../../shared/types.ts';
-import { DEFAULT_CAPTURE_RETRY, DEFAULT_CHOICE_RETRY, MAX_REMINDERS } from '../../shared/engine.ts';
+import {
+  DEFAULT_CAPTURE_RETRY,
+  DEFAULT_CHOICE_RETRY,
+  MAX_REMINDERS,
+  triggerConflicts,
+} from '../../shared/engine.ts';
 import { commentTemplate, materialTemplate } from '../../shared/templates.ts';
 import { Badge, Empty, Modal, useUI } from '../ui.tsx';
 const nodeTypes = [
@@ -327,7 +332,11 @@ function FlowEditor({ flow, onClose }: { flow: Flow; onClose: () => void }) {
     [showPalette, setShowPalette] = useState(false);
   const nodes = draft.definition.nodes,
     node = nodes.find((n) => n.id === selected),
-    index = nodes.findIndex((n) => n.id === selected);
+    index = nodes.findIndex((n) => n.id === selected),
+    conflicts = triggerConflicts(draft, data.flows),
+    winner = [...conflicts, draft].sort(
+      (a, b) => a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id),
+    )[0];
   useEffect(() => {
     function before(e: BeforeUnloadEvent) {
       if (dirty) {
@@ -621,6 +630,15 @@ function FlowEditor({ flow, onClose }: { flow: Flow; onClose: () => void }) {
                   />
                   <small>Separate with commas. Matching ignores case and punctuation.</small>
                 </label>
+              )}
+              {conflicts.length > 0 && (
+                <p className="inspector-note warning">
+                  {draft.trigger_kind === 'dm_any'
+                    ? 'Another flow also answers any message'
+                    : 'Shares keywords with'}{' '}
+                  {conflicts.map((f) => `“${f.name}”`).join(', ')}. Only the oldest flow runs
+                  {winner.id === draft.id ? ': this one.' : `: “${winner.name}”.`}
+                </p>
               )}
               {draft.trigger_kind === 'comment_keyword' && (
                 <>

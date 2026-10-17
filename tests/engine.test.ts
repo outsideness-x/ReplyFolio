@@ -9,6 +9,7 @@ import {
   routeEvent,
   runFlow,
   selectFlow,
+  triggerConflicts,
   validateDefinition,
   validateFlow,
   WINDOW_MS,
@@ -78,6 +79,17 @@ describe('Instagram rules and validation', () => {
     const comment = { ...flow(true), post_ids: ['123'] };
     expect(selectFlow([comment], 'comment', 'price', '124')).toBeUndefined();
     expect(selectFlow([comment], 'comment', 'price', '123')?.id).toBe('flow');
+  });
+});
+describe('trigger conflicts', () => {
+  it('finds enabled flows that would compete for the same keyword', () => {
+    const a = { ...flow(), id: 'a', keywords: ['Price!'] },
+      b = { ...flow(), id: 'b', keywords: ['price', 'cost'] },
+      off = { ...flow(), id: 'off', enabled: false },
+      comment = { ...flow(true), id: 'comment', keywords: ['price'] };
+    expect(triggerConflicts(a, [a, b, off, comment]).map((f) => f.id)).toEqual(['b']);
+    const any = { ...flow(), id: 'any', trigger_kind: 'dm_any' as const, keywords: [] };
+    expect(triggerConflicts({ ...any, id: 'any2' }, [any, a]).map((f) => f.id)).toEqual(['any']);
   });
 });
 describe('durable flow sessions', () => {

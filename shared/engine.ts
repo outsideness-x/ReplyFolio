@@ -17,6 +17,9 @@ export const PRIVATE_REPLY_MS = 7 * 24 * 60 * 60 * 1000;
 export const SESSION_TTL_MS = WINDOW_MS;
 // Reminders sent for one unrecognized question before the bot leaves it to the team.
 export const MAX_REMINDERS = 2;
+// Sent when a customer asks for a person ("team", "manager", "менеджер").
+export const HANDOFF_REPLY =
+  "I'm passing this conversation to our team. They'll continue chatting with you here.";
 export const DEFAULT_CHOICE_RETRY = 'Please choose one of the options.';
 export const DEFAULT_CAPTURE_RETRY = {
   email: 'Enter an email, such as name@example.com.',
@@ -92,6 +95,17 @@ export function selectFlow(
   return (
     active.find((f) => f.trigger_kind === 'dm_keyword' && matchesKeyword(text, f.keywords)) ??
     active.find((f) => f.trigger_kind === 'dm_any')
+  );
+}
+// Enabled flows that would compete with this one for the same message; the oldest wins.
+export function triggerConflicts(flow: Flow, flows: Flow[]): Flow[] {
+  const mine = new Set(flow.keywords.map(normalize).filter(Boolean));
+  return flows.filter(
+    (f) =>
+      f.id !== flow.id &&
+      f.enabled &&
+      f.trigger_kind === flow.trigger_kind &&
+      (flow.trigger_kind === 'dm_any' || f.keywords.some((k) => mine.has(normalize(k)))),
   );
 }
 export function sessionExpired(session: FlowSession, now = Date.now()): boolean {

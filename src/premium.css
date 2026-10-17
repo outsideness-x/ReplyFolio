@@ -890,6 +890,11 @@
   background: var(--accent-wash);
   border-color: #a9a9a91a;
 }
+.app-shell .inspector-note.warning {
+  border-color: #d9a40a40;
+  background: #d9a40a0f;
+  color: var(--ink);
+}
 .app-shell .option-editor {
   background: var(--canvas);
   border-color: var(--border);

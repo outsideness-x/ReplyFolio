@@ -2,6 +2,7 @@ import {
   assertMessage,
   canPrivateReply,
   canSend,
+  HANDOFF_REPLY,
   isHandoffCommand,
   isStopCommand,
   routeEvent,
@@ -159,7 +160,7 @@ async function eventJob(db: Database, event: MetaEvent): Promise<void> {
         await rpc(db, 'service_queue_message', {
           conversation: c.id,
           key: event.key + ':handoff',
-          body: "I'm passing this conversation to our team. They'll continue chatting with you here.",
+          body: HANDOFF_REPLY,
           replies: [],
           sender: 'bot',
           allow_handoff: true,
