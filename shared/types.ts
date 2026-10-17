@@ -76,6 +76,7 @@ export type Conversation = {
   last_message: string;
   last_message_at: string;
   unread_count: number;
+  any_flow_at?: string | null;
 };
 export type Message = {
   id: string;

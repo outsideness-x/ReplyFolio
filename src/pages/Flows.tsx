@@ -631,6 +631,12 @@ function FlowEditor({ flow, onClose }: { flow: Flow; onClose: () => void }) {
                   <small>Separate with commas. Matching ignores case and punctuation.</small>
                 </label>
               )}
+              {draft.trigger_kind === 'dm_any' && (
+                <p className="inspector-note">
+                  Answers a conversation at most once a day, so it never repeats after every
+                  message. Keywords always start their own flows.
+                </p>
+              )}
               {conflicts.length > 0 && (
                 <p className="inspector-note warning">
                   {draft.trigger_kind === 'dm_any'

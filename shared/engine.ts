@@ -15,6 +15,8 @@ export const WINDOW_MS = 24 * 60 * 60 * 1000;
 export const PRIVATE_REPLY_MS = 7 * 24 * 60 * 60 * 1000;
 // Unanswered questions expire with the messaging window; a comment reply may arrive later.
 export const SESSION_TTL_MS = WINDOW_MS;
+// An "any message" flow greets a conversation at most once in this period.
+export const ANY_FLOW_COOLDOWN_MS = WINDOW_MS;
 // Reminders sent for one unrecognized question before the bot leaves it to the team.
 export const MAX_REMINDERS = 2;
 // Sent when a customer asks for a person ("team", "manager", "менеджер").
@@ -147,11 +149,19 @@ export function routeEvent(
   session: FlowSession | null | undefined,
   event: InboundEvent,
   now = Date.now(),
+  // When an "any message" flow last ran in this conversation.
+  anyFlowAt?: string | null,
 ): Route {
   const active = flows.filter((f) => f.enabled),
     text = event.attachment ? '' : event.text,
+    cooling = !!anyFlowAt && now - Date.parse(anyFlowAt) < ANY_FLOW_COOLDOWN_MS,
     fresh = (discard: boolean): Route => ({
-      flow: selectFlow(active, event.kind, text, event.postId),
+      flow: selectFlow(
+        cooling ? active.filter((f) => f.trigger_kind !== 'dm_any') : active,
+        event.kind,
+        text,
+        event.postId,
+      ),
       session: null,
       discard,
     });

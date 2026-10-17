@@ -160,6 +160,7 @@ export class LocalRepository implements Repository {
     contact.is_lead ||= result.lead;
     contact.updated_at = new Date(this.now()).toISOString();
     if (result.handoff) c.mode = 'human';
+    if (f.trigger_kind === 'dm_any') c.any_flow_at = new Date(this.now()).toISOString();
     if (result.session) this.state.sessions[c.id] = result.session;
     else delete this.state.sessions[c.id];
     for (const action of result.actions)
@@ -232,6 +233,7 @@ export class LocalRepository implements Repository {
         this.state.sessions[c.id],
         event,
         this.now(),
+        c.any_flow_at,
       );
       const { flow, session } = route;
       if (!flow && route.discard) delete this.state.sessions[c.id];

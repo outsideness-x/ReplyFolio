@@ -179,13 +179,19 @@ async function eventJob(db: Database, event: MetaEvent): Promise<void> {
       .eq('workspace_id', a.workspace_id)
       .eq('enabled', true);
     if (flowError) throw new Retry();
-    const route = routeEvent(flows as Flow[], stored, {
-      kind: event.kind,
-      text: event.text,
-      payload: event.payload,
-      postId: event.postId,
-      attachment: event.attachment,
-    });
+    const route = routeEvent(
+      flows as Flow[],
+      stored,
+      {
+        kind: event.kind,
+        text: event.text,
+        payload: event.payload,
+        postId: event.postId,
+        attachment: event.attachment,
+      },
+      Date.now(),
+      c.any_flow_at,
+    );
     const { flow, session } = route;
     if (!flow) {
       if (route.discard) await rpc(db, 'service_clear_session', { conversation: c.id });

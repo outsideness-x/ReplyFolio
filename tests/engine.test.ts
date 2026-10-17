@@ -325,6 +325,20 @@ describe('routing an active conversation', () => {
       'pricing',
     );
   });
+  it('greets with an any-message flow at most once a day', () => {
+    const welcome = { ...flow(), id: 'welcome', trigger_kind: 'dm_any' as const, keywords: [] };
+    const recent = new Date(now - 60000).toISOString(),
+      old = new Date(now - WINDOW_MS).toISOString();
+    expect(routeEvent([welcome], null, { kind: 'dm', text: 'thanks' }, now, recent).flow).toBe(
+      undefined,
+    );
+    expect(routeEvent([welcome], null, { kind: 'dm', text: 'hi' }, now, old).flow?.id).toBe(
+      'welcome',
+    );
+    expect(
+      routeEvent([welcome, pricing()], null, { kind: 'dm', text: 'cost' }, now, recent).flow?.id,
+    ).toBe('pricing');
+  });
   it('sends a limited number of reminders and then leaves the question to the team', () => {
     const f = materials();
     let session = atChoice();

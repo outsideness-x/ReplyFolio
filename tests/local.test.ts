@@ -42,6 +42,33 @@ describe('local demonstration uses the production scenario engine', () => {
     expect(out.at(-1)?.body).toContain('Leave your email');
     expect(s.runs[0].flow_name).toBe('Pricing and consultation');
   });
+  it('does not repeat an any-message greeting after every message', async () => {
+    const f = fixture(),
+      s = await f.repo.load();
+    await f.repo.saveFlow({
+      ...s.flows[0],
+      id: 'welcome',
+      name: 'Welcome',
+      trigger_kind: 'dm_any',
+      keywords: [],
+      definition: {
+        version: 1,
+        start: 'hi',
+        nodes: [{ id: 'hi', type: 'send', text: 'Welcome!', next: null }],
+      },
+    });
+    const id = await f.repo.simulate({ kind: 'dm', text: 'hello' }),
+      contactId = (await f.repo.load()).conversations.find((c) => c.id === id)!.contact_id;
+    await f.repo.simulate({ kind: 'dm', text: 'thanks', contactId });
+    const greetings = () =>
+      f.repo
+        .load()
+        .then((x) => x.messages.filter((m) => m.conversation_id === id && m.body === 'Welcome!'));
+    expect(await greetings()).toHaveLength(1);
+    f.advance(24 * 3600000);
+    await f.repo.simulate({ kind: 'dm', text: 'hello again', contactId });
+    expect(await greetings()).toHaveLength(2);
+  });
   it('does not open a normal window from a comment', async () => {
     const { repo } = fixture(),
       id = await repo.simulate({ kind: 'comment', text: 'lesson' }),

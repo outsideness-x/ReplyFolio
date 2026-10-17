@@ -54,6 +54,12 @@ beforeAll(async () => {
       'utf8',
     ),
   );
+  await db.exec(
+    await readFile(
+      new URL('../supabase/migrations/202610170002_any_flow_cooldown.sql', import.meta.url),
+      'utf8',
+    ),
+  );
   await asUser(userA);
   wsA = (await db.query<{ create_workspace: string }>("select public.create_workspace('Team A')"))
     .rows[0].create_workspace;
@@ -341,6 +347,40 @@ describe('real PostgreSQL permissions and queue transactions', () => {
         contact_name: 'Instagram user',
       },
     ]);
+  });
+  it('remembers when an any-message flow last answered a conversation', async () => {
+    await db.exec('reset role');
+    const f = '77777777-7777-4777-8777-777777777777';
+    await db.query(
+      "insert into public.flows(id,workspace_id,name,trigger_kind,definition) values($1,$2,'Welcome','dm_any','{}')",
+      [f, wsA],
+    );
+    const c = (
+      await db.query<{ id: string }>('select id from public.conversations where workspace_id=$1', [
+        wsA,
+      ])
+    ).rows[0].id;
+    await db.query('select public.service_apply_result($1,$2,$3,$4::jsonb)', [
+      c,
+      f,
+      'welcome-once',
+      JSON.stringify({
+        actions: [],
+        variables: {},
+        tags: [],
+        lead: false,
+        handoff: false,
+        session: null,
+      }),
+    ]);
+    expect(
+      (
+        await db.query<{ any_flow_at: string | null }>(
+          'select any_flow_at from public.conversations where id=$1',
+          [c],
+        )
+      ).rows[0].any_flow_at,
+    ).not.toBeNull();
   });
   it('removes a deleted flow session so its old assets are no longer permanently locked', async () => {
     await db.exec('reset role');
