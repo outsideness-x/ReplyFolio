@@ -139,8 +139,9 @@ export function Avatar({ name, size = 'normal' }: { name: string; size?: 'normal
       .trim()
       .split(/\s+/)
       .slice(0, 2)
-      .map((x) => x[0])
-      .join('') || '?';
+      .map((x) => [...x][0])
+      .join('')
+      .toLocaleUpperCase() || '?';
   return <span className={`avatar ${size}`}>{letters}</span>;
 }
 export function time(value: string) {
@@ -149,6 +150,16 @@ export function time(value: string) {
     minute: '2-digit',
     timeZone: 'Europe/Minsk',
   }).format(new Date(value));
+}
+const dayFormat = new Intl.DateTimeFormat('en-CA', {
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  timeZone: 'Europe/Minsk',
+});
+// Calendar day in the workspace time zone, as YYYY-MM-DD.
+export function dayKey(value: string | number | Date) {
+  return dayFormat.format(new Date(value));
 }
 export function day(value: string) {
   return new Intl.DateTimeFormat('en-GB', {

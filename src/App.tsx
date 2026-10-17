@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   BookOpen,
   ChevronRight,
@@ -103,14 +103,31 @@ function WorkspaceApp({ repo }: { repo: Repository }) {
     [mobile, setMobile] = useState(false),
     [query, setQuery] = useState(''),
     [selectedConversation, setSelectedConversation] = useState<string | null>(null);
+  const current = useRef(page);
+  current.current = page;
   const navigate = (value: Page) => {
     if (!window.dispatchEvent(new Event('replyfolio:navigate', { cancelable: true }))) return;
+    current.current = value;
     location.hash = '/' + value;
     setPage(value);
     setMobile(false);
   };
   useEffect(() => {
-    const fn = () => setPage(initialPage());
+    // Browser back and forward ask the same unsaved-changes question as the sidebar.
+    const fn = () => {
+      const next = initialPage();
+      if (next === current.current) return;
+      if (!window.dispatchEvent(new Event('replyfolio:navigate', { cancelable: true }))) {
+        history.replaceState(
+          null,
+          '',
+          location.pathname + location.search + '#/' + current.current,
+        );
+        return;
+      }
+      current.current = next;
+      setPage(next);
+    };
     window.addEventListener('hashchange', fn);
     return () => window.removeEventListener('hashchange', fn);
   }, []);
@@ -276,16 +293,18 @@ function WorkspaceApp({ repo }: { repo: Repository }) {
                     : 'Instagram not connected'}
               </span>
             </div>
-            <button className="help-card" onClick={() => navigate('settings')}>
-              <span className="help-icon">
-                <BookOpen size={18} />
-              </span>
-              <div>
-                <strong>Ready to connect Instagram?</strong>
-                <small>Step-by-step setup</small>
-              </div>
-              <ArrowUpRight size={16} />
-            </button>
+            {data.account?.status !== 'connected' && (
+              <button className="help-card" onClick={() => navigate('settings')}>
+                <span className="help-icon">
+                  <BookOpen size={18} />
+                </span>
+                <div>
+                  <strong>Ready to connect Instagram?</strong>
+                  <small>Step-by-step setup</small>
+                </div>
+                <ArrowUpRight size={16} />
+              </button>
+            )}
             <div className="sidebar-version">
               GROWTHTHREAD <span>v0.1</span>
             </div>

@@ -132,6 +132,20 @@ test('unsaved flow edits are protected when switching sections', async ({ page }
   await page.getByRole('button', { name: 'Materials', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Materials', exact: true })).toBeVisible();
 });
+test('browser back asks before discarding unsaved flow edits', async ({ page }) => {
+  await open(page, 'dashboard');
+  await page.getByRole('button', { name: 'Flows', exact: true }).click();
+  await page
+    .locator('.flow-card')
+    .first()
+    .getByRole('button', { name: 'Open', exact: true })
+    .click();
+  await page.getByLabel('Block text').fill('Keep our changes');
+  page.once('dialog', (dialog) => dialog.dismiss());
+  await page.goBack();
+  await expect(page.getByLabel('Block text')).toHaveValue('Keep our changes');
+  await expect(page).toHaveURL(/#\/flows$/);
+});
 test('new comment flow can be configured and enabled on a phone', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await open(page, 'flows');

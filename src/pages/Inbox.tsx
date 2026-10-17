@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import {
   Check,
   Clock3,
@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { canSend, isHttpsUrl } from '../../shared/engine.ts';
 import type { Contact } from '../../shared/types.ts';
-import { Avatar, Badge, day, Empty, leadLabels, time, useUI } from '../ui.tsx';
+import { Avatar, Badge, day, dayKey, Empty, leadLabels, time, useUI } from '../ui.tsx';
 import { ContactEditor } from '../components/ContactEditor.tsx';
 function Body({ text }: { text: string }) {
   return (
@@ -214,62 +214,66 @@ export function Inbox({
                 </span>
               </div>
               <div className="messages">
-                <div className="chat-day">{day(conversation.last_message_at)}</div>
                 {messages.map((m, i) => (
-                  <div className={`message-row ${m.direction}`} key={m.id}>
-                    <div className="message">
-                      <div className="message-body">
-                        <Body text={m.body} />
-                      </div>
-                      {m.quick_replies?.length ? (
-                        <div className="quick-replies">
-                          {m.quick_replies.map((q) => (
-                            <button
-                              key={q.payload}
-                              disabled={repo.mode !== 'demo' || busy || i !== messages.length - 1}
-                              title={
-                                repo.mode === 'demo'
-                                  ? 'Reply as the test learner'
-                                  : "Button in the customer's message"
-                              }
-                              onClick={() =>
-                                void perform(() =>
-                                  repo.simulate!({
-                                    kind: 'dm',
-                                    text: q.title,
-                                    payload: q.payload,
-                                    contactId: contact.id,
-                                  }),
-                                )
-                              }
-                            >
-                              {q.title}
-                            </button>
-                          ))}
+                  <Fragment key={m.id}>
+                    {(i === 0 || dayKey(messages[i - 1].created_at) !== dayKey(m.created_at)) && (
+                      <div className="chat-day">{day(m.created_at)}</div>
+                    )}
+                    <div className={`message-row ${m.direction}`}>
+                      <div className="message">
+                        <div className="message-body">
+                          <Body text={m.body} />
                         </div>
-                      ) : null}
-                      <div className="message-meta">
-                        <span>
-                          {m.source === 'bot' ? 'Flow' : m.source === 'operator' ? 'Team' : ''}
-                        </span>
-                        <time>{time(m.created_at)}</time>
-                        {m.direction === 'out' && (
+                        {m.quick_replies?.length ? (
+                          <div className="quick-replies">
+                            {m.quick_replies.map((q) => (
+                              <button
+                                key={q.payload}
+                                disabled={repo.mode !== 'demo' || busy || i !== messages.length - 1}
+                                title={
+                                  repo.mode === 'demo'
+                                    ? 'Reply as the test learner'
+                                    : "Button in the customer's message"
+                                }
+                                onClick={() =>
+                                  void perform(() =>
+                                    repo.simulate!({
+                                      kind: 'dm',
+                                      text: q.title,
+                                      payload: q.payload,
+                                      contactId: contact.id,
+                                    }),
+                                  )
+                                }
+                              >
+                                {q.title}
+                              </button>
+                            ))}
+                          </div>
+                        ) : null}
+                        <div className="message-meta">
                           <span>
-                            {m.status === 'accepted' ? (
-                              <Check size={12} />
-                            ) : m.status === 'queued' ? (
-                              <Clock3 size={12} />
-                            ) : (
-                              <span className="message-error-status">
-                                {m.status === 'uncertain' ? 'Unconfirmed' : 'Error'}
-                              </span>
-                            )}
+                            {m.source === 'bot' ? 'Flow' : m.source === 'operator' ? 'Team' : ''}
                           </span>
-                        )}
+                          <time>{time(m.created_at)}</time>
+                          {m.direction === 'out' && (
+                            <span>
+                              {m.status === 'accepted' ? (
+                                <Check size={12} />
+                              ) : m.status === 'queued' ? (
+                                <Clock3 size={12} />
+                              ) : (
+                                <span className="message-error-status">
+                                  {m.status === 'uncertain' ? 'Unconfirmed' : 'Error'}
+                                </span>
+                              )}
+                            </span>
+                          )}
+                        </div>
+                        {m.error && <small className="message-error">{m.error}</small>}
                       </div>
-                      {m.error && <small className="message-error">{m.error}</small>}
                     </div>
-                  </div>
+                  </Fragment>
                 ))}
                 <div ref={bottom} />
               </div>
