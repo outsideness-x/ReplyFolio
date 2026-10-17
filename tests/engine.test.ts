@@ -4,7 +4,9 @@ import {
   canPrivateReply,
   canSend,
   matchesKeyword,
+  MAX_REMINDERS,
   normalize,
+  routeEvent,
   runFlow,
   selectFlow,
   validateDefinition,
@@ -188,5 +190,158 @@ describe('durable flow sessions', () => {
       ],
     });
     expect(result.actions[0].text).toContain('https://example.com/lesson');
+  });
+});
+describe('routing an active conversation', () => {
+  const pricing = (): Flow => ({
+    ...flow(),
+    id: 'pricing',
+    keywords: ['pricing', 'cost'],
+    created_at: new Date(now + 1).toISOString(),
+  });
+  const materials = (): Flow => ({ ...flow(), keywords: ['materials'] });
+  const atChoice = () => runFlow(materials(), { now }).session!;
+  const atCapture = (field: 'email' | 'name') => {
+    const f = materials();
+    const node = f.definition.nodes.find((n) => n.id === 'email');
+    if (node?.type !== 'capture') throw new Error('fixture');
+    node.field = field;
+    const session = runFlow(f, { now }).session!;
+    return { f, session: runFlow(f, { session, input: { text: 'Course pricing' }, now }).session! };
+  };
+  it('starts another flow when its keyword replaces an answer', () => {
+    const route = routeEvent(
+      [materials(), pricing()],
+      atChoice(),
+      {
+        kind: 'dm',
+        text: 'What is the cost?',
+      },
+      now,
+    );
+    expect(route.flow?.id).toBe('pricing');
+    expect(route.session).toBeNull();
+    expect(route.discard).toBe(true);
+  });
+  it('keeps the current question when the answer itself contains a keyword', () => {
+    const choice = routeEvent(
+      [materials(), pricing()],
+      atChoice(),
+      {
+        kind: 'dm',
+        text: 'Course pricing',
+      },
+      now,
+    );
+    expect(choice.flow?.id).toBe('flow');
+    expect(choice.session?.nodeId).toBe('interest');
+    const { f, session } = atCapture('email');
+    const email = routeEvent(
+      [f, pricing()],
+      session,
+      {
+        kind: 'dm',
+        text: 'anna.cost@example.com',
+      },
+      now,
+    );
+    expect(email.flow?.id).toBe('flow');
+    expect(email.session?.waiting).toBe('capture');
+  });
+  it('treats a keyword as a request rather than a typed name', () => {
+    const { f, session } = atCapture('name');
+    expect(routeEvent([f, pricing()], session, { kind: 'dm', text: 'cost' }, now).flow?.id).toBe(
+      'pricing',
+    );
+  });
+  it('forgets unanswered questions after the messaging window', () => {
+    const route = routeEvent(
+      [materials(), pricing()],
+      atChoice(),
+      {
+        kind: 'dm',
+        text: 'hello again',
+      },
+      now + WINDOW_MS,
+    );
+    expect(route.flow).toBeUndefined();
+    expect(route.discard).toBe(true);
+  });
+  it('continues a comment flow when the reply arrives days later', () => {
+    const comment = flow(true),
+      session = runFlow(comment, { privateReply: true, now }).session!;
+    const route = routeEvent(
+      [comment, pricing()],
+      session,
+      {
+        kind: 'dm',
+        text: 'pricing',
+      },
+      now + 3 * WINDOW_MS,
+    );
+    expect(route.flow?.id).toBe('flow');
+    expect(route.session?.waiting).toBe('reply');
+  });
+  it('drops a session whose flow was disabled and ignores comments during a live flow', () => {
+    const disabled = { ...materials(), enabled: false };
+    expect(routeEvent([disabled], atChoice(), { kind: 'dm', text: 'x' }, now)).toEqual({
+      flow: undefined,
+      session: null,
+      discard: true,
+    });
+    const comment = { ...flow(true), id: 'comment' };
+    expect(
+      routeEvent([materials(), comment], atChoice(), { kind: 'comment', text: 'lesson' }, now),
+    ).toEqual({ session: null, discard: false });
+  });
+  it('lets a delay resume on schedule unless a keyword starts a new flow', () => {
+    const f = materials();
+    f.definition = {
+      version: 1,
+      start: 'wait',
+      nodes: [
+        { id: 'wait', type: 'delay', minutes: 30, next: 'send' },
+        { id: 'send', type: 'send', text: 'Done', next: null },
+      ],
+    };
+    const session = runFlow(f, { now }).session!;
+    expect(routeEvent([f, pricing()], session, { kind: 'dm', text: 'thanks' }, now)).toEqual({
+      session: null,
+      discard: false,
+    });
+    expect(routeEvent([f, pricing()], session, { kind: 'dm', text: 'cost' }, now).flow?.id).toBe(
+      'pricing',
+    );
+  });
+  it('sends a limited number of reminders and then leaves the question to the team', () => {
+    const f = materials();
+    let session = atChoice();
+    for (let i = 1; i <= MAX_REMINDERS; i++) {
+      const reminder = runFlow(f, { session, input: { text: 'when does it start?' }, now });
+      expect(reminder.actions[0].text).toBe('Please choose one of the options.');
+      expect(reminder.actions[0].quickReplies).toHaveLength(2);
+      session = reminder.session!;
+      expect(session.retries).toBe(i);
+    }
+    const stopped = runFlow(f, { session, input: { text: 'hello?' }, now });
+    expect(stopped.actions).toHaveLength(0);
+    expect(stopped.session).toBeNull();
+    expect(stopped.note).toBe(`Stopped after ${MAX_REMINDERS + 1} unrecognized replies`);
+    const answered = runFlow(f, { session, input: { text: 'Learning resources' }, now });
+    expect(answered.session?.retries).toBeUndefined();
+  });
+  it('uses a custom reminder and never captures an attachment', () => {
+    const { f, session } = atCapture('name');
+    const node = session.definition!.nodes.find((n) => n.id === 'email');
+    if (node?.type !== 'capture') throw new Error('fixture');
+    node.retry = 'Напишите, пожалуйста, ваше имя.';
+    const result = runFlow(f, { session, input: { text: 'Attachment', attachment: true }, now });
+    expect(result.variables.name).toBeUndefined();
+    expect(result.actions[0].text).toBe('Напишите, пожалуйста, ваше имя.');
+    const long = materials();
+    const choice = long.definition.nodes.find((n) => n.type === 'choice');
+    if (choice?.type !== 'choice') throw new Error('fixture');
+    choice.retry = 'я'.repeat(501);
+    expect(() => validateFlow(long)).toThrow('reminder');
   });
 });

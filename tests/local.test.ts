@@ -32,6 +32,16 @@ describe('local demonstration uses the production scenario engine', () => {
       is_lead: true,
     });
   });
+  it('starts another flow when a keyword arrives instead of an answer', async () => {
+    const { repo } = fixture(),
+      id = await repo.simulate({ kind: 'dm', text: 'materials' }),
+      contactId = (await repo.load()).conversations.find((c) => c.id === id)!.contact_id;
+    await repo.simulate({ kind: 'dm', text: 'What is the price?', contactId });
+    const s = await repo.load(),
+      out = s.messages.filter((m) => m.conversation_id === id && m.direction === 'out');
+    expect(out.at(-1)?.body).toContain('Leave your email');
+    expect(s.runs[0].flow_name).toBe('Pricing and consultation');
+  });
   it('does not open a normal window from a comment', async () => {
     const { repo } = fixture(),
       id = await repo.simulate({ kind: 'comment', text: 'lesson' }),

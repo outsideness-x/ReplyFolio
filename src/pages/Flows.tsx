@@ -19,6 +19,7 @@ import {
   X,
 } from 'lucide-react';
 import type { Flow, FlowNode, TriggerKind } from '../../shared/types.ts';
+import { DEFAULT_CAPTURE_RETRY, DEFAULT_CHOICE_RETRY, MAX_REMINDERS } from '../../shared/engine.ts';
 import { commentTemplate, materialTemplate } from '../../shared/templates.ts';
 import { Badge, Empty, Modal, useUI } from '../ui.tsx';
 const nodeTypes = [
@@ -774,6 +775,27 @@ function FlowEditor({ flow, onClose }: { flow: Flow; onClose: () => void }) {
                     Add an option
                   </button>
                 </>
+              )}
+              {(node.type === 'choice' || node.type === 'capture') && (
+                <label>
+                  Reminder
+                  <textarea
+                    aria-label="Reminder text"
+                    value={node.retry ?? ''}
+                    placeholder={
+                      node.type === 'choice'
+                        ? DEFAULT_CHOICE_RETRY
+                        : DEFAULT_CAPTURE_RETRY[node.field]
+                    }
+                    onChange={(e) => patch({ retry: e.target.value || undefined })}
+                    rows={2}
+                  />
+                  <small>
+                    Sent when the reply isn't recognized, up to {MAX_REMINDERS} times. Then the bot
+                    stops and the conversation waits for your team. Another flow's keyword starts
+                    that flow.
+                  </small>
+                </label>
               )}
               {node.type === 'condition' && (
                 <>

@@ -4,8 +4,8 @@ import {
   canSend,
   isHandoffCommand,
   isStopCommand,
+  routeEvent,
   runFlow,
-  selectFlow,
 } from '../../../shared/engine.ts';
 import { constantTimeEqual, type MetaEvent } from '../../../shared/meta-events.ts';
 import type {
@@ -120,26 +120,25 @@ async function eventJob(db: Database, event: MetaEvent): Promise<void> {
     if (c.mode === 'human' || a.status !== 'connected') return;
     if (event.kind === 'dm' && !canSend(c.window_expires_at)) return;
     if (event.kind === 'comment' && !canPrivateReply(event.at)) return;
-    const session = await rpc<FlowSession | null>(db, 'service_get_session', {
+    const stored = await rpc<FlowSession | null>(db, 'service_get_session', {
       conversation: c.id,
     });
-    if (event.kind === 'comment' && session) return;
     const { data: flows, error: flowError } = await db
       .from('flows')
       .select('*')
       .eq('workspace_id', a.workspace_id)
       .eq('enabled', true);
     if (flowError) throw new Retry();
-    const flow = session
-      ? (flows as Flow[]).find((f) => f.id === session.flowId)
-      : selectFlow(
-          flows as Flow[],
-          event.kind === 'comment' ? 'comment' : 'dm',
-          event.text,
-          event.postId,
-        );
+    const route = routeEvent(flows as Flow[], stored, {
+      kind: event.kind,
+      text: event.text,
+      payload: event.payload,
+      postId: event.postId,
+      attachment: event.attachment,
+    });
+    const { flow, session } = route;
     if (!flow) {
-      if (session) await rpc(db, 'service_clear_session', { conversation: c.id });
+      if (route.discard) await rpc(db, 'service_clear_session', { conversation: c.id });
       return;
     }
     const { data: materials, error: materialError } = await db
@@ -149,7 +148,9 @@ async function eventJob(db: Database, event: MetaEvent): Promise<void> {
     if (materialError) throw new Retry();
     const result = runFlow(flow, {
       session,
-      input: session ? { text: event.text, payload: event.payload } : undefined,
+      input: session
+        ? { text: event.text, payload: event.payload, attachment: event.attachment }
+        : undefined,
       materials: materials as Material[],
       variables: {
         name: contact.name,

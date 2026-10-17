@@ -5,6 +5,7 @@ import type {
   FlowDefinition,
   FlowNode,
   FlowSession,
+  InboundEvent,
   Material,
   SendAction,
 } from './types.ts';
@@ -12,6 +13,16 @@ import type {
 export const MESSAGE_BYTE_LIMIT = 1000;
 export const WINDOW_MS = 24 * 60 * 60 * 1000;
 export const PRIVATE_REPLY_MS = 7 * 24 * 60 * 60 * 1000;
+// Unanswered questions expire with the messaging window; a comment reply may arrive later.
+export const SESSION_TTL_MS = WINDOW_MS;
+// Reminders sent for one unrecognized question before the bot leaves it to the team.
+export const MAX_REMINDERS = 2;
+export const DEFAULT_CHOICE_RETRY = 'Please choose one of the options.';
+export const DEFAULT_CAPTURE_RETRY = {
+  email: 'Enter an email, such as name@example.com.',
+  phone: 'Enter a phone number with a country code, such as +375291234567.',
+  name: 'Enter a name between 2 and 120 characters.',
+} as const;
 export function normalize(value: string): string {
   return value
     .normalize('NFKC')
@@ -83,6 +94,73 @@ export function selectFlow(
     active.find((f) => f.trigger_kind === 'dm_any')
   );
 }
+export function sessionExpired(session: FlowSession, now = Date.now()): boolean {
+  if (!session.at) return false;
+  const age = now - Date.parse(session.at);
+  return (
+    !Number.isFinite(age) ||
+    age >= (session.waiting === 'reply' ? PRIVATE_REPLY_MS : SESSION_TTL_MS)
+  );
+}
+function answersQuestion(session: FlowSession, event: InboundEvent): boolean {
+  if (event.attachment) return false;
+  const node = session.definition?.nodes.find((n) => n.id === session.nodeId);
+  if (session.waiting === 'choice' && node?.type === 'choice')
+    return node.options.some(
+      (o) =>
+        event.payload === `rf:${node.id}:${o.id}` || normalize(o.label) === normalize(event.text),
+    );
+  // A typed name cannot be told apart from a request, so a keyword wins over a name.
+  if (session.waiting === 'capture' && node?.type === 'capture')
+    return node.field !== 'name' && capture(node.field, event.text) !== null;
+  return false;
+}
+export type Route = {
+  // The flow to run now, if any.
+  flow?: Flow;
+  // The session to continue, or null to start the flow from its first block.
+  session: FlowSession | null;
+  // Whether the stored session must be removed even when no flow runs.
+  discard: boolean;
+};
+/**
+ * Decides which flow answers an inbound event. An active flow keeps the conversation
+ * unless it expired, was disabled, or the customer sends another flow's keyword
+ * instead of answering the current question.
+ */
+export function routeEvent(
+  flows: Flow[],
+  session: FlowSession | null | undefined,
+  event: InboundEvent,
+  now = Date.now(),
+): Route {
+  const active = flows.filter((f) => f.enabled),
+    text = event.attachment ? '' : event.text,
+    fresh = (discard: boolean): Route => ({
+      flow: selectFlow(active, event.kind, text, event.postId),
+      session: null,
+      discard,
+    });
+  if (!session) return fresh(false);
+  const live = !sessionExpired(session, now),
+    current = active.find((f) => f.id === session.flowId);
+  if (event.kind === 'comment')
+    return live && current ? { session: null, discard: false } : fresh(true);
+  if (!live || !current) return fresh(true);
+  if (session.waiting === 'reply') return { flow: current, session, discard: false };
+  const keyword = active.find(
+    (f) => f.trigger_kind === 'dm_keyword' && matchesKeyword(text, f.keywords),
+  );
+  if (keyword && !answersQuestion(session, event))
+    return { flow: keyword, session: null, discard: true };
+  // A scheduled delay resumes on its own; other messages wait for the team.
+  if (session.waiting === 'delay') return { session: null, discard: false };
+  return { flow: current, session, discard: false };
+}
+function assertReminder(value: unknown): void {
+  if (value !== undefined && (typeof value !== 'string' || (value.trim() && !validMessage(value))))
+    throw new Error('The reminder must be up to 1000 UTF-8 bytes.');
+}
 function pointers(node: FlowNode): (string | null)[] {
   if (node.type === 'end' || node.type === 'handoff') return [];
   if (node.type === 'condition') return [node.yes, node.no];
@@ -116,6 +194,7 @@ export function validateDefinition(
         assertMessage(node.text);
         if (!Array.isArray(node.options) || node.options.length < 1 || node.options.length > 13)
           throw new Error('Add between 1 and 13 quick replies.');
+        assertReminder(node.retry);
         const optionIds = new Set<string>();
         for (const o of node.options) {
           if (
@@ -137,6 +216,7 @@ export function validateDefinition(
         if (!['name', 'email', 'phone'].includes(node.field) || typeof node.text !== 'string')
           throw new Error('Choose a contact field and enter a question.');
         assertMessage(node.text);
+        assertReminder(node.retry);
         break;
       case 'condition':
         if (
@@ -221,7 +301,7 @@ export function runFlow(
   flow: Flow,
   args: {
     session?: FlowSession | null;
-    input?: { text: string; payload?: string };
+    input?: { text: string; payload?: string; attachment?: boolean };
     variables?: Record<string, string>;
     materials?: Material[];
     now?: number;
@@ -236,7 +316,9 @@ export function runFlow(
   const variables = { ...(args.variables ?? {}), ...(old?.variables ?? {}) };
   const tags = [...(old?.tags ?? [])];
   let lead = old?.lead ?? false,
-    handoff = false;
+    handoff = false,
+    retries = 0,
+    note: string | undefined;
   let cursor: string | null = old?.nodeId ?? definition.start;
   const actions: SendAction[] = [];
   const result = (
@@ -248,8 +330,20 @@ export function runFlow(
     tags,
     lead,
     handoff,
+    ...(note ? { note } : {}),
     session: cursor
-      ? { flowId: flow.id, nodeId: cursor, waiting, resumeAt, variables, tags, lead, definition }
+      ? {
+          flowId: flow.id,
+          nodeId: cursor,
+          waiting,
+          resumeAt,
+          variables,
+          tags,
+          lead,
+          definition,
+          at: new Date(now).toISOString(),
+          ...(retries ? { retries } : {}),
+        }
       : null,
   });
   const send = (
@@ -264,41 +358,54 @@ export function runFlow(
   if (old?.waiting === 'delay' && old.resumeAt && Date.parse(old.resumeAt) > now)
     return result('delay', old.resumeAt);
   if (old?.waiting === 'reply' && !args.input) return result('reply');
+  // Repeats an unrecognized question a limited number of times, then stops quietly.
+  const remind = (
+    waiting: 'choice' | 'capture',
+    nodeId: string,
+    text: string,
+    quickReplies: SendAction['quickReplies'] = [],
+  ): EngineResult => {
+    const attempt = (old?.retries ?? 0) + 1;
+    if (attempt > MAX_REMINDERS) {
+      cursor = null;
+      note = `Stopped after ${attempt} unrecognized replies`;
+      return result();
+    }
+    retries = attempt;
+    send(nodeId, text, quickReplies);
+    return result(waiting);
+  };
   if ((old?.waiting === 'choice' || old?.waiting === 'capture') && args.input) {
-    const node = definition.nodes.find((n) => n.id === cursor);
+    const input = args.input,
+      node = definition.nodes.find((n) => n.id === cursor);
     if (node?.type === 'choice') {
-      const option = node.options.find(
-        (o) =>
-          args.input!.payload === `rf:${node.id}:${o.id}` ||
-          normalize(o.label) === normalize(args.input!.text),
-      );
-      if (!option) {
-        send(
+      const option = input.attachment
+        ? undefined
+        : node.options.find(
+            (o) =>
+              input.payload === `rf:${node.id}:${o.id}` ||
+              normalize(o.label) === normalize(input.text),
+          );
+      if (!option)
+        return remind(
+          'choice',
           node.id,
-          'Please choose one of the options.',
+          node.retry?.trim() || DEFAULT_CHOICE_RETRY,
           node.options.map((o) => ({ title: o.label, payload: `rf:${node.id}:${o.id}` })),
         );
-        return result('choice');
-      }
       variables.choice = option.label;
       cursor = option.next;
     } else if (node?.type === 'capture') {
-      const value = capture(node.field, args.input.text);
-      if (!value) {
-        send(
-          node.id,
-          node.field === 'email'
-            ? 'Enter an email, such as name@example.com.'
-            : node.field === 'phone'
-              ? 'Enter a phone number with a country code, such as +375291234567.'
-              : 'Enter a name between 2 and 120 characters.',
-        );
-        return result('capture');
-      }
+      const value = input.attachment ? null : capture(node.field, input.text);
+      if (!value)
+        return remind('capture', node.id, node.retry?.trim() || DEFAULT_CAPTURE_RETRY[node.field]);
       variables[node.field] = value;
       cursor = node.next;
     }
-  } else if (old?.waiting === 'choice' || old?.waiting === 'capture') return result(old.waiting);
+  } else if (old?.waiting === 'choice' || old?.waiting === 'capture') {
+    retries = old.retries ?? 0;
+    return result(old.waiting);
+  }
   for (let steps = 0; cursor && steps < 50; steps++) {
     const node = definition.nodes.find((n) => n.id === cursor);
     if (!node) throw new Error('The current block was deleted. Restart the flow.');

@@ -9,8 +9,9 @@ export type FlowNode = BaseNode &
         type: 'choice';
         text: string;
         options: { id: string; label: string; next: string | null }[];
+        retry?: string;
       }
-    | { type: 'capture'; field: CaptureField; text: string }
+    | { type: 'capture'; field: CaptureField; text: string; retry?: string }
     | {
         type: 'condition';
         field: string;
@@ -127,6 +128,10 @@ export type FlowSession = {
   tags: string[];
   lead: boolean;
   definition?: FlowDefinition;
+  // When the session last advanced; stale sessions do not capture new requests.
+  at?: string;
+  // Reminders already sent for the current question.
+  retries?: number;
 };
 export type SendAction = {
   type: 'send';
@@ -141,4 +146,12 @@ export type EngineResult = {
   tags: string[];
   lead: boolean;
   handoff: boolean;
+  note?: string;
+};
+export type InboundEvent = {
+  kind: 'dm' | 'comment';
+  text: string;
+  payload?: string;
+  postId?: string;
+  attachment?: boolean;
 };

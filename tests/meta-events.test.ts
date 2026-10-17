@@ -35,6 +35,30 @@ describe('Meta webhook normalization', () => {
     expect(a).toHaveLength(1);
     expect(a[0].key).toBe(b[0].key);
   });
+  it('marks messages without text as attachments', () => {
+    const [photo, text] = parseMetaEvents({
+      object: 'instagram',
+      entry: [
+        {
+          id: '100',
+          messaging: [
+            {
+              sender: { id: '200' },
+              recipient: { id: '100' },
+              message: { mid: 'mid.photo', attachments: [{ type: 'image' }] },
+            },
+            {
+              sender: { id: '200' },
+              recipient: { id: '100' },
+              message: { mid: 'mid.t', text: 'Hi' },
+            },
+          ],
+        },
+      ],
+    });
+    expect(photo).toMatchObject({ text: 'Attachment', attachment: true });
+    expect(text.attachment).toBeUndefined();
+  });
   it('distinguishes operator echoes and parses comment IDs', () => {
     const result = parseMetaEvents({
       object: 'instagram',

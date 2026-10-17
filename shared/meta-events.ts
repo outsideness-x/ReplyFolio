@@ -5,6 +5,8 @@ export type MetaEvent = {
   senderId: string;
   text: string;
   payload?: string;
+  // A message without text, such as a photo, voice note or story mention.
+  attachment?: boolean;
   username?: string;
   messageId?: string;
   commentId?: string;
@@ -55,14 +57,16 @@ export function parseMetaEvents(body: unknown, now = Date.now()): MetaEvent[] {
       const at = date(m.timestamp, Date.parse(entryAt));
       if (str(message.mid)) {
         if (message.is_deleted === true || message.is_unsupported === true) continue;
-        const mid = str(message.mid);
+        const mid = str(message.mid),
+          text = str(message.text, 10000);
         events.push({
           key: `message:${accountId}:${mid}`,
           kind: echo ? 'echo' : 'dm',
           accountId,
           senderId: peer,
-          text: str(message.text, 10000) || 'Attachment',
+          text: text || 'Attachment',
           payload: str(obj(message.quick_reply).payload, 1000) || undefined,
+          ...(text.trim() ? {} : { attachment: true }),
           messageId: mid,
           at,
         });

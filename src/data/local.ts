@@ -5,8 +5,8 @@ import {
   isHandoffCommand,
   isHttpsUrl,
   isStopCommand,
+  routeEvent,
   runFlow,
-  selectFlow,
   validateFlow,
   WINDOW_MS,
 } from '../../shared/engine.ts';
@@ -168,7 +168,7 @@ export class LocalRepository implements Repository {
       flow_name: f.name,
       contact_name: contact.name || contact.username || 'Test customer',
       status: result.handoff ? 'handoff' : result.session ? 'waiting' : 'completed',
-      detail: `${result.actions.length} messages in the simulator`,
+      detail: result.note ?? `${result.actions.length} messages in the simulator`,
       created_at: new Date(this.now()).toISOString(),
     });
   }
@@ -225,11 +225,15 @@ export class LocalRepository implements Repository {
       return c.id;
     }
     if (c.mode === 'bot') {
-      const session = this.state.sessions[c.id];
-      const flow = session
-        ? this.state.snapshot.flows.find((f) => f.id === session.flowId && f.enabled)
-        : selectFlow(this.state.snapshot.flows, event.kind, event.text, event.postId);
-      if (flow && !(event.kind === 'comment' && session)) {
+      const route = routeEvent(
+        this.state.snapshot.flows,
+        this.state.sessions[c.id],
+        event,
+        this.now(),
+      );
+      const { flow, session } = route;
+      if (!flow && route.discard) delete this.state.sessions[c.id];
+      if (flow) {
         try {
           this.apply(
             c,

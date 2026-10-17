@@ -154,7 +154,7 @@ export function Lab() {
                 {c?.mode === 'human'
                   ? 'Bot paused: your team has taken over.'
                   : c
-                    ? 'The active conversation will continue its current flow.'
+                    ? "An active flow continues unless this is another flow's keyword."
                     : matching
                       ? 'Ready to run.'
                       : 'Check the keywords and whether the flow is active.'}
