@@ -18,7 +18,7 @@ supabase link --project-ref YOUR_PROJECT_REF
 supabase db push
 ```
 
-Применяются все десять SQL-миграций. Альтернатива — выполнить их по порядку в SQL Editor, без повторного ручного применения.
+Применяются все двенадцать SQL-миграций. Альтернатива — выполнить их по порядку в SQL Editor, без повторного ручного применения.
 
 В облачных настройках Auth отключите общую публичную регистрацию (`auth.enable_signup=false`), но оставьте включённым Email provider (`auth.email.enable_signup=true`): этот второй параметр включает сам способ входа по email. Включите подтверждение email, TOTP enrollment и verification. Установите email OTP: 8 цифр, срок 600 секунд; Site URL — точный HTTPS-адрес приложения. Локальный `supabase/config.toml` описывает эти настройки, но `db push` сам не переносит настройки облачного Auth.
 
