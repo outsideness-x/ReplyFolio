@@ -30,6 +30,7 @@ export class LocalRepository implements Repository {
   constructor(
     private storage: Pick<Storage, 'getItem' | 'setItem'>,
     private now = () => Date.now(),
+    private seed: (now: number) => Snapshot = demoSnapshot,
   ) {
     let state: State | null = null;
     try {
@@ -47,7 +48,7 @@ export class LocalRepository implements Repository {
     } catch {
       /* A malformed demo cache is replaced with fresh demonstration data. */
     }
-    this.state = state ?? { version: 1, snapshot: demoSnapshot(now()), sessions: {} };
+    this.state = state ?? { version: 1, snapshot: seed(now()), sessions: {} };
   }
   async load() {
     return structuredClone(this.state.snapshot);
@@ -290,8 +291,18 @@ export class LocalRepository implements Repository {
     }
     if (dirty) this.changed();
   }
+  pendingDelay(conversationId: string): string | null {
+    const s = this.state.sessions[conversationId];
+    return s?.waiting === 'delay' ? s.resumeAt : null;
+  }
+  async skipDelay(conversationId: string) {
+    const s = this.state.sessions[conversationId];
+    if (s?.waiting !== 'delay') return;
+    s.resumeAt = new Date(this.now()).toISOString();
+    await this.processDue();
+  }
   async reset() {
-    this.state = { version: 1, snapshot: demoSnapshot(this.now()), sessions: {} };
+    this.state = { version: 1, snapshot: this.seed(this.now()), sessions: {} };
     this.changed();
   }
   async renameWorkspace(name: string) {

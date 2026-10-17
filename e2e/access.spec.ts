@@ -105,3 +105,36 @@ for (const width of [390, 768, 1440])
     );
     expect(errors).toEqual([]);
   });
+test('live simulator runs saved flows in a sandbox without writing to the workspace', async ({
+  page,
+}) => {
+  const snapshot = demoSnapshot(),
+    writes: string[] = [];
+  snapshot.flows[1].enabled = false;
+  await page.route('**/api/auth', (route) =>
+    route.fulfill({ json: { state: 'active', workspaceId: ws } }),
+  );
+  await page.route('**/api/workspace-api', async (route) => {
+    const action = route.request().postDataJSON().action;
+    if (action !== 'read') writes.push(action);
+    await route.fulfill({ json: action === 'read' ? snapshot : { ok: true } });
+  });
+  await page.goto('/#/lab');
+  await expect(
+    page.getByText('Your saved flows, run by the same engine as the server.'),
+  ).toBeVisible();
+  await page.getByLabel('Test message').fill('price');
+  await page.getByRole('button', { name: 'Send to simulator' }).click();
+  await expect(page.locator('.lab-matching')).toContainText('No match');
+  await expect(page.locator('.phone-messages .message-row.out')).toHaveCount(0);
+  await page.getByLabel('Include 1 draft flow').check();
+  await page.getByLabel('Test message').fill('price');
+  await page.getByLabel('Test message').press('Enter');
+  await expect(page.locator('.phone-messages')).toContainText('Course details and pricing');
+  await page.getByLabel('Test message').fill('student@example.com');
+  await page.getByLabel('Test message').press('Enter');
+  await expect(page.locator('.phone-messages')).toContainText('Your lead has been saved');
+  await page.getByRole('button', { name: 'Start over' }).click();
+  await expect(page.locator('.phone-messages .message-row')).toHaveCount(0);
+  expect(writes).toEqual([]);
+});

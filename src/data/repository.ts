@@ -24,5 +24,7 @@ export interface Repository {
   removeUpload?(path: string): Promise<void>;
   simulate?(event: Simulation): Promise<string>;
   processDue?(): Promise<void>;
+  pendingDelay?(conversationId: string): string | null;
+  skipDelay?(conversationId: string): Promise<void>;
   reset?(): Promise<void>;
 }
