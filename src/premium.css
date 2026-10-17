@@ -629,6 +629,13 @@
 .app-shell .list-search input {
   background: transparent;
 }
+.app-shell .table-search {
+  flex: 1;
+  max-width: 340px;
+}
+.app-shell .table-search input {
+  width: 100%;
+}
 .app-shell .table-toolbar select,
 .app-shell .inline-select {
   background: var(--canvas);
@@ -721,15 +728,81 @@
   color: var(--muted);
   font-size: 11px;
 }
+/* Flows read as one list, like an issue tracker, rather than separate cards. */
+.app-shell .flow-list {
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: var(--surface);
+  overflow: hidden;
+}
+.app-shell .flow-list .flow-card {
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  box-shadow: none;
+  padding: 18px 22px;
+  transition: background 0.12s;
+}
+.app-shell .flow-list .flow-card:last-child {
+  border-bottom: 0;
+}
+.app-shell .flow-list .flow-card:hover {
+  background: var(--canvas);
+}
+.app-shell .flow-list .flow-symbol {
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+}
+.app-shell .flow-list .flow-symbol svg {
+  width: 19px;
+  height: 19px;
+}
+.app-shell .flow-card-body > p {
+  margin-top: 4px;
+}
+.app-shell .flow-metadata {
+  margin-top: 9px;
+}
+.app-shell .keyword-chips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+.app-shell .keyword-chips code {
+  font-family: inherit;
+  font-size: 10.5px;
+  line-height: 1.5;
+  padding: 0 6px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--canvas);
+  color: var(--ink);
+}
 .app-shell .flow-metadata i {
   background: #afafaf;
 }
 .app-shell .toggle {
-  background: #a8a8a830;
+  background: #a8a8a838;
   border: 0;
+  cursor: pointer;
+  transition: background 0.15s;
 }
 .app-shell .toggle.on {
-  background: #a1a1a1;
+  background: var(--primary);
+}
+.app-shell[data-theme='dark'] .toggle.on span {
+  background: #1c1c1c;
+}
+.app-shell .toggle:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.app-shell .toggle:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 .app-shell .flow-editor {
   border-color: var(--border);
