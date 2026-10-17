@@ -1,14 +1,7 @@
 import { env, rpc, type Database } from './http.ts';
 import { decryptToken } from './crypto.ts';
-export class MetaError extends Error {
-  constructor(
-    public status: number,
-    public code: number,
-    public uncertain = false,
-  ) {
-    super(`Meta rejected the request (HTTP ${status}, code ${code}).`);
-  }
-}
+export { MetaError } from '../../../shared/meta-errors.ts';
+import { MetaError } from '../../../shared/meta-errors.ts';
 export async function metaRequest(
   path: string,
   token: string,
@@ -35,11 +28,12 @@ export async function metaRequest(
     throw new MetaError(response.status, 0, method === 'POST');
   }
   if (!response.ok || value.error) {
-    const err = value.error as { code?: number } | undefined;
+    const err = value.error as { code?: number; error_subcode?: number } | undefined;
     throw new MetaError(
       response.status,
       err?.code ?? 0,
       method === 'POST' && response.status >= 500,
+      err?.error_subcode ?? 0,
     );
   }
   return value;

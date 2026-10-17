@@ -11,6 +11,7 @@ import { constantTimeEqual, type MetaEvent } from '../../../shared/meta-events.t
 import type {
   Contact,
   Conversation,
+  EngineResult,
   Flow,
   FlowSession,
   Material,
@@ -62,6 +63,34 @@ async function takeHuman(db: Database, c: Conv): Promise<void> {
   await update(db, 'conversations', c.id, { mode: 'human', mode_revision: c.mode_revision + 1 });
   await rpc(db, 'service_clear_session', { conversation: c.id });
 }
+// Flow errors are deterministic, so the run is logged once instead of being retried.
+async function runOrRecord(
+  db: Database,
+  c: Conv,
+  flow: Flow,
+  key: string,
+  contactName: string,
+  run: () => EngineResult,
+): Promise<EngineResult | null> {
+  try {
+    return run();
+  } catch (e) {
+    await rpc(db, 'service_clear_session', { conversation: c.id });
+    const { error } = await db.from('automation_runs').upsert(
+      {
+        workspace_id: c.workspace_id,
+        operation_key: key,
+        flow_name: flow.name,
+        contact_name: contactName || 'Instagram user',
+        status: 'failed',
+        detail: (e instanceof Error ? e.message : 'The flow could not run.').slice(0, 500),
+      },
+      { onConflict: 'operation_key', ignoreDuplicates: true },
+    );
+    if (error) throw new Retry();
+    return null;
+  }
+}
 async function eventJob(db: Database, event: MetaEvent): Promise<void> {
   const { data: a, error } = await db
     .from('instagram_accounts')
@@ -94,6 +123,26 @@ async function eventJob(db: Database, event: MetaEvent): Promise<void> {
         .maybeSingle();
       if (lookupError) throw new Retry();
       if (own) return;
+      // The echo of an unconfirmed send proves delivery; it is not a manager reply.
+      const { data: pending, error: pendingError } = await db
+        .from('messages')
+        .select('id')
+        .eq('conversation_id', initial.conversation.id)
+        .eq('direction', 'out')
+        .eq('status', 'uncertain')
+        .is('instagram_message_id', null)
+        .eq('body', event.text)
+        .order('created_at', { ascending: true })
+        .limit(1);
+      if (pendingError) throw new Retry();
+      if (pending?.length) {
+        await update(db, 'messages', pending[0].id, {
+          status: 'accepted',
+          instagram_message_id: event.messageId,
+          error: null,
+        });
+        return;
+      }
     }
     const { contact, conversation: c } = await rpc<{ contact: Contact; conversation: Conv }>(
       db,
@@ -146,20 +195,23 @@ async function eventJob(db: Database, event: MetaEvent): Promise<void> {
       .select('*')
       .eq('workspace_id', a.workspace_id);
     if (materialError) throw new Retry();
-    const result = runFlow(flow, {
-      session,
-      input: session
-        ? { text: event.text, payload: event.payload, attachment: event.attachment }
-        : undefined,
-      materials: materials as Material[],
-      variables: {
-        name: contact.name,
-        email: contact.email,
-        phone: contact.phone,
-        username: contact.username,
-      },
-      privateReply: event.kind === 'comment',
-    });
+    const result = await runOrRecord(db, c, flow, event.key, contact.name || contact.username, () =>
+      runFlow(flow, {
+        session,
+        input: session
+          ? { text: event.text, payload: event.payload, attachment: event.attachment }
+          : undefined,
+        materials: materials as Material[],
+        variables: {
+          name: contact.name,
+          email: contact.email,
+          phone: contact.phone,
+          username: contact.username,
+        },
+        privateReply: event.kind === 'comment',
+      }),
+    );
+    if (!result) return;
     await rpc(db, 'service_apply_result', {
       conversation: c.id,
       flow: flow.id,
@@ -199,7 +251,16 @@ async function resumeJob(db: Database, job: Job): Promise<void> {
       .select('*')
       .eq('workspace_id', c.workspace_id);
     if (error) throw new Retry();
-    const result = runFlow(f, { session, materials: materials as Material[] });
+    const contact = await getRow<Contact>(db, 'contacts', c.contact_id);
+    const result = await runOrRecord(
+      db,
+      c,
+      f,
+      job.event_key,
+      contact.name || contact.username,
+      () => runFlow(f, { session, materials: materials as Material[] }),
+    );
+    if (!result) return;
     await rpc(db, 'service_apply_result', {
       conversation: c.id,
       flow: f.id,
@@ -275,7 +336,7 @@ async function sendJob(db: Database, job: Job): Promise<void> {
         last_message_at: new Date().toISOString(),
       });
     } catch (e) {
-      if (e instanceof MetaError && e.status === 429) {
+      if (e instanceof MetaError && e.rateLimited) {
         await update(db, 'messages', m.id, {
           status: 'queued',
           error: 'Instagram rate limit reached. Sending has been delayed.',
@@ -284,7 +345,7 @@ async function sendJob(db: Database, job: Job): Promise<void> {
       }
       if (e instanceof MetaError && !e.uncertain) {
         await update(db, 'messages', m.id, { status: 'failed', error: e.message });
-        if (e.code === 190 || e.status === 401)
+        if (e.revoked)
           await update(db, 'instagram_accounts', a.id, {
             status: 'error',
             last_error: 'Instagram revoked access. Reconnect your account.',
