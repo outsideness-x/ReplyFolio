@@ -473,19 +473,33 @@
   width: 4px;
   height: 4px;
 }
-.app-shell .chart polyline {
-  stroke: #939393;
-  stroke-width: 2;
-}
-.app-shell .chart circle {
-  stroke: #999999;
-  fill: var(--surface);
-}
 .app-shell .chart text {
   fill: var(--muted);
+  font-variant-numeric: tabular-nums;
 }
 .app-shell .chart line {
-  stroke: #aeaeae18;
+  stroke: #aeaeae26;
+}
+.app-shell .chart line.baseline {
+  stroke: #9e9e9e55;
+}
+.app-shell .chart .bar {
+  fill: #c9c9c9;
+  transition: fill 0.15s;
+}
+.app-shell[data-theme='dark'] .chart .bar {
+  fill: #ffffff2e;
+}
+.app-shell .chart .today .bar,
+.app-shell .chart g:hover .bar {
+  fill: var(--primary);
+}
+.app-shell .chart .value {
+  fill: var(--ink);
+  font-weight: 500;
+}
+.app-shell .chart .today text:not(.value) {
+  fill: var(--ink);
 }
 .app-shell .preview-row {
   border-bottom-color: var(--border);

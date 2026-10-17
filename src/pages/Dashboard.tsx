@@ -9,11 +9,11 @@ import {
   MessageCircle,
   MessagesSquare,
   MousePointerClick,
-  Play,
+  Plus,
   Users,
   Workflow,
 } from 'lucide-react';
-import { Badge, day, Empty, time, useUI } from '../ui.tsx';
+import { Badge, day, dayKey, Empty, time, useUI } from '../ui.tsx';
 export function Dashboard() {
   const { data, repo, navigate, openInbox } = useUI(),
     [period, setPeriod] = useState(7);
@@ -49,20 +49,26 @@ export function Dashboard() {
       color: 'orange',
     },
   ];
+  // Days follow the workspace time zone, like every other date in the interface.
   const points = Array.from({ length: period }, (_, i) => {
     const date = new Date(Date.now() - (period - i - 1) * 86400000);
-    const dateString = date.toISOString().slice(0, 10);
-    return {
-      date,
-      count: data.messages.filter(
-        (m) => m.direction === 'in' && m.created_at.slice(0, 10) === dateString,
-      ).length,
-    };
+    return { date, key: dayKey(date), count: 0 };
   });
-  const max = Math.max(4, ...points.map((p) => p.count)),
-    path = points
-      .map((p, i) => `${40 + (i * 650) / (period - 1)},${155 - (p.count / max) * 125}`)
-      .join(' ');
+  const byDay = new Map(points.map((p) => [p.key, p]));
+  for (const m of data.messages)
+    if (m.direction === 'in') {
+      const point = byDay.get(dayKey(m.created_at));
+      if (point) point.count++;
+    }
+  const step = Math.max(1, Math.ceil(Math.max(...points.map((p) => p.count)) / 4)),
+    top = step * 4,
+    slot = 650 / period,
+    bar = Math.min(28, slot * 0.5),
+    label = new Intl.DateTimeFormat('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      timeZone: 'Europe/Minsk',
+    });
   const date = new Intl.DateTimeFormat('en-GB', {
     weekday: 'long',
     day: 'numeric',
@@ -78,7 +84,7 @@ export function Dashboard() {
           <p>Everything happening in your Instagram Direct.</p>
         </div>
         <button className="button primary" onClick={() => navigate('flows')}>
-          <Play size={16} />
+          <Plus size={16} />
           Create a flow
         </button>
       </div>
@@ -114,45 +120,44 @@ export function Dashboard() {
           </div>
           <div className="chart">
             <svg viewBox="0 0 720 190" role="img" aria-label="Incoming requests by day">
-              {[30, 72, 113, 155].map((y) => (
-                <g key={y}>
-                  <line x1="40" y1={y} x2="690" y2={y} stroke="#eaf0f7" strokeDasharray="4 5" />
-                  <text x="7" y={y + 4} fill="#92a0b5" fontSize="10">
-                    {Math.round(((155 - y) / 125) * max)}
-                  </text>
-                </g>
-              ))}
-              <polygon points={`40,155 ${path} 690,155`} fill="currentColor" fillOpacity=".04" />
-              <polyline
-                points={path}
-                fill="none"
-                stroke="#566780"
-                strokeWidth="3"
-                strokeLinejoin="round"
-              />
-              {points.map((p, i) => (
-                <g key={i}>
-                  <circle
-                    cx={40 + (i * 650) / (period - 1)}
-                    cy={155 - (p.count / max) * 125}
-                    r="4"
-                    fill="white"
-                    stroke="#566780"
-                    strokeWidth="2"
-                  />
-                  <text
-                    x={40 + (i * 650) / (period - 1)}
-                    y="180"
-                    textAnchor="middle"
-                    fill="#8494ad"
-                    fontSize="10"
-                  >
-                    {new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'numeric' }).format(
-                      p.date,
+              {[0, 1, 2, 3, 4].map((n) => {
+                const y = 155 - n * 31;
+                return (
+                  <g key={n}>
+                    <line x1="40" y1={y} x2="690" y2={y} className={n ? '' : 'baseline'} />
+                    <text x="28" y={y + 3.5} textAnchor="end" fontSize="10">
+                      {n * step}
+                    </text>
+                  </g>
+                );
+              })}
+              {points.map((p, i) => {
+                const x = 40 + slot * i + slot / 2,
+                  h = (p.count / top) * 124;
+                return (
+                  <g key={p.key} className={i === period - 1 ? 'today' : ''}>
+                    <title>{`${label.format(p.date)}: ${p.count} incoming`}</title>
+                    {p.count > 0 && (
+                      <>
+                        <rect
+                          className="bar"
+                          x={x - bar / 2}
+                          y={155 - h}
+                          width={bar}
+                          height={h}
+                          rx="3"
+                        />
+                        <text className="value" x={x} y={150 - h} textAnchor="middle" fontSize="10">
+                          {p.count}
+                        </text>
+                      </>
                     )}
-                  </text>
-                </g>
-              ))}
+                    <text x={x} y="178" textAnchor="middle" fontSize="10">
+                      {label.format(p.date)}
+                    </text>
+                  </g>
+                );
+              })}
             </svg>
           </div>
           <div className="chart-summary">
